@@ -1,0 +1,51 @@
+{
+    "name": "Joseph White",
+    "contact": {
+      "phone": "+1(234)-555-1234",
+      "email": "help@enhancv.com",
+      "location": "San Diego, CA",
+      "linkedin": "linkedin.com"
+    },
+    "summary": "With over a decade of experience in leading software development teams, I am adept at fostering technical growth and delivering exceptional custom software solutions. My strategic management skills and deep understanding of diverse technologies such as C#, .NET, and React, combined with a track record of increasing productivity and client satisfaction, make me a prime candidate for the Software Engineering Manager role.",
+    "experience": [
+      {
+        "position": "Senior Software Engineering Manager",
+        "company": "EnSolve Inc",
+        "duration": "06/2019 - Present",
+        "location": "San Diego, CA",
+        "responsibilities": [
+          "Directed a team of 20 engineers in the development of scalable applications, resulting in a 25% increase in department productivity.",
+          "Implemented Agile methodologies which decreased time to market by 30% and improved cross-functional team collaboration.",
+          "Oversaw the successful launch of 5 major client projects, leading to a total revenue increase of $3M for the fiscal year.",
+          "Mentored junior engineers and established a knowledge sharing program that enhanced the team’s technical skills by 40%.",
+          "Introduced code review practices that improved code quality and decreased bug rates by 15%.",
+          "Managed HR functions such as performance reviews and conflict resolution, leading to a 90% employee retention rate."
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "name": "Open Source Contribution - Data Parser Library",
+        "description": "Created a lightweight data parsing library designed to simplify data import/export operations for JSON, XML, and CSV formats. See my work: github.com/josephwhite/DataParserLib"
+      }
+    ],
+    "achievements": [
+      "Streamlined Deployment Pipelines: Architected a new deployment pipeline which reduced deployment times by 20%, increasing team efficiency.",
+      "Major Client Project Launch Success: Led the successful execution and launch of a $1.5M project for a high-profile client, meeting all deliverables ahead of schedule."
+    ],
+    "skills": [
+      "React",
+      "JavaScript"
+    ],
+    "education": [
+      {
+        "degree": "Master of Science in Computer Science",
+        "institution": "University of California, Berkeley",
+        "duration": "01/2009 - 01/2011",
+        "location": "Berkeley, CA"
+      }
+    ],
+    "courses": [
+      "Certified ScrumMaster (CSM): An intensive course provided by Scrum Alliance focusing on the Scrum framework and team leadership."
+    ]
+  }

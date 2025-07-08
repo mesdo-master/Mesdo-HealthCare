@@ -1,0 +1,81 @@
+export const users = [
+    {
+      id: 1,
+      name: "Dr. Rajeev Bhatt",
+      lastMessage: "Hello guys, we have discussed......",
+      time: "Today",
+      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150",
+      online: true,
+      messages: [
+        {
+          id: 1,
+          text: "Hello guys, we have discussed about post-corona vacation plan and our decision is to go to Bali. We will have a very big party after this corona ends! These are some images about our destination",
+          time: "08:35 AM",
+          sender: "Dr. Rajeev Bhatt",
+          type: "received",
+        },
+        {
+          id: 2,
+          text: "That sounds amazing! I can't wait for the trip. The beaches in Bali are beautiful.",
+          time: "08:35 AM",
+          sender: "You",
+          type: "sent",
+        },
+        {
+          id: 3,
+          text: "We should start planning the activities we want to do there.",
+          time: "08:36 AM",
+          sender: "Dr. Rajeev Bhatt",
+          type: "received",
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: "Dr. Sarah Wilson",
+      lastMessage: "Let's discuss the patient's treatment...",
+      time: "Yesterday",
+      image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=150",
+      online: true,
+      messages: [
+        {
+          id: 1,
+          text: "Let's discuss the patient's treatment plan for the upcoming surgery.",
+          time: "14:20 PM",
+          sender: "Dr. Sarah Wilson",
+          type: "received",
+        },
+        {
+          id: 2,
+          text: "I've reviewed the case. We should schedule a meeting with the team.",
+          time: "14:25 PM",
+          sender: "You",
+          type: "sent",
+        },
+      ],
+    },
+    {
+      id: 3,
+      name: "Dr. Michael Chen",
+      lastMessage: "The conference details are...",
+      time: "2 days ago",
+      image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150",
+      online: false,
+      messages: [
+        {
+          id: 1,
+          text: "The medical conference is scheduled for next month. Will you be attending?",
+          time: "09:15 AM",
+          sender: "Dr. Michael Chen",
+          type: "received",
+        },
+        {
+          id: 2,
+          text: "Yes, I've already registered. Looking forward to your presentation.",
+          time: "09:20 AM",
+          sender: "You",
+          type: "sent",
+        },
+      ],
+    },
+  ];
