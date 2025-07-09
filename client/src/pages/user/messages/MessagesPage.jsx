@@ -7,11 +7,12 @@ import axiosInstance from "../../../lib/axio";
 
 function Messages() {
   const { conversationId } = useParams();
-  const [selectedConversation, setSelectedConversation] = useState(conversationId);
+  const [selectedConversation, setSelectedConversation] =
+    useState(conversationId);
 
   useEffect(() => {
     setSelectedConversation(conversationId);
-  }, [conversationId])
+  }, [conversationId]);
 
   const [activeTab, setActiveTab] = useState("Personal");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -41,7 +42,7 @@ function Messages() {
         try {
           setLoadingConversations(true);
           const res = await axiosInstance.get("chats/getjobsConversations");
-          console.log(res)
+          console.log(res);
           setAllConversations(res.data);
           setFetchError(null);
         } catch (err) {
@@ -70,8 +71,7 @@ function Messages() {
 
       fetchConversations();
     }
-  }, [conversationId,activeTab]);
-
+  }, [conversationId, activeTab]);
 
   const handleProfileClick = (user) => {
     if (user.isGroup) {
@@ -83,23 +83,41 @@ function Messages() {
     }
   };
 
-  const handleCreateGroup = (newGroup) => {
-    const completeGroup = {
-      ...newGroup,
-      id: `group-${Date.now()}`,
-      lastMessage: "Group created",
-      time: "Just now",
-      image: "/group-default.png",
-      isGroup: true,
-      messages: [],
-      online: false,
-    };
+  const handleCreateGroup = async (newGroup) => {
+    console.log("New group created:", newGroup); // Debug log
 
-    setGroups([...groups, completeGroup]);
-    setActiveTab("Groups");
-    setShowGroupModal(false);
-    setGroupName("");
-    setGroupDescription("");
+    try {
+      // Add the new group to conversations list immediately
+      setAllConversations((prevConversations) => [
+        ...prevConversations,
+        newGroup,
+      ]);
+
+      // Switch to Groups tab to show the new group
+      setActiveTab("Groups");
+
+      // Close the modal
+      setShowGroupModal(false);
+
+      // Clear form states
+      setGroupName("");
+      setGroupDescription("");
+
+      // Navigate to the new group
+      setSelectedConversation(newGroup._id);
+
+      // Refresh conversations from server to ensure consistency
+      setTimeout(async () => {
+        try {
+          const res = await axiosInstance.get("chats/allConversations");
+          setAllConversations(res.data);
+        } catch (error) {
+          console.error("Error refreshing conversations:", error);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error("Error handling group creation:", error);
+    }
   };
 
   // Add this before return
@@ -107,7 +125,7 @@ function Messages() {
     (c) => c._id === selectedConversation
   );
 
-  console.log(selectedConversationObj)
+  console.log(selectedConversationObj);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -120,11 +138,7 @@ function Messages() {
             setSelectedUser={setSelectedUser}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            onCreateGroup={() => {
-              setShowGroupModal(true);
-              setGroupName("");
-              setGroupDescription("");
-            }}
+            onCreateGroup={handleCreateGroup} // Pass the actual function instead of just opening modal
             loading={loadingConversations}
             error={fetchError}
           />

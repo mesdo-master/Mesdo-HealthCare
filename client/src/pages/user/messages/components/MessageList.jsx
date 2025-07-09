@@ -93,7 +93,7 @@ const MessageList = ({
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <p className="mb-2">No groups yet</p>
             <button
-              onClick={onCreateGroup}
+              onClick={() => setShowCreateGroupModal(true)} // Open modal instead of calling onCreateGroup
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               aria-label="Create new group"
             >

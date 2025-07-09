@@ -12,11 +12,8 @@ const CreateGroupModal = ({ isOpen, onClose, users, onCreateGroup }) => {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isNewGroupModalOpen, setIsNewGroupModalOpen] = useState(false); // New state for the new group modal
   const [showAddModal, setShowAddModal] = useState(false);
-  const [groupName, setGroupName] = useState(""); // Holds group name
-  const [description, setDescription] = useState(""); // Holds group description
   const [showSuccess, setShowSuccess] = useState(false);
-  // const [groupName, setGroupName] = useState(""); // Holds group name
-  // const [description, setDescription] = useState(""); // Holds group description
+  // Remove local form state management since NewGroupModal handles it now
 
   useEffect(() => {
     setIsVisible(isOpen);
@@ -55,46 +52,51 @@ const CreateGroupModal = ({ isOpen, onClose, users, onCreateGroup }) => {
   };
 
   const handleCreateGroup = (group) => {
+    console.log("Group created successfully:", group); // Debug log
     onCreateGroup(group);
     setShowSuccess(true);
     setIsNewGroupModalOpen(false);
+
+    // Clear form states after a delay to prevent immediate reset
     setTimeout(() => {
       setIsVisible(false);
       onClose();
       setShowSuccess(false);
+      // setGroupName(""); // Clear after modal closes
+      // setDescription(""); // Clear after modal closes
     }, 1200);
   };
 
   const dummyUsers = [
     {
-      id: 1,
+      _id: "507f1f77bcf86cd799439011", // Valid ObjectId format
       name: "Dr. Rajeev Bhatt",
-      role: "Dental Surgeon",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+      headline: "Dental Surgeon", // Changed from 'role' to 'headline' to match real users
+      profilePicture: "https://randomuser.me/api/portraits/men/32.jpg", // Changed from 'avatar' to 'profilePicture'
     },
     {
-      id: 2,
+      _id: "507f1f77bcf86cd799439012", // Valid ObjectId format
       name: "Dr. Riya Sharma",
-      role: "Cardiologist",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+      headline: "Cardiologist",
+      profilePicture: "https://randomuser.me/api/portraits/women/44.jpg",
     },
     {
-      id: 3,
+      _id: "507f1f77bcf86cd799439013", // Valid ObjectId format
       name: "Dr. Aman Verma",
-      role: "Orthopedic",
-      avatar: "https://randomuser.me/api/portraits/men/45.jpg",
+      headline: "Orthopedic",
+      profilePicture: "https://randomuser.me/api/portraits/men/45.jpg",
     },
     {
-      id: 4,
+      _id: "507f1f77bcf86cd799439014", // Valid ObjectId format
       name: "Dr. Priya Singh",
-      role: "Neurologist",
-      avatar: "https://randomuser.me/api/portraits/women/46.jpg",
+      headline: "Neurologist",
+      profilePicture: "https://randomuser.me/api/portraits/women/46.jpg",
     },
     {
-      id: 5,
+      _id: "507f1f77bcf86cd799439015", // Valid ObjectId format
       name: "Dr. Karannnnn Patel",
-      role: "Pediatrician",
-      avatar: "https://randomuser.me/api/portraits/men/47.jpg",
+      headline: "Pediatrician",
+      profilePicture: "https://randomuser.me/api/portraits/men/47.jpg",
     },
   ];
 
@@ -207,10 +209,6 @@ const CreateGroupModal = ({ isOpen, onClose, users, onCreateGroup }) => {
             onClose={() => setIsNewGroupModalOpen(false)}
             onCreate={handleCreateGroup}
             users={users && users.length > 0 ? users : dummyUsers}
-            groupName={groupName}
-            setGroupName={setGroupName}
-            description={description}
-            setDescription={setDescription}
           />
 
           <AddGroupModal

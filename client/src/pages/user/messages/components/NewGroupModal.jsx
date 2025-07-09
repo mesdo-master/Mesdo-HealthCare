@@ -1,17 +1,10 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle, Link as LinkIcon, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom"; // Add proper import
+import axiosInstance from "../../../../lib/axio"; // Add axios import
 
-const NewGroupModal = ({
-  isOpen,
-  onClose,
-  onCreate,
-  groupName = "",
-  setGroupName = () => {},
-  description = "",
-  setDescription = () => {},
-  users,
-}) => {
+const NewGroupModal = ({ isOpen, onClose, onCreate, users }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [step, setStep] = useState(1);
   const [search, setSearch] = useState("");
@@ -19,10 +12,11 @@ const NewGroupModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisible, setIsVisible] = useState(isOpen);
 
-  // Mock navigate function
-  const navigate = (path) => {
-    console.log(`Navigating to: ${path}`);
-  };
+  // Manage form state locally to prevent parent interference
+  const [localGroupName, setLocalGroupName] = useState("");
+  const [localDescription, setLocalDescription] = useState("");
+
+  const navigate = useNavigate(); // Use proper navigate hook
 
   useEffect(() => {
     setIsVisible(isOpen);
@@ -30,61 +24,92 @@ const NewGroupModal = ({
       setStep(1);
       setSelectedMembers([]);
       setSearch("");
-      setGroupName("");
-      setDescription("");
+      // Don't reset local form states here to prevent form clearing
       setShowSuccess(false);
       setIsSubmitting(false);
+
+      // Debug logging
+      console.log("NewGroupModal opened with users:", users);
+      console.log("Users length:", users?.length);
     }
-  }, [isOpen]);
+  }, [isOpen, users]); // Add users to dependency array
 
   if (!isOpen) return null;
 
   // Filter users by search query
-  const filteredUsers = users.filter((user) =>
+  const filteredUsers = (users || []).filter((user) =>
     user.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  console.log("Filtered users:", filteredUsers); // Debug log
+
   const handleToggleMember = (id) => {
+    console.log("Toggling member with ID:", id); // Debug log
+    console.log("Current selected members:", selectedMembers); // Debug log
+
     setSelectedMembers((prev) =>
       prev.includes(id) ? prev.filter((mid) => mid !== id) : [...prev, id]
     );
   };
 
   const handleContinue = () => {
-    if (selectedMembers.length >= 2) setStep(2);
+    if (selectedMembers.length >= 2) setStep(2); // Changed back to 2 members minimum
   };
 
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(onClose, 300);
+    setTimeout(() => {
+      onClose();
+      // Reset form states only when manually closing
+      setStep(1);
+      setSelectedMembers([]);
+      setSearch("");
+      setLocalGroupName("");
+      setLocalDescription("");
+    }, 300);
   };
 
-  // Improved handleCreate: async call, loading state, success feedback
+  // Improved handleCreate: actual API call with proper error handling
   const handleCreate = async () => {
-    if (!groupName.trim()) return;
+    if (!localGroupName.trim()) return;
     setIsSubmitting(true);
     try {
       const payload = {
-        name: groupName.trim(),
-        description: description.trim(),
+        name: localGroupName.trim(),
+        description: localDescription.trim(),
         participantIds: selectedMembers,
       };
 
-      // Mock API call
-      const newGroup = { _id: Date.now(), ...payload };
+      console.log("Creating group with payload:", payload); // Debug log
+      console.log("selectedMembers type:", typeof selectedMembers);
+      console.log("selectedMembers value:", selectedMembers);
+      console.log(
+        "selectedMembers array check:",
+        Array.isArray(selectedMembers)
+      );
+
+      // Actual API call to backend
+      const response = await axiosInstance.post("/chats/createGroup", payload);
+      const newGroup = response.data;
+
+      console.log("Group created successfully:", newGroup); // Debug log
 
       // Notify parent of new group
       onCreate(newGroup);
       setShowSuccess(true);
+
+      // Close modal and navigate after success message
       setTimeout(() => {
+        setShowSuccess(false);
         setIsVisible(false);
         onClose();
-        setShowSuccess(false);
         navigate(`/messages/${newGroup._id}`);
-      }, 1200);
+      }, 1500); // Slightly longer delay to show success message
     } catch (error) {
       console.error("Error creating group:", error);
-      // Optionally display an error message to the user
+      console.error("Error response:", error.response?.data);
+      // Show error message to user
+      alert("Failed to create group. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -185,16 +210,18 @@ const NewGroupModal = ({
                 >
                   <button
                     onClick={handleContinue}
-                    disabled={selectedMembers.length < 2}
+                    disabled={selectedMembers.length < 2} // Changed back to 2
                     className={`w-full flex items-center justify-center gap-2 font-medium rounded-lg h-10 text-sm transition-all duration-150 ${
-                      selectedMembers.length >= 2
+                      selectedMembers.length >= 2 // Changed back to 2
                         ? "bg-[#1890FF] text-white hover:bg-blue-700"
                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {`Add ${selectedMembers.length} Member${
-                      selectedMembers.length !== 1 ? "s" : ""
-                    }`}
+                    {selectedMembers.length === 0
+                      ? "Select at least 2 members"
+                      : selectedMembers.length === 1
+                      ? "Select 1 more member"
+                      : `Continue with ${selectedMembers.length} Members`}
                   </button>
                 </motion.div>
 
@@ -205,49 +232,61 @@ const NewGroupModal = ({
                   transition={{ delay: 0.2 }}
                   className="flex-1 overflow-y-auto max-h-[400px]"
                 >
-                  {filteredUsers.map((user, index) => (
-                    <motion.div
-                      key={user._id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
-                      onClick={() => handleToggleMember(user._id)}
-                      className="p-4 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors"
-                    >
-                      <img
-                        src={user.profilePicture}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.headline}</p>
-                      </div>
-                      {/* Custom Checkbox */}
-                      <div
-                        className={`w-6 h-6 flex items-center justify-center rounded border-2 transition-all duration-150 ${
-                          selectedMembers.includes(user._id)
-                            ? "border-[#1890FF] bg-blue-50"
-                            : "border-gray-300 bg-white"
-                        }`}
+                  {filteredUsers.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      {search ? "No users found" : "No users available"}
+                    </div>
+                  ) : (
+                    filteredUsers.map((user, index) => (
+                      <motion.div
+                        key={user._id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        onClick={() => handleToggleMember(user._id)}
+                        className="p-4 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors"
                       >
-                        {selectedMembers.includes(user._id) && (
-                          <motion.svg
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            width="14"
-                            height="14"
-                            fill="none"
-                            stroke="#1890FF"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </motion.svg>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                        <img
+                          src={user.profilePicture}
+                          alt={user.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://via.placeholder.com/40x40?text=User";
+                          }}
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium">{user.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {user.headline}
+                          </p>
+                        </div>
+                        {/* Custom Checkbox */}
+                        <div
+                          className={`w-6 h-6 flex items-center justify-center rounded border-2 transition-all duration-150 ${
+                            selectedMembers.includes(user._id)
+                              ? "border-[#1890FF] bg-blue-50"
+                              : "border-gray-300 bg-white"
+                          }`}
+                        >
+                          {selectedMembers.includes(user._id) && (
+                            <motion.svg
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="#1890FF"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </motion.svg>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </motion.div>
               </>
             )}
@@ -292,8 +331,8 @@ const NewGroupModal = ({
                     <input
                       type="text"
                       placeholder="Group name"
-                      value={groupName}
-                      onChange={(e) => setGroupName(e.target.value)}
+                      value={localGroupName}
+                      onChange={(e) => setLocalGroupName(e.target.value)}
                       className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-sm"
                     />
                   </div>
@@ -304,8 +343,8 @@ const NewGroupModal = ({
                     </label>
                     <textarea
                       placeholder="Description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      value={localDescription}
+                      onChange={(e) => setLocalDescription(e.target.value)}
                       className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 h-24 resize-none text-sm"
                     />
                   </div>
@@ -325,9 +364,9 @@ const NewGroupModal = ({
                   </button>
                   <button
                     onClick={handleCreate}
-                    disabled={!groupName.trim() || isSubmitting}
+                    disabled={!localGroupName.trim() || isSubmitting}
                     className={`flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors ${
-                      groupName.trim() && !isSubmitting
+                      localGroupName.trim() && !isSubmitting
                         ? "bg-[#1890FF] hover:bg-blue-700"
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
