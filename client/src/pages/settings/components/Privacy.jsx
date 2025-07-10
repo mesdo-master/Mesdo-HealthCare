@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { updatePrivacySettings } from "./settingsService";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentUser } from "../../../store/features/authSlice";
 
 const dropdownOptions = {
   invitationsToConnect: [
@@ -20,6 +21,7 @@ const dropdownOptions = {
 
 const Privacy = () => {
   const { currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -89,6 +91,7 @@ const Privacy = () => {
       });
       console.log(response);
       toast.success("Privacy settings saved successfully");
+      dispatch(setCurrentUser(response.data));
     } catch (error) {
       console.error("Error saving privacy settings:", error);
       toast.error("Failed to save privacy settings");

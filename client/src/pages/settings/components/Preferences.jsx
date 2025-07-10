@@ -4,10 +4,12 @@ import {
   getPreferencesSettings,
   updatePreferencesSettings,
 } from "./settingsService";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentUser } from "../../../store/features/authSlice";
 
 const Preferences = () => {
   const { currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [language, setLanguage] = useState("English");
@@ -34,6 +36,7 @@ const Preferences = () => {
         },
       });
       toast.success("Preferences saved successfully");
+      dispatch(setCurrentUser(currentUser)); // Update Redux store
     } catch (error) {
       console.error("Error saving preferences:", error);
       toast.error("Failed to save preferences");

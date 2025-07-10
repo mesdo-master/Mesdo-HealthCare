@@ -206,17 +206,6 @@ export default function Sidebar({ className = "" }) {
                         }
                         text="Help Center"
                       />
-                      <NavItem
-                        icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
-                          />
-                        }
-                        text="Settings"
-                        navTo={"/settings"}
-                      />
                     </ul>
                   </div>
                 </>
@@ -258,6 +247,17 @@ export default function Sidebar({ className = "" }) {
                         }
                         text="Profile"
                         navTo={`/profile/${currentUser?.username}`}
+                      />
+                      <NavItem
+                        icon={
+                          <img
+                            src={SettingsIcon}
+                            alt="Settings"
+                            className="w-5 h-5"
+                          />
+                        }
+                        text="Settings"
+                        navTo={"/settings"}
                       />
 
                       <li>

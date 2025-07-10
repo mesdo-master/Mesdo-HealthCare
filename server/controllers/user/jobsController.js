@@ -4,8 +4,33 @@ const mongoose = require("mongoose");
 
 const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({}).sort({ createdAt: -1 });
-    console.log("All jobs:", jobs);
+    console.log("=== GET JOBS START ===");
+    console.log("User from middleware:", req.user?._id);
+
+    let hiddenJobIds = [];
+
+    // If user is authenticated, get their hidden jobs
+    if (req.user && req.user._id) {
+      try {
+        console.log("Fetching hidden jobs for user:", req.user._id);
+        const user = await User.findById(req.user._id).select("hiddenJobs");
+        hiddenJobIds = user && user.hiddenJobs ? user.hiddenJobs : [];
+        console.log("Hidden job IDs:", hiddenJobIds);
+      } catch (userError) {
+        console.log("Error fetching user hidden jobs:", userError);
+        // Continue without filtering if user lookup fails
+        hiddenJobIds = [];
+      }
+    }
+
+    // Fetch all jobs excluding hidden ones
+    const jobs = await Job.find({
+      _id: { $nin: hiddenJobIds },
+    }).sort({ createdAt: -1 });
+
+    console.log(
+      `Found ${jobs.length} jobs (excluding ${hiddenJobIds.length} hidden)`
+    );
     res.status(200).json(jobs);
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -81,6 +106,22 @@ const filterJobs = async (req, res) => {
     if (typeof salaryRange === "number" && salaryRange > 0) {
       query["salaryRangeFrom"] = { $lte: salaryRange };
       query["salaryRangeTo"] = { $gte: salaryRange };
+    }
+
+    // Exclude hidden jobs for authenticated user
+    let hiddenJobIds = [];
+    if (req.user && req.user._id) {
+      try {
+        const user = await User.findById(req.user._id).select("hiddenJobs");
+        hiddenJobIds = user && user.hiddenJobs ? user.hiddenJobs : [];
+      } catch (userError) {
+        console.log("Error fetching user hidden jobs:", userError);
+        hiddenJobIds = [];
+      }
+    }
+
+    if (hiddenJobIds.length > 0) {
+      query._id = { $nin: hiddenJobIds };
     }
 
     console.log("Final Filter Query:", query);
@@ -283,6 +324,101 @@ const getSavedJobs = async (req, res) => {
   }
 };
 
+const hideJob = async (req, res) => {
+  try {
+    const { jobId } = req.body;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job ID" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if job exists
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    // Check if job is already hidden
+    if (user.hiddenJobs.includes(jobId)) {
+      return res.status(400).json({ message: "Job is already hidden" });
+    }
+
+    // Add job to hidden jobs
+    user.hiddenJobs.push(jobId);
+    await user.save();
+
+    res.status(200).json({
+      message: "Job hidden successfully",
+      hiddenJobId: jobId,
+    });
+  } catch (error) {
+    console.error("Error hiding job:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const unhideJob = async (req, res) => {
+  try {
+    const { jobId } = req.body;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job ID" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if job is in hidden jobs
+    if (!user.hiddenJobs.includes(jobId)) {
+      return res.status(400).json({ message: "Job is not hidden" });
+    }
+
+    // Remove job from hidden jobs
+    user.hiddenJobs = user.hiddenJobs.filter((id) => id.toString() !== jobId);
+    await user.save();
+
+    res.status(200).json({
+      message: "Job unhidden successfully",
+      unhiddenJobId: jobId,
+    });
+  } catch (error) {
+    console.error("Error unhiding job:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getHiddenJobs = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId).populate({
+      path: "hiddenJobs",
+      model: "Job",
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Hidden jobs retrieved successfully",
+      hiddenJobs: user.hiddenJobs || [],
+    });
+  } catch (error) {
+    console.error("Error fetching hidden jobs:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getJobs,
   getEachJob,
@@ -292,4 +428,7 @@ module.exports = {
   checkSave,
   getAppliedJobs,
   getSavedJobs,
+  hideJob,
+  unhideJob,
+  getHiddenJobs,
 };

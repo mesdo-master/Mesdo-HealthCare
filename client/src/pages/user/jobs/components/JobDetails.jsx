@@ -75,74 +75,7 @@ const itemVariants = {
   },
 };
 
-const MatchPercentage = ({ job, user }) => {
-  // Weighted job match calculation (same as JobPage)
-  function calculateMatchPercentage(job, user) {
-    if (!user) return 0;
-    // --- Skills ---
-    const jobSkills = Array.isArray(job.skills)
-      ? job.skills.map((s) => s.toLowerCase())
-      : [];
-    const userSkills = Array.isArray(user.skills)
-      ? user.skills.map((s) => s.toLowerCase())
-      : [];
-    let skillScore = 0;
-    if (jobSkills.length > 0 && userSkills.length > 0) {
-      const matchedSkills = userSkills.filter((s) => jobSkills.includes(s));
-      skillScore = matchedSkills.length / jobSkills.length;
-    }
-    // --- Experience ---
-    let userExp = 0;
-    if (Array.isArray(user.workExperience) && user.workExperience.length > 0) {
-      userExp = Math.max(
-        ...user.workExperience.map((exp) => {
-          if (exp.startDate && exp.endDate) {
-            return (
-              (new Date(exp.endDate) - new Date(exp.startDate)) /
-              (1000 * 60 * 60 * 24 * 365)
-            );
-          } else if (exp.startDate && exp.currentlyWorking) {
-            return (
-              (Date.now() - new Date(exp.startDate)) /
-              (1000 * 60 * 60 * 24 * 365)
-            );
-          }
-          return 0;
-        })
-      );
-    }
-    const jobExp = Number(job.experience) || 0;
-    let expScore = 0;
-    if (jobExp > 0) {
-      expScore = Math.min(userExp / jobExp, 1);
-    } else {
-      expScore = 1;
-    }
-    // --- Location ---
-    let locationScore = 0;
-    if (user.city && job.location) {
-      locationScore =
-        user.city.toLowerCase() === job.location.toLowerCase() ? 1 : 0;
-    } else {
-      locationScore = 0.5;
-    }
-    // --- Salary ---
-    let salaryScore = 0;
-    if (user.expectedSalary && job.salaryRangeFrom && job.salaryRangeTo) {
-      salaryScore =
-        user.expectedSalary >= job.salaryRangeFrom &&
-        user.expectedSalary <= job.salaryRangeTo
-          ? 1
-          : 0;
-    } else {
-      salaryScore = 0.5;
-    }
-    // --- Weighted sum ---
-    const match =
-      skillScore * 65 + expScore * 20 + locationScore * 10 + salaryScore * 5;
-    return Math.round(match);
-  }
-
+const MatchPercentage = ({ job, user, calculateMatchPercentage }) => {
   const percentage = calculateMatchPercentage(job, user);
 
   const skills = [
@@ -162,7 +95,6 @@ const MatchPercentage = ({ job, user }) => {
     <motion.div
       variants={itemVariants}
       className="bg-white rounded-xl shadow-sm p-6 text-center border border-gray-100 mt-6"
-      layout
     >
       <h3 className="text-base font-medium text-gray-800 mb-1 text-start">
         Match Percentage
@@ -201,7 +133,6 @@ const MatchPercentageSkeleton = () => (
   <motion.div
     variants={itemVariants}
     className="bg-white rounded-xl shadow-sm p-6 text-center border border-gray-100 mt-6"
-    layout
   >
     <div className="h-4 bg-gray-200 rounded-md mb-3 animate-pulse"></div>
     <div className="h-3 bg-gray-200 rounded-md mb-6 animate-pulse"></div>
@@ -319,6 +250,73 @@ const JobDetails = ({ onClose }) => {
 
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyNote, setApplyNote] = useState("");
+
+  // Weighted job match calculation (shared function)
+  const calculateMatchPercentage = (job, user) => {
+    if (!user) return 0;
+    // --- Skills ---
+    const jobSkills = Array.isArray(job.skills)
+      ? job.skills.map((s) => s.toLowerCase())
+      : [];
+    const userSkills = Array.isArray(user.skills)
+      ? user.skills.map((s) => s.toLowerCase())
+      : [];
+    let skillScore = 0;
+    if (jobSkills.length > 0 && userSkills.length > 0) {
+      const matchedSkills = userSkills.filter((s) => jobSkills.includes(s));
+      skillScore = matchedSkills.length / jobSkills.length;
+    }
+    // --- Experience ---
+    let userExp = 0;
+    if (Array.isArray(user.workExperience) && user.workExperience.length > 0) {
+      userExp = Math.max(
+        ...user.workExperience.map((exp) => {
+          if (exp.startDate && exp.endDate) {
+            return (
+              (new Date(exp.endDate) - new Date(exp.startDate)) /
+              (1000 * 60 * 60 * 24 * 365)
+            );
+          } else if (exp.startDate && exp.currentlyWorking) {
+            return (
+              (Date.now() - new Date(exp.startDate)) /
+              (1000 * 60 * 60 * 24 * 365)
+            );
+          }
+          return 0;
+        })
+      );
+    }
+    const jobExp = Number(job.experience) || 0;
+    let expScore = 0;
+    if (jobExp > 0) {
+      expScore = Math.min(userExp / jobExp, 1);
+    } else {
+      expScore = 1;
+    }
+    // --- Location ---
+    let locationScore = 0;
+    if (user.city && job.location) {
+      locationScore =
+        user.city.toLowerCase() === job.location.toLowerCase() ? 1 : 0;
+    } else {
+      locationScore = 0.5;
+    }
+    // --- Salary ---
+    let salaryScore = 0;
+    if (user.expectedSalary && job.salaryRangeFrom && job.salaryRangeTo) {
+      salaryScore =
+        user.expectedSalary >= job.salaryRangeFrom &&
+        user.expectedSalary <= job.salaryRangeTo
+          ? 1
+          : 0;
+    } else {
+      salaryScore = 0.5;
+    }
+    // --- Weighted sum ---
+    const match =
+      skillScore * 65 + expScore * 20 + locationScore * 10 + salaryScore * 5;
+    return Math.round(match);
+  };
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -441,9 +439,6 @@ const JobDetails = ({ onClose }) => {
 
     const handleNewMessage = (newMessage) => {
       // Check if the sender is either the current user or the otherUser
-      console.log(otherUser);
-      console.log(businessProfile._id);
-      console.log("newMessage", newMessage);
       if (
         (newMessage.sender === otherUser[0] &&
           newMessage.receiver === currentUser._id) ||
@@ -581,7 +576,7 @@ const JobDetails = ({ onClose }) => {
 
   // Mock similar jobs data (you might want to fetch this from API)
   const piimage =
-    "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
+    "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_sxcncq.avif";
 
   const getRandomEmptyText = () =>
     emptyMessagesText[Math.floor(Math.random() * emptyMessagesText.length)];
@@ -779,9 +774,8 @@ const JobDetails = ({ onClose }) => {
       <motion.div
         className="flex flex-row gap-6 p-6 min-h-0"
         variants={itemVariants}
-        layout
       >
-        <motion.div className="flex-1 min-w-0 flex flex-col gap-6" layout>
+        <motion.div className="flex-1 min-w-0 flex flex-col gap-6">
           {/* Job Description Tab - Always rendered, visibility controlled */}
           <motion.div
             className={activeTab === "Job Description" ? "block" : "hidden"}
@@ -828,7 +822,6 @@ const JobDetails = ({ onClose }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     whileHover={{ scale: 1.02 }}
-                    layout
                   >
                     <item.icon className="w-5 h-5 text-[#1890FF] mb-2" />
                     <div
@@ -851,7 +844,6 @@ const JobDetails = ({ onClose }) => {
             <motion.div
               className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mt-6"
               variants={itemVariants}
-              layout
             >
               <Section title="Job Description">
                 <p className="text-gray-700 text-sm">
@@ -867,7 +859,6 @@ const JobDetails = ({ onClose }) => {
             <motion.div
               className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mt-6"
               variants={itemVariants}
-              layout
             >
               <Section title="Specialization Required">
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -888,7 +879,6 @@ const JobDetails = ({ onClose }) => {
             <motion.div
               className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mt-6"
               variants={itemVariants}
-              layout
             >
               <Section title="Additional Detail">
                 <div className="space-y-3">
@@ -936,15 +926,14 @@ const JobDetails = ({ onClose }) => {
             }}
             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           >
-            {/* Hospital Details - Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
+            {/* Hospital Details - Responsive Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Main Content (2/3 width) */}
-              <div className="lg:col-span-2 space-y-6 w-[640px]">
+              <div className="lg:col-span-2 space-y-6">
                 {/* About */}
                 <motion.div
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
                   variants={itemVariants}
-                  layout
                 >
                   <Section title="About">
                     <p className="text-sm text-gray-700 leading-relaxed">
@@ -969,7 +958,6 @@ const JobDetails = ({ onClose }) => {
                 <motion.div
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
                   variants={itemVariants}
-                  layout
                 >
                   <Section title="Specialties">
                     <div className="flex flex-wrap gap-2">
@@ -1002,7 +990,6 @@ const JobDetails = ({ onClose }) => {
                 <motion.div
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 min-h-[200px]"
                   variants={itemVariants}
-                  layout
                 >
                   <Section title="Jobs">
                     <div className="text-center py-8">
@@ -1017,7 +1004,6 @@ const JobDetails = ({ onClose }) => {
                 <motion.div
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
                   variants={itemVariants}
-                  layout
                 >
                   <Section title="People at Apollo">
                     <div className="space-y-4">
@@ -1075,12 +1061,11 @@ const JobDetails = ({ onClose }) => {
               </div>
 
               {/* Right Column - Sidebar (1/3 width) */}
-              <div className="space-y-6 w-[400px] ml-40">
+              <div className="space-y-6">
                 {/* More Information */}
                 <motion.div
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
                   variants={itemVariants}
-                  layout
                 >
                   <Section title="More Information">
                     <div className="space-y-3 text-sm">
@@ -1105,7 +1090,6 @@ const JobDetails = ({ onClose }) => {
                 <motion.div
                   className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"
                   variants={itemVariants}
-                  layout
                 >
                   <img
                     alt="Map showing the location of the branches"
@@ -1118,7 +1102,6 @@ const JobDetails = ({ onClose }) => {
                 <motion.div
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
                   variants={itemVariants}
-                  layout
                 >
                   <Section title="Address (10)">
                     <div className="space-y-4 text-sm text-gray-700">
@@ -1175,13 +1158,12 @@ const JobDetails = ({ onClose }) => {
             <motion.div
               className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
               variants={itemVariants}
-              layout
             >
               <h3 className="text-lg font-medium text-gray-800 mb-6 ">
                 Similar Jobs
               </h3>
               {similarJobs.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-6 ">
+                <div className="space-y-4">
                   {similarJobs.map((job, idx) => (
                     <motion.div
                       key={job.id || job._id}
@@ -1191,7 +1173,16 @@ const JobDetails = ({ onClose }) => {
                       whileHover={{ scale: 1.02 }}
                       className="w-full"
                     >
-                      <JobCard job={job} small />
+                      <JobCard
+                        job={{
+                          ...job,
+                          matchPercentage: calculateMatchPercentage(
+                            job,
+                            currentUser
+                          ),
+                        }}
+                        fullWidth
+                      />
                     </motion.div>
                   ))}
                 </div>
@@ -1206,19 +1197,25 @@ const JobDetails = ({ onClose }) => {
           </motion.div>
         </motion.div>
 
-        <motion.div
-          className="w-[340px] flex-shrink-0"
-          layout
-          style={{ minHeight: "400px" }}
-        >
-          {/* Show sidebar content ONLY for Job Description tab */}
-          {activeTab === "Job Description" &&
-            (job && currentUser ? (
-              <MatchPercentage key="match" job={job} user={currentUser} />
+        {/* Sidebar - simple conditional rendering */}
+        {activeTab === "Job Description" && (
+          <div
+            key={`sidebar-${activeTab}`}
+            className="w-[340px] flex-shrink-0"
+            style={{ minHeight: "400px" }}
+          >
+            {job && currentUser ? (
+              <MatchPercentage
+                key={`match-percentage-${activeTab}-${job._id}`}
+                job={job}
+                user={currentUser}
+                calculateMatchPercentage={calculateMatchPercentage}
+              />
             ) : (
-              <MatchPercentageSkeleton key="skeleton" />
-            ))}
-        </motion.div>
+              <MatchPercentageSkeleton key={`skeleton-${activeTab}`} />
+            )}
+          </div>
+        )}
       </motion.div>
 
       {/* Apply Modal with Framer Motion */}

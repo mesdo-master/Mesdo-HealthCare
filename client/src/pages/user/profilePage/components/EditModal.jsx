@@ -11,6 +11,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrentUser } from "../../../../store/features/authSlice";
 import WorkExperienceForm from "./WorkExperienceForm";
 import QualificationForm from "./QualificationForm";
 import QualificationsPreview from "./QualificationsPreview";
@@ -41,6 +43,9 @@ const EditModal = ({
   activeAchievementTab,
   setActiveAchievementTab,
 }) => {
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.auth);
+
   const [aboutData, setAboutData] = useState("");
   const [basicInformation, setBasicInformation] = useState({
     name: "",
@@ -184,6 +189,16 @@ const EditModal = ({
       const response = await axiosInstance.put(`/users/updateProfile`, {
         about: aboutData,
       });
+
+      // Update Redux store with the new about information
+      if (currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          about: aboutData,
+        };
+        dispatch(setCurrentUser(updatedUser));
+      }
+
       setIsEditing(false);
       onDataUpdate();
     } catch (error) {
@@ -205,6 +220,24 @@ const EditModal = ({
         `/users/updateProfile`,
         basicInformation
       );
+
+      // Update Redux store with the new basic information
+      if (currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          name: basicInformation.name,
+          location: {
+            ...currentUser.location,
+            state: basicInformation.state,
+            city: basicInformation.city,
+          },
+          phoneNo: basicInformation.phoneNo,
+          pronouns: basicInformation.pronouns,
+          headline: basicInformation.headline,
+        };
+        dispatch(setCurrentUser(updatedUser));
+      }
+
       setIsEditing(false);
       onDataUpdate();
     } catch (error) {

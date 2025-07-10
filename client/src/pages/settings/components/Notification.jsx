@@ -3,10 +3,12 @@ import { Switch } from "@headlessui/react";
 
 import { toast } from "react-hot-toast";
 import { updateNotificationSettings } from "./settingsService";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentUser } from "../../../store/features/authSlice";
 
 const Notification = () => {
   const { currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -48,6 +50,18 @@ const Notification = () => {
         },
       });
       toast.success("Notification settings saved successfully");
+      dispatch(
+        setCurrentUser({
+          ...currentUser,
+          notificationSettings: {
+            quietHours,
+            fromTime,
+            toTime,
+            weekendOnly,
+            notifications,
+          },
+        })
+      );
     } catch (error) {
       console.error("Error saving notification settings:", error);
       toast.error("Failed to save notification settings");

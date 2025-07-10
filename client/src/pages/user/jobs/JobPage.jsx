@@ -5,12 +5,14 @@ import JobSort from "./components/JobSort";
 import JobCard from "./components/JobCard";
 import axiosInstance from "../../../lib/axio";
 import { useNavigate, Outlet, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setFilteredJobs } from "../../../store/features/authSlice";
 import { AnimatePresence, motion } from "framer-motion";
 import ReactDOM from "react-dom";
 
 const JobPage = () => {
   const { filteredJobs, currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   const [jobs, setJobs] = useState([]);
   const navigate = useNavigate();
@@ -37,6 +39,22 @@ const JobPage = () => {
       navigate(`/jobs/${id}`);
     },
     [navigate]
+  );
+
+  // Handle job hidden - remove from current display and filtered jobs
+  const handleJobHidden = useCallback(
+    (hiddenJobId) => {
+      setJobs((prevJobs) => prevJobs.filter((job) => job._id !== hiddenJobId));
+
+      // Also remove from filtered jobs if they exist
+      if (filteredJobs) {
+        const updatedFilteredJobs = filteredJobs.filter(
+          (job) => job._id !== hiddenJobId
+        );
+        dispatch(setFilteredJobs(updatedFilteredJobs));
+      }
+    },
+    [filteredJobs, dispatch]
   );
 
   // This is called by JobDetails close button
@@ -146,6 +164,7 @@ const JobPage = () => {
                       ),
                     }}
                     onClick={() => handleJobSelect(job._id)}
+                    onJobHidden={handleJobHidden}
                   />
                 ))}
               </div>

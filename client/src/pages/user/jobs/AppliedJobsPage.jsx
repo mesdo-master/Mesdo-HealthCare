@@ -1,7 +1,12 @@
 import { BsFillBookmarkCheckFill, BsThreeDotsVertical } from "react-icons/bs";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaRegBookmark } from "react-icons/fa";
-import { ArrowLeft } from "lucide-react";
+import {
+  FaRegBookmark,
+  FaClock,
+  FaMapMarkerAlt,
+  FaBuilding,
+} from "react-icons/fa";
+import { ArrowLeft, CheckCircle, Clock, MapPin, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../lib/axio";
@@ -103,6 +108,37 @@ const AppliedJob = ({ inUserProfile }) => {
     }
   }
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "active":
+        return "from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200";
+      case "pending":
+        return "from-amber-50 to-amber-100 text-amber-700 border-amber-200";
+      case "closed":
+        return "from-red-50 to-red-100 text-red-700 border-red-200";
+      default:
+        return "from-blue-50 to-blue-100 text-blue-700 border-blue-200";
+    }
+  };
+
+  const formatSalary = (from, to) => {
+    const formatAmount = (amount) => {
+      if (amount >= 100000) {
+        return `${(amount / 100000).toFixed(1)}L`;
+      } else if (amount >= 1000) {
+        return `${(amount / 1000).toFixed(0)}K`;
+      }
+      return amount?.toString();
+    };
+
+    if (from && to) {
+      return `₹${formatAmount(from)} - ₹${formatAmount(to)}`;
+    } else if (from) {
+      return `₹${formatAmount(from)}+`;
+    }
+    return "Salary not disclosed";
+  };
+
   if (loading) {
     return (
       <div
@@ -198,59 +234,103 @@ const AppliedJob = ({ inUserProfile }) => {
               transition={{ delay: index * 0.05 }}
               whileHover={{
                 scale: 1.01,
-                y: -2,
+                y: -3,
                 boxShadow:
-                  "0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.04)",
+                  "0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.1)",
               }}
               whileTap={{ scale: 0.99 }}
-              className="bg-white/70 backdrop-blur-sm rounded-3xl px-8 py-6 mb-6 shadow-sm border border-slate-200/60 relative cursor-pointer transition-all duration-300 hover:border-slate-300/60 hover:bg-white/80"
+              className="bg-white/80 backdrop-blur-md rounded-2xl p-6 mb-6 shadow-lg border border-white/60 relative cursor-pointer transition-all duration-300 hover:border-white/80 hover:bg-white/90 group overflow-hidden"
             >
-              {/* Top Section */}
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex gap-5">
-                  <motion.div
-                    className="w-[90px] flex-shrink-0"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <div className="w-[80px] h-[80px] rounded-2xl border border-slate-200/60 shadow-sm flex items-center justify-center bg-white/80 backdrop-blur-sm overflow-hidden">
-                      <img
-                        src={
-                          job.hospitalLogo ||
-                          "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg"
-                        }
-                        alt="Hospital Logo"
-                        className="w-[70px] h-[70px] object-contain"
-                        onError={(e) => {
-                          e.target.src =
-                            "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg";
-                        }}
-                      />
-                    </div>
-                  </motion.div>
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <motion.span
-                        className="text-xs font-medium text-purple-700 bg-gradient-to-r from-purple-50 to-purple-100/80 px-3 py-1.5 rounded-full border border-purple-200/60 shadow-sm"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        {job.jobStatus || "Recently active"}
-                      </motion.span>
+              {/* Job Card Content */}
+              <div className="relative z-10">
+                {/* Header Section */}
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex gap-4 flex-1">
+                    {/* Company Logo */}
+                    <motion.div
+                      className="flex-shrink-0"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="w-16 h-16 rounded-xl border border-slate-200/60 shadow-sm flex items-center justify-center bg-white/90 backdrop-blur-sm overflow-hidden">
+                        <img
+                          src={
+                            job.hospitalLogo ||
+                            "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg"
+                          }
+                          alt="Hospital Logo"
+                          className="w-12 h-12 object-contain"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg";
+                          }}
+                        />
+                      </div>
+                    </motion.div>
+
+                    {/* Job Details */}
+                    <div className="flex-1 min-w-0">
+                      {/* Status Badge */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <motion.span
+                          className={`text-xs font-semibold px-3 py-1.5 rounded-full border shadow-sm bg-gradient-to-r ${getStatusColor(
+                            job.jobStatus
+                          )}`}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <CheckCircle className="w-3 h-3 inline-block mr-1.5" />
+                          {job.jobStatus || "Active"}
+                        </motion.span>
+                        <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Applied {formatRelativeTime(job.createdAt)}
+                        </span>
+                      </div>
+
+                      {/* Job Title */}
+                      <h3 className="text-xl font-bold text-slate-800 mb-2 leading-tight truncate">
+                        {job.jobTitle}
+                      </h3>
+
+                      {/* Company & Location */}
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <Building className="w-4 h-4 text-slate-400" />
+                          <span className="font-medium">
+                            {job.HospitalName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4 text-slate-400" />
+                          <span>{job.location}</span>
+                        </div>
+                      </div>
+
+                      {/* Job Details Tags */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {job.employmentType && (
+                          <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md font-medium">
+                            {job.employmentType.charAt(0).toUpperCase() +
+                              job.employmentType.slice(1)}
+                          </span>
+                        )}
+                        {job.experience && (
+                          <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">
+                            {job.experience}+ years
+                          </span>
+                        )}
+                        <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium">
+                          {formatSalary(job.salaryRangeFrom, job.salaryRangeTo)}
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-2 leading-tight">
-                      {job.jobTitle}
-                    </h3>
-                    <p className="text-base text-slate-600 font-medium">
-                      {job.HospitalName} | {job.location}
-                    </p>
                   </div>
-                </div>
 
-                <div className="flex flex-col items-end gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-slate-500 font-medium">
-                      Applied {formatRelativeTime(job.createdAt)}
-                    </span>
+                  {/* Right Section - Match & Actions */}
+                  <div className="flex flex-col items-end gap-3 ml-4">
+                    {/* Actions Menu */}
                     <motion.button
                       className="p-2 hover:bg-white/60 rounded-lg transition-colors backdrop-blur-sm"
                       onClick={(e) => e.stopPropagation()}
@@ -259,101 +339,139 @@ const AppliedJob = ({ inUserProfile }) => {
                     >
                       <BsThreeDotsVertical className="text-slate-400" />
                     </motion.button>
+
+                    {/* Match Percentage */}
+                    <motion.div
+                      className="flex flex-col items-center"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.4 }}
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="relative w-14 h-14">
+                        <svg
+                          className="w-14 h-14 -rotate-90"
+                          viewBox="0 0 56 56"
+                        >
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="#e5e7eb"
+                            strokeWidth="3"
+                            fill="none"
+                          />
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="url(#gradient)"
+                            strokeWidth="3"
+                            fill="none"
+                            strokeDasharray={`${
+                              (job.progress || 85) * 1.51
+                            } 151`}
+                            strokeLinecap="round"
+                            className="transition-all duration-1000"
+                          />
+                          <defs>
+                            <linearGradient
+                              id="gradient"
+                              x1="0%"
+                              y1="0%"
+                              x2="100%"
+                              y2="100%"
+                            >
+                              <stop offset="0%" stopColor="#10b981" />
+                              <stop offset="100%" stopColor="#059669" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-sm font-bold text-green-600">
+                            {job.progress || 85}%
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500 font-medium mt-1">
+                        Match
+                      </span>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Application Progress Section */}
+                <div className="bg-gradient-to-r from-slate-50/80 to-blue-50/80 rounded-xl p-4 border border-slate-200/40">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-slate-700">
+                      Application Progress
+                    </h4>
+                    <span className="text-xs text-slate-500 font-medium">
+                      {job.currentStage + 1} of {stages.length} stages
+                    </span>
                   </div>
 
-                  {/* Match Percentage - Top Right */}
-                  <motion.div
-                    className="flex flex-col items-center"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <div className="w-12 h-12 rounded-full border-4 border-green-500 bg-white/90 backdrop-blur-sm mb-1 flex items-center justify-center relative shadow-sm">
-                      <svg className="w-12 h-12 -rotate-90 absolute">
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="20"
-                          stroke="#e5e7eb"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="20"
-                          stroke="#10b981"
-                          strokeWidth="4"
-                          fill="none"
-                          strokeDasharray={`${(job.progress || 85) * 1.26} 126`}
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <span className="text-xs font-bold text-green-600 z-10">
-                        {job.progress || 85}%
-                      </span>
-                    </div>
-                    <span className="text-xs text-slate-500 font-medium">
-                      Match
-                    </span>
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Progress Section */}
-              <div className="relative">
-                <div className="w-4/5">
                   {/* Progress Bar */}
-                  <div className="relative h-2 bg-slate-100/80 rounded-full mb-4 backdrop-blur-sm">
-                    <motion.div
-                      className="absolute h-2 bg-gradient-to-r from-[#1890FF] to-[#40A9FF] rounded-full transition-all duration-500 shadow-sm"
-                      style={{
-                        width: `${
-                          (job.currentStage / (stages.length - 1)) * 100
-                        }%`,
-                      }}
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${
-                          (job.currentStage / (stages.length - 1)) * 100
-                        }%`,
-                      }}
-                      transition={{ duration: 0.8, delay: 0.2 }}
-                    />
+                  <div className="relative">
+                    <div className="h-2 bg-slate-200/60 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-[#1890FF] to-[#40A9FF] rounded-full"
+                        style={{
+                          width: `${
+                            ((job.currentStage || 0) / (stages.length - 1)) *
+                            100
+                          }%`,
+                        }}
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${
+                            ((job.currentStage || 0) / (stages.length - 1)) *
+                            100
+                          }%`,
+                        }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                      />
+                    </div>
 
                     {/* Stage Indicators */}
-                    <div className="absolute top-1/2 left-0 w-full flex justify-between -translate-y-1/2 px-0">
+                    <div className="absolute top-1/2 left-0 w-full flex justify-between -translate-y-1/2">
                       {stages.map((_, idx) => (
                         <motion.div
                           key={idx}
-                          className={`w-4 h-4 rounded-full border-2 transition-all duration-300 shadow-sm backdrop-blur-sm ${
-                            idx <= job.currentStage
-                              ? "bg-[#1890FF] border-[#1890FF]"
-                              : "bg-white/80 border-slate-300/60"
+                          className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
+                            idx <= (job.currentStage || 0)
+                              ? "bg-[#1890FF] border-[#1890FF] shadow-sm"
+                              : "bg-white border-slate-300"
                           }`}
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ delay: idx * 0.1 + 0.3 }}
-                          whileHover={{ scale: 1.2 }}
                         />
                       ))}
                     </div>
                   </div>
 
                   {/* Stage Labels */}
-                  <div className="flex justify-between text-xs text-slate-600 font-medium">
+                  <div className="flex justify-between mt-3">
                     {stages.map((stage, index) => (
-                      <span
+                      <div
                         key={index}
-                        className={`w-1/4 text-left leading-tight ${
-                          index === job.currentStage
-                            ? "text-[#1890FF] font-semibold"
-                            : ""
+                        className={`flex-1 text-center ${
+                          index < stages.length - 1 ? "pr-2" : ""
                         }`}
                       >
-                        {stage}
-                      </span>
+                        <span
+                          className={`text-xs leading-tight font-medium ${
+                            index === (job.currentStage || 0)
+                              ? "text-[#1890FF] font-semibold"
+                              : index <= (job.currentStage || 0)
+                              ? "text-green-600"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          {stage}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </div>

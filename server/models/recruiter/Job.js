@@ -148,4 +148,23 @@ jobSchema.pre(["updateOne", "findOneAndUpdate"], function (next) {
   next();
 });
 
+// Create text index for search functionality, excluding language field
+jobSchema.index(
+  {
+    jobTitle: "text",
+    jobCategory: "text",
+    location: "text",
+    skills: "text",
+    qualification: "text",
+    department: "text",
+    specialization: "text",
+    jobDescription: "text",
+    HospitalName: "text",
+  },
+  {
+    default_language: "english",
+    language_override: "textLanguage", // Use a field that doesn't exist to avoid conflicts
+  }
+);
+
 module.exports = mongoose.model("Job", jobSchema);

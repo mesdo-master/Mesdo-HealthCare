@@ -11,8 +11,13 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrentUser } from "../../../../store/features/authSlice";
 
 const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.auth);
+
   const [profileImage, setProfileImage] = useState(
     userData?.profilePicture || "/default-avatar.png"
   );
@@ -60,6 +65,16 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       });
 
       setProfileImage(imageUrl);
+
+      // Update Redux store if this is the current user's profile
+      if (isOwnProfile && currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          profilePicture: imageUrl,
+        };
+        dispatch(setCurrentUser(updatedUser));
+      }
+
       if (onDataUpdate) onDataUpdate();
     } catch (error) {
       console.error("Error uploading profile image:", error);
@@ -92,6 +107,16 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       });
 
       setBannerImage(imageUrl);
+
+      // Update Redux store if this is the current user's profile
+      if (isOwnProfile && currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          Banner: imageUrl,
+        };
+        dispatch(setCurrentUser(updatedUser));
+      }
+
       if (onDataUpdate) onDataUpdate();
     } catch (error) {
       console.error("Error uploading banner image:", error);

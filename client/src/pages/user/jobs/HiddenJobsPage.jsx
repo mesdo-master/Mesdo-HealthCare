@@ -99,47 +99,7 @@ const HiddenJobs = () => {
         setHiddenJobs(res.data.hiddenJobs || []);
       } catch (error) {
         console.log("Error fetching hidden jobs:", error);
-        // Fallback to demo data if API fails
-        setHiddenJobs([
-          {
-            _id: "1",
-            jobTitle: "Dermatologist Specialist",
-            HospitalName: "Apollo Hospital",
-            location: "Mumbai, Maharashtra",
-            hospitalLogo:
-              "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg",
-            saved: true,
-            createdAt: new Date(
-              Date.now() - 2 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-            jobStatus: "Recently active",
-            employmentType: "Full-time",
-            experience: "2-5 Years",
-            salaryRangeFrom: 800000,
-            salaryRangeTo: 1200000,
-            qualification: "MBBS",
-            matchPercentage: 88,
-          },
-          {
-            _id: "2",
-            jobTitle: "Cardiologist",
-            HospitalName: "Fortis Hospital",
-            location: "Delhi, India",
-            hospitalLogo:
-              "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg",
-            saved: true,
-            createdAt: new Date(
-              Date.now() - 1 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-            jobStatus: "Recently active",
-            employmentType: "Part-time",
-            experience: "5-8 Years",
-            salaryRangeFrom: 1000000,
-            salaryRangeTo: 1500000,
-            qualification: "MD Cardiology",
-            matchPercentage: 92,
-          },
-        ]);
+        setHiddenJobs([]); // Set empty array instead of demo data
       } finally {
         setLoading(false);
       }

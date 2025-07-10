@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { uploadProfilePic } from "../../store/features/user/profileSlice";
+import { setCurrentUser } from "../../store/features/authSlice";
 import { MdCancel, MdOutlineCancel } from "react-icons/md";
 
 const Tab = ({ label, isActive, onClick }) => (
@@ -37,6 +38,7 @@ const Tab = ({ label, isActive, onClick }) => (
 
 const Settings = () => {
   const { currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch(); // Add dispatch
   const [activeTab, setActiveTab] = useState("Account");
 
   const [formData, setFormData] = useState({
@@ -84,10 +86,19 @@ const Settings = () => {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      await updateAccountSettings({
+      const response = await updateAccountSettings({
         phoneNo: formData.phoneNo,
         about: formData.bio,
       });
+
+      // Update Redux store with the new user data
+      const updatedUser = {
+        ...currentUser,
+        phoneNo: formData.phoneNo,
+        about: formData.bio,
+      };
+      dispatch(setCurrentUser(updatedUser));
+
       toast.success("Settings saved successfully");
     } catch (error) {
       console.error("Error saving settings:", error);
@@ -110,10 +121,20 @@ const Settings = () => {
       try {
         setIsLoading(true);
         const response = await dispatch(uploadProfilePic(file));
+        const newProfilePicUrl = response.payload;
+
         setFormData((prevData) => ({
           ...prevData,
-          profilePic: response.payload,
+          profilePic: newProfilePicUrl,
         }));
+
+        // Update Redux store with the new profile picture
+        const updatedUser = {
+          ...currentUser,
+          profilePicture: newProfilePicUrl,
+        };
+        dispatch(setCurrentUser(updatedUser));
+
         toast.success("Profile image updated successfully");
       } catch (error) {
         console.error("Error uploading profile image:", error);
@@ -124,8 +145,6 @@ const Settings = () => {
     }
   };
 
-  const dispatch = useDispatch();
-
   const handleImageUpload = async (e) => {
     const image = e.target.files[0];
 
@@ -135,10 +154,20 @@ const Settings = () => {
     }
 
     const response = await dispatch(uploadProfilePic(image));
+    const newProfilePicUrl = response.payload;
+
     setFormData((prevData) => ({
       ...prevData,
-      profilePic: response.payload,
+      profilePic: newProfilePicUrl,
     }));
+
+    // Update Redux store with the new profile picture
+    const updatedUser = {
+      ...currentUser,
+      profilePicture: newProfilePicUrl,
+    };
+    dispatch(setCurrentUser(updatedUser));
+
     toast.success("Profile image updated");
   };
 
