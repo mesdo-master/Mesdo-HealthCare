@@ -13,6 +13,7 @@ import Interest from "./components/Interest";
 import {
   checkAuth,
   updateFormDataFunc,
+  completeOnboarding,
 } from "../../../store/features/authSlice";
 
 const Onboarding = () => {
@@ -106,23 +107,39 @@ const Onboarding = () => {
     setIsLoading(true);
     console.log("Finishing onboarding with data:", formData);
     try {
-      const response = await axiosInstance.post(
-        "/onboarding/complete-onboarding",
-        formData
-      );
-      console.log("Data saved successfully:", response.data);
+      // Use the Redux async thunk for proper state management
+      const resultAction = await dispatch(completeOnboarding(formData));
 
-      // Update local formData
-      const updatedFormData = { ...formData, onboardingCompleted: true };
-      setFormData(updatedFormData);
+      if (completeOnboarding.fulfilled.match(resultAction)) {
+        console.log("Data saved successfully:", resultAction.payload);
 
-      // Dispatch to Redux store
-      dispatch(updateFormDataFunc(updatedFormData));
-      dispatch(checkAuth());
-      // Redirect to home page
-      navigate(`/profile/${currentUser?.username}`);
+        // Update local formData
+        const updatedFormData = { ...formData, onboardingCompleted: true };
+        setFormData(updatedFormData);
+
+        // Dispatch to Redux store (already handled by the async thunk)
+        dispatch(updateFormDataFunc(updatedFormData));
+
+        // Wait a bit for state to update, then navigate
+        setTimeout(() => {
+          // Navigate to profile using username from updated currentUser or fallback
+          const updatedUser = resultAction.payload?.user;
+          const username = updatedUser?.username || currentUser?.username;
+
+          if (username) {
+            navigate(`/profile/${username}`);
+          } else {
+            // Fallback to home if username is not available
+            navigate("/");
+          }
+        }, 500);
+      } else {
+        // Handle error case
+        console.error("Error saving data:", resultAction.payload);
+        // Could show error message to user here
+      }
     } catch (error) {
-      console.error("Error saving data:", error.response?.data || error);
+      console.error("Error saving data:", error);
       // Handle error (e.g., show error message)
     } finally {
       setIsLoading(false);

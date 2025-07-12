@@ -72,6 +72,7 @@ const OverviewTab = ({
               />
 
               <WorkExperienceDisplay
+                userData={userData}
                 isOwnProfile={isOwnProfile}
                 openModal={openModal}
                 setActiveModalTab={setActiveModalTab}

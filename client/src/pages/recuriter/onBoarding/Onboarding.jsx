@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import OrganizationInformation from "./components/OrganizationInformation";
 import About from "./components/About";
 import Location from "./components/Location";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   completeRecruiterOnboarding,
   organizationLogoUpload,
@@ -12,7 +12,9 @@ import { useNavigate } from "react-router-dom";
 const OnboardingRecruiter = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { currentUser } = useSelector((state) => state.auth);
   const [step, setStep] = useState(1); // Tracks the current step (1, 2, or 3)
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     website: "",
@@ -69,13 +71,43 @@ const OnboardingRecruiter = () => {
     setStep((prevStep) => prevStep - 1);
   };
 
-  // Simulate saving to a database
+  // Improved save to database function
   const saveToDatabase = async () => {
+    setIsLoading(true);
     console.log("Saving to database:", formData);
-    const response = await dispatch(completeRecruiterOnboarding(formData));
-    console.log("Response from saveToDatabase:", response);
-    navigate("/");
-    alert("Organization data saved successfully!");
+
+    try {
+      // Use the Redux async thunk for proper state management
+      const resultAction = await dispatch(
+        completeRecruiterOnboarding(formData)
+      );
+
+      if (completeRecruiterOnboarding.fulfilled.match(resultAction)) {
+        console.log("Data saved successfully:", resultAction.payload);
+
+        // Wait a bit for state to update, then navigate
+        setTimeout(() => {
+          // Navigate based on available username or fallback to home
+          const username = currentUser?.username;
+
+          if (username) {
+            navigate(`/recuriter/dashboard`);
+          } else {
+            // Fallback to home if username is not available
+            navigate("/");
+          }
+        }, 500);
+      } else {
+        // Handle error case
+        console.error("Error saving data:", resultAction.payload);
+        alert("Error saving organization data. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+      alert("Error saving organization data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Render the current step
@@ -106,6 +138,7 @@ const OnboardingRecruiter = () => {
             updateFormData={updateFormData}
             prevStep={prevStep}
             saveToDatabase={saveToDatabase}
+            isLoading={isLoading}
           />
         );
       default:

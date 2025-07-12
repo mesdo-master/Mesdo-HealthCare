@@ -58,9 +58,17 @@ export const logoutUser = createAsyncThunk(
 // Complete normal onboarding
 export const completeOnboarding = createAsyncThunk(
   "auth/completeOnboarding",
-  async (_, { rejectWithValue }) => {
+  async (formData, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axiosInstance.post("/complete-onboarding", {}, { withCredentials: true });
+      const response = await axiosInstance.post(
+        "/onboarding/complete-onboarding",
+        formData,
+        { withCredentials: true }
+      );
+
+      // After successful onboarding, refresh auth to get updated user data
+      dispatch(checkAuth());
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -71,9 +79,17 @@ export const completeOnboarding = createAsyncThunk(
 // ✅ Complete recruiter onboarding
 export const completeRecruiterOnboarding = createAsyncThunk(
   "auth/completeRecruiterOnboarding",
-  async (formData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axiosInstance.post("onboarding/complete-recruiter-onboarding", formData, { withCredentials: true });
+      const response = await axiosInstance.post(
+        "onboarding/complete-recruiter-onboarding",
+        formData,
+        { withCredentials: true }
+      );
+
+      // After successful onboarding, refresh auth to get updated user data
+      dispatch(checkAuth());
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -81,15 +97,18 @@ export const completeRecruiterOnboarding = createAsyncThunk(
   }
 );
 
-
 export const organizationLogoUpload = createAsyncThunk(
   "auth/organizationLogoUpload",
   async (image, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-        formData.append('orgLogo', image);
-      const response = await axiosInstance.post("recuriter/organizationLogoUpload", formData, { withCredentials: true });
-      console.log("Org logo: response -> ",response)
+      formData.append("orgLogo", image);
+      const response = await axiosInstance.post(
+        "recuriter/organizationLogoUpload",
+        formData,
+        { withCredentials: true }
+      );
+      console.log("Org logo: response -> ", response);
       return response.data.recruiter.orgLogo;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -101,7 +120,7 @@ export const organizationLogoUpload = createAsyncThunk(
 const savedMode = localStorage.getItem("mode") || "individual";
 
 const initialState = {
-  filteredJobs:null,
+  filteredJobs: null,
   isAuthenticated: false,
   authChecked: false,
   currentUser: null,
@@ -162,8 +181,10 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.currentUser = action.payload.user;
         state.businessProfile = action.payload.orgInfo || null;
-        state.formData.onboardingCompleted = action.payload.user.onboardingCompleted || false;
-        state.formData.recruiterOnboardingCompleted = action.payload.user.recruiterOnboardingCompleted || false;
+        state.formData.onboardingCompleted =
+          action.payload.user.onboardingCompleted || false;
+        state.formData.recruiterOnboardingCompleted =
+          action.payload.user.recruiterOnboardingCompleted || false;
         state.error = null;
         state.loading = false;
         state.authChecked = true;
@@ -203,14 +224,14 @@ const authSlice = createSlice({
         state.currentUser = action.payload;
         state.error = null;
         state.loading = false;
-        state.authChecked = true
+        state.authChecked = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isAuthenticated = false;
         state.currentUser = null;
         state.error = action.payload;
         state.loading = false;
-        state.authChecked = true
+        state.authChecked = true;
       })
 
       .addCase(logoutUser.pending, (state) => {
@@ -250,9 +271,16 @@ const authSlice = createSlice({
       .addCase(completeOnboarding.pending, (state) => {
         state.loading = true;
       })
-      .addCase(completeOnboarding.fulfilled, (state) => {
+      .addCase(completeOnboarding.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
+
+        // Update currentUser with the returned data from server
+        if (action.payload && action.payload.user) {
+          state.currentUser = action.payload.user;
+        }
+
+        // Update onboarding status
         if (state.currentUser) {
           state.currentUser.onboardingCompleted = true;
         }
@@ -267,9 +295,16 @@ const authSlice = createSlice({
       .addCase(completeRecruiterOnboarding.pending, (state) => {
         state.loading = true;
       })
-      .addCase(completeRecruiterOnboarding.fulfilled, (state) => {
+      .addCase(completeRecruiterOnboarding.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
+
+        // Update currentUser with the returned data from server
+        if (action.payload && action.payload.user) {
+          state.currentUser = action.payload.user;
+        }
+
+        // Update recruiter onboarding status
         if (state.currentUser) {
           state.currentUser.recruiterOnboardingCompleted = true;
         }

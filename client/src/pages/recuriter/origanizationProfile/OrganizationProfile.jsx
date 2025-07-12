@@ -353,6 +353,10 @@ const TabsSection = ({
     if (userData && userData.about) {
       setAboutData(userData.about);
       setEditData({ description: userData.about });
+    } else if (userData && userData.overview) {
+      // Use overview field as fallback for about
+      setAboutData(userData.overview);
+      setEditData({ description: userData.overview });
     }
   }, [userData]);
 
@@ -369,32 +373,85 @@ const TabsSection = ({
   };
 
   const [moreInfo, setMoreInfo] = useState({
-    website: "www.apollo.com",
-    organizationSize: "1000-5000",
-    type: "Public",
-    founded: "1999",
-    industry: "Hospital & Healthcare",
-    socials: "Hospital & Healthcare",
+    website: "",
+    organizationSize: "",
+    type: "",
+    founded: "",
+    industry: "",
+    socials: "",
   });
-  const [addresses, setAddresses] = useState([
-    {
-      address: "Apollo Hospitals Hyderabad Hyderabad, Telangana 500033, IN",
-      isMain: true,
-    },
-    {
-      address: "Apollo Hospitals Mumbai Mumbai, Maharashtra 400001, IN",
-      isMain: false,
-    },
-  ]);
 
-  const handleSaveMoreInfo = (updatedInfo) => {
-    setMoreInfo(updatedInfo);
-    setIsEditing(false);
+  // Update moreInfo when userData changes
+  useEffect(() => {
+    if (userData) {
+      setMoreInfo({
+        website: userData.website || "",
+        organizationSize: userData.organizationSize || "",
+        type: userData.organizationType || "",
+        founded: userData.founded || "",
+        industry: userData.industry || "",
+        socials: userData.socials || "",
+      });
+    }
+  }, [userData]);
+
+  const [addresses, setAddresses] = useState([]);
+
+  // Update addresses when userData changes
+  useEffect(() => {
+    if (userData) {
+      const addressList = [];
+      if (userData.locationName || userData.locationAddress) {
+        addressList.push({
+          address: userData.locationAddress || userData.locationName || "",
+          isMain: true,
+        });
+      }
+      setAddresses(addressList);
+    }
+  }, [userData]);
+
+  const handleSaveMoreInfo = async (updatedInfo) => {
+    try {
+      const response = await axiosInstance.put(`/recuriter/updateProfile`, {
+        website: updatedInfo.website,
+        organizationSize: updatedInfo.organizationSize,
+        organizationType: updatedInfo.type,
+        founded: updatedInfo.founded,
+        industry: updatedInfo.industry,
+        socials: updatedInfo.socials,
+      });
+
+      if (response.data.success) {
+        setMoreInfo(updatedInfo);
+        setIsEditing(false);
+        console.log("More information updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating more information:", error);
+      alert("Error updating organization information. Please try again.");
+    }
   };
 
-  const handleSaveAddresses = (updatedAddresses) => {
-    setAddresses(updatedAddresses);
-    setIsEditing(false);
+  const handleSaveAddresses = async (updatedAddresses) => {
+    try {
+      const mainAddress =
+        updatedAddresses.find((addr) => addr.isMain) || updatedAddresses[0];
+
+      const response = await axiosInstance.put(`/recuriter/updateProfile`, {
+        locationName: mainAddress?.address?.split(",")[0] || "",
+        locationAddress: mainAddress?.address || "",
+      });
+
+      if (response.data.success) {
+        setAddresses(updatedAddresses);
+        setIsEditing(false);
+        console.log("Addresses updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating addresses:", error);
+      alert("Error updating addresses. Please try again.");
+    }
   };
 
   return (
@@ -946,45 +1003,15 @@ const TabsSection = ({
 
 const OrganizationProfile = () => {
   const [activeTab, setActiveTab] = useState("Overview");
-  const [moreInfo, setMoreInfo] = useState({
-    website: "www.apollo.com",
-    organizationSize: "1000-5000",
-    type: "Public",
-    founded: "1999",
-    industry: "Hospital & Healthcare",
-    socials: "Hospital & Healthcare",
-  });
-  const [addresses, setAddresses] = useState([
-    {
-      address: "Apollo Hospitals Hyderabad Hyderabad, Telangana 500033, IN",
-      isMain: true,
-    },
-    {
-      address: "Apollo Hospitals Mumbai Mumbai, Maharashtra 400001, IN",
-      isMain: false,
-    },
-  ]);
   const [isEditing, setIsEditing] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("");
 
-  const handleSaveMoreInfo = (updatedInfo) => {
-    setMoreInfo(updatedInfo);
-    setIsEditing(false);
-  };
-
-  const handleSaveAddresses = (updatedAddresses) => {
-    setAddresses(updatedAddresses);
-    setIsEditing(false);
-  };
-
   const { businessProfile } = useSelector((state) => state.auth);
-
   const [orgData, setOrgData] = useState();
-
   const dispatch = useDispatch();
-
   const { orgname } = useParams();
 
+  // Fetch organization data first
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -1002,19 +1029,150 @@ const OrganizationProfile = () => {
     }
   }, [orgname, dispatch]);
 
+  // Determine userData after fetching
   const isOwnProfile = businessProfile?._id === orgData?._id;
   const userData = isOwnProfile ? businessProfile : orgData;
 
   const SIDEBAR_WIDTH = "200px";
 
   const [editData, setEditData] = useState({ description: "" });
-  const [userSkills, setUserSkills] = useState([
-    "CPR Certified",
-    "Patient Care",
-    "EMT",
-  ]);
+  const [userSkills, setUserSkills] = useState([]);
   const [experiences, setExperiences] = useState([]);
   const [editingExperience, setEditingExperience] = useState(null);
+
+  const [moreInfo, setMoreInfo] = useState({
+    website: "",
+    organizationSize: "",
+    type: "",
+    founded: "",
+    industry: "",
+    socials: "",
+  });
+  const [addresses, setAddresses] = useState([]);
+
+  // Initialize skills based on industry and set up about data
+  useEffect(() => {
+    if (userData) {
+      // Set about data
+      if (userData.about) {
+        setEditData({ description: userData.about });
+      } else if (userData.overview) {
+        setEditData({ description: userData.overview });
+      }
+
+      // Set industry-based skills
+      const industrySkills = {
+        healthcare: [
+          "Patient Care",
+          "Medical Knowledge",
+          "Emergency Response",
+          "Healthcare Compliance",
+        ],
+        technology: [
+          "Software Development",
+          "Data Analysis",
+          "Cloud Computing",
+          "AI/ML",
+        ],
+        finance: [
+          "Financial Analysis",
+          "Risk Management",
+          "Compliance",
+          "Investment Banking",
+        ],
+        education: [
+          "Curriculum Development",
+          "Student Assessment",
+          "Educational Technology",
+          "Academic Research",
+        ],
+        manufacturing: [
+          "Quality Control",
+          "Process Optimization",
+          "Safety Management",
+          "Supply Chain",
+        ],
+      };
+
+      const skills = industrySkills[userData.industry?.toLowerCase()] || [
+        "Industry Expertise",
+        "Professional Services",
+        "Team Management",
+      ];
+      setUserSkills(skills);
+    }
+  }, [userData]);
+
+  // Update moreInfo when userData changes
+  useEffect(() => {
+    if (userData) {
+      setMoreInfo({
+        website: userData.website || "",
+        organizationSize: userData.organizationSize || "",
+        type: userData.organizationType || "",
+        founded: userData.founded || "",
+        industry: userData.industry || "",
+        socials: userData.socials || "",
+      });
+    }
+  }, [userData]);
+
+  // Update addresses when userData changes
+  useEffect(() => {
+    if (userData) {
+      const addressList = [];
+      if (userData.locationName || userData.locationAddress) {
+        addressList.push({
+          address: userData.locationAddress || userData.locationName || "",
+          isMain: true,
+        });
+      }
+      setAddresses(addressList);
+    }
+  }, [userData]);
+
+  const handleSaveMoreInfo = async (updatedInfo) => {
+    try {
+      const response = await axiosInstance.put(`/recuriter/updateProfile`, {
+        website: updatedInfo.website,
+        organizationSize: updatedInfo.organizationSize,
+        organizationType: updatedInfo.type,
+        founded: updatedInfo.founded,
+        industry: updatedInfo.industry,
+        socials: updatedInfo.socials,
+      });
+
+      if (response.data.success) {
+        setMoreInfo(updatedInfo);
+        setIsEditing(false);
+        console.log("More information updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating more information:", error);
+      alert("Error updating organization information. Please try again.");
+    }
+  };
+
+  const handleSaveAddresses = async (updatedAddresses) => {
+    try {
+      const mainAddress =
+        updatedAddresses.find((addr) => addr.isMain) || updatedAddresses[0];
+
+      const response = await axiosInstance.put(`/recuriter/updateProfile`, {
+        locationName: mainAddress?.address?.split(",")[0] || "",
+        locationAddress: mainAddress?.address || "",
+      });
+
+      if (response.data.success) {
+        setAddresses(updatedAddresses);
+        setIsEditing(false);
+        console.log("Addresses updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating addresses:", error);
+      alert("Error updating addresses. Please try again.");
+    }
+  };
 
   const handleChange = (e) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });

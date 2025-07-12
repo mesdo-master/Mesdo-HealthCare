@@ -12,7 +12,26 @@ const EducationSection = ({
   const [qualifications, setQualifications] = useState([]);
 
   useEffect(() => {
-    fetchQualifications();
+    // Use userData.education from props (populated after onboarding) first
+    if (userData?.education && userData.education.length > 0) {
+      const formattedEducation = userData.education.map((edu, index) => ({
+        ...edu,
+        id: edu._id || `education_${index}`,
+        qualification: edu.degree || edu.qualification || "Degree",
+        course: edu.fieldOfStudy || edu.course || "",
+        university: edu.schoolName || edu.university || "",
+        passingYear: edu.endDate
+          ? new Date(edu.endDate).getFullYear()
+          : edu.passingYear,
+        specialization: edu.specialization || "",
+        description: edu.description || "",
+        skills: edu.skills || [],
+      }));
+      setQualifications(formattedEducation);
+    } else {
+      // Fallback to API call if no education in userData
+      fetchQualifications();
+    }
   }, [userData]);
 
   const fetchQualifications = async () => {
@@ -28,6 +47,8 @@ const EducationSection = ({
       }
     } catch (error) {
       console.error("Error fetching qualifications:", error);
+      // Don't show error to user, just leave empty
+      setQualifications([]);
     }
   };
 
@@ -84,91 +105,117 @@ const EducationSection = ({
         )}
       </div>
       <div className="space-y-4">
-        {qualifications.map((qualification, index) => (
-          <div
-            key={qualification.id || index}
-            className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg"
-          >
-            <div className="bg-blue-100 w-10 h-10 flex justify-center items-center rounded-lg">
-              <GraduationCap className="text-blue-600 w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h3 className="text-[14px] font-medium text-gray-900 mr-2">
-                  {qualification.qualification}
-                </h3>
-                {qualification.course && (
-                  <>
-                    <span className="text-[12px] text-gray-400 font-medium">
-                      |
+        {qualifications && qualifications.length > 0 ? (
+          qualifications.map((qualification, index) => (
+            <div
+              key={qualification.id || index}
+              className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg"
+            >
+              <div className="bg-blue-100 w-10 h-10 flex justify-center items-center rounded-lg">
+                <GraduationCap className="text-blue-600 w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h3 className="text-[14px] font-medium text-gray-900 mr-2">
+                    {qualification.qualification ||
+                      qualification.degree ||
+                      "Degree"}
+                  </h3>
+                  {(qualification.course || qualification.fieldOfStudy) && (
+                    <>
+                      <span className="text-[12px] text-gray-400 font-medium">
+                        |
+                      </span>
+                      <span className="text-[12px] text-gray-600">
+                        {qualification.course || qualification.fieldOfStudy}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 text-[12px] text-gray-600 mb-1">
+                  {(qualification.university || qualification.schoolName) && (
+                    <span>
+                      {qualification.university || qualification.schoolName}
                     </span>
-                    <span className="text-[12px] text-gray-600">
-                      {qualification.course}
-                    </span>
-                  </>
+                  )}
+                  {(qualification.university || qualification.schoolName) &&
+                    qualification.passingYear && <span>·</span>}
+                  {qualification.passingYear && (
+                    <span>{qualification.passingYear}</span>
+                  )}
+                </div>
+                {qualification.specialization && (
+                  <p className="text-[12px] text-gray-500 mt-1">
+                    {qualification.specialization}
+                  </p>
+                )}
+                {qualification.description && (
+                  <div className="mt-2 text-[14px] text-gray-600">
+                    {qualification.description.split("\n").map((line, i) => {
+                      const cleanLine = line.replace(/<[^>]*>/g, "").trim();
+                      return cleanLine ? (
+                        <p key={i} className="mb-1">
+                          {cleanLine}
+                        </p>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+                {qualification.skills && qualification.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {qualification.skills.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="bg-gray-100 text-gray-700 rounded-full px-3 py-1 text-[12px] font-medium"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 text-[12px] text-gray-600 mb-1">
-                {qualification.university && (
-                  <span>{qualification.university}</span>
-                )}
-                {qualification.university && qualification.passingYear && (
-                  <span>·</span>
-                )}
-                {qualification.passingYear && (
-                  <span>{qualification.passingYear}</span>
-                )}
-              </div>
-              {qualification.specialization && (
-                <p className="text-[12px] text-gray-500 mt-1">
-                  {qualification.specialization}
-                </p>
-              )}
-              {qualification.description && (
-                <div className="mt-2 text-[14px] text-gray-600">
-                  {qualification.description.split("\n").map((line, i) => {
-                    const cleanLine = line.replace(/<[^>]*>/g, "").trim();
-                    return cleanLine ? (
-                      <p key={i} className="mb-1">
-                        {cleanLine}
-                      </p>
-                    ) : null;
-                  })}
-                </div>
-              )}
-              {qualification.skills && qualification.skills.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {qualification.skills.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="bg-gray-100 text-gray-700 rounded-full px-3 py-1 text-[12px] font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+              {isOwnProfile && (
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    onClick={() => handleEditQualification(qualification)}
+                    className="text-gray-400 hover:text-gray-600 p-2 rounded-full transition"
+                    aria-label="Edit qualification"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteQualification(qualification.id)}
+                    className="text-gray-400 hover:text-red-500 p-2 rounded-full transition"
+                    aria-label="Delete qualification"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <GraduationCap className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              No education added
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Get started by adding your educational background.
+            </p>
             {isOwnProfile && (
-              <div className="flex flex-col items-center gap-2">
+              <div className="mt-6">
                 <button
-                  onClick={() => handleEditQualification(qualification)}
-                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full transition"
-                  aria-label="Edit qualification"
+                  onClick={() => openModal("Qualification")}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteQualification(qualification.id)}
-                  className="text-gray-400 hover:text-red-500 p-2 rounded-full transition"
-                  aria-label="Delete qualification"
-                >
-                  <Trash2 className="w-4 h-4" />
+                  <GraduationCap className="-ml-1 mr-2 h-5 w-5" />
+                  Add Education
                 </button>
               </div>
             )}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

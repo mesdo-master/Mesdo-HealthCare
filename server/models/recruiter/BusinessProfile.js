@@ -45,6 +45,12 @@ const businessProfileSchema = new mongoose.Schema(
     locationAddress: {
       type: String,
     },
+    founded: {
+      type: String,
+    },
+    socials: {
+      type: String,
+    },
 
     followers: [
       {

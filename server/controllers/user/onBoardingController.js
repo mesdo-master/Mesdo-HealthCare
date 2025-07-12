@@ -133,11 +133,32 @@ const completeOnboarding = async (req, res) => {
     // Save the updated user document to the database
     await user.save();
 
-    // Send success response
+    // Send success response with the updated user data
     res.json({
       message: "Onboarding completed",
       success: true,
-      username: user.username,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        phoneNo: user.phoneNo,
+        gender: user.gender,
+        location: user.location,
+        headline: user.headline,
+        about: user.about,
+        dob: user.dob,
+        education: user.education,
+        experience: user.experience,
+        skills: user.skills,
+        achievements: user.achievements,
+        interests: user.interests,
+        onboardingCompleted: user.onboardingCompleted,
+        recruiterOnboardingCompleted: user.recruiterOnboardingCompleted,
+        profilePicture: user.profilePicture,
+        role: user.role,
+        resume: user.resume,
+      },
     });
   } catch (error) {
     console.error("Error in completeOnboarding:", error);
@@ -273,10 +294,27 @@ const completeRecruiterOnboarding = async (req, res) => {
     user.recruiterOnboardingCompleted = true;
     await user.save();
 
-    // Send success response
+    // Send success response with updated user data and business profile
     res.json({
       message: "Recruiter onboarding completed",
       success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        phoneNo: user.phoneNo,
+        gender: user.gender,
+        location: user.location,
+        headline: user.headline,
+        about: user.about,
+        dob: user.dob,
+        onboardingCompleted: user.onboardingCompleted,
+        recruiterOnboardingCompleted: user.recruiterOnboardingCompleted,
+        profilePicture: user.profilePicture,
+        role: user.role,
+      },
+      businessProfile: businessProfile,
     });
   } catch (error) {
     console.error("Error in completeRecruiterOnboarding:", error);
