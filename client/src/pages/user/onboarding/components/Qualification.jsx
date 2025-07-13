@@ -21,8 +21,16 @@ const Qualification = ({
 }) => {
   const [universities, setUniversities] = useState([]);
   const [qualifications, setQualifications] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [specializations, setSpecializations] = useState([]);
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [customUniversity, setCustomUniversity] = useState("");
+  const [loading, setLoading] = useState({
+    universities: false,
+    qualifications: false,
+    courses: false,
+    specializations: false,
+  });
   const [formValues, setFormValues] = useState({
     qualification: "",
     university: "",
@@ -40,6 +48,18 @@ const Qualification = ({
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState("");
 
+  // Initialize qualifications with existing data when component mounts
+  useEffect(() => {
+    if (
+      formData &&
+      formData.qualifications &&
+      formData.qualifications.length > 0
+    ) {
+      setQualList(formData.qualifications);
+      setShowPreview(true);
+    }
+  }, [formData]);
+
   const modules = {
     toolbar: [
       [{ header: [1, 2, false] }],
@@ -51,30 +71,472 @@ const Qualification = ({
     ],
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
+  // Fetch Universities from APIs
+  const fetchUniversities = async () => {
+    setLoading((prev) => ({ ...prev, universities: true }));
+    try {
+      let allUniversities = [];
+
+      // Try multiple API sources for better reliability
       try {
-        // Simulated data - replace with your actual API calls
-        setUniversities([
-          { value: "university1", label: "University 1" },
-          { value: "university2", label: "University 2" },
-        ]);
-        setQualifications([
-          { value: "qualification1", label: "Qualification 1" },
-          { value: "qualification2", label: "Qualification 2" },
-        ]);
+        // Try the worldwide universities API first
+        const worldResponse = await axios.get(
+          "https://universities.hipolabs.com/search?limit=200"
+        );
+        if (worldResponse.data && Array.isArray(worldResponse.data)) {
+          const worldOptions = worldResponse.data.map((uni) => ({
+            value: uni.name,
+            label: `${uni.name} - ${uni.country}`,
+            country: uni.country,
+          }));
+          allUniversities = [...worldOptions];
+        }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.warn("World universities API failed:", error);
       }
-    };
-    fetchData();
-  }, []);
+
+      // Try Indian colleges API as secondary source
+      try {
+        const indianResponse = await axios.get(
+          "https://colleges-api.onrender.com/colleges?limit=100"
+        );
+        if (
+          indianResponse.data &&
+          indianResponse.data.colleges &&
+          Array.isArray(indianResponse.data.colleges)
+        ) {
+          const indianOptions = indianResponse.data.colleges.map((college) => ({
+            value: college.Name,
+            label: `${college.Name} - ${college.City}, ${college.State}`,
+            country: "India",
+          }));
+          allUniversities = [...allUniversities, ...indianOptions];
+        }
+      } catch (error) {
+        console.warn("Indian colleges API failed:", error);
+      }
+
+      // Fallback data for major universities if APIs fail
+      const fallbackUniversities = [
+        // Indian Universities
+        {
+          value: "Indian Institute of Technology Delhi",
+          label: "Indian Institute of Technology Delhi - Delhi, India",
+          country: "India",
+        },
+        {
+          value: "Indian Institute of Technology Bombay",
+          label: "Indian Institute of Technology Bombay - Mumbai, India",
+          country: "India",
+        },
+        {
+          value: "Indian Institute of Technology Madras",
+          label: "Indian Institute of Technology Madras - Chennai, India",
+          country: "India",
+        },
+        {
+          value: "Indian Institute of Technology Kanpur",
+          label: "Indian Institute of Technology Kanpur - Kanpur, India",
+          country: "India",
+        },
+        {
+          value: "Indian Institute of Technology Kharagpur",
+          label: "Indian Institute of Technology Kharagpur - Kharagpur, India",
+          country: "India",
+        },
+        {
+          value: "Indian Institute of Science",
+          label: "Indian Institute of Science - Bangalore, India",
+          country: "India",
+        },
+        {
+          value: "University of Delhi",
+          label: "University of Delhi - Delhi, India",
+          country: "India",
+        },
+        {
+          value: "Jawaharlal Nehru University",
+          label: "Jawaharlal Nehru University - Delhi, India",
+          country: "India",
+        },
+        {
+          value: "University of Mumbai",
+          label: "University of Mumbai - Mumbai, India",
+          country: "India",
+        },
+        {
+          value: "University of Calcutta",
+          label: "University of Calcutta - Kolkata, India",
+          country: "India",
+        },
+        {
+          value: "Anna University",
+          label: "Anna University - Chennai, India",
+          country: "India",
+        },
+        {
+          value: "Banaras Hindu University",
+          label: "Banaras Hindu University - Varanasi, India",
+          country: "India",
+        },
+        {
+          value: "Aligarh Muslim University",
+          label: "Aligarh Muslim University - Aligarh, India",
+          country: "India",
+        },
+        {
+          value: "Jamia Millia Islamia",
+          label: "Jamia Millia Islamia - Delhi, India",
+          country: "India",
+        },
+        {
+          value: "Manipal Academy of Higher Education",
+          label: "Manipal Academy of Higher Education - Manipal, India",
+          country: "India",
+        },
+
+        // International Universities
+        {
+          value: "Harvard University",
+          label: "Harvard University - United States",
+          country: "United States",
+        },
+        {
+          value: "Massachusetts Institute of Technology",
+          label: "Massachusetts Institute of Technology - United States",
+          country: "United States",
+        },
+        {
+          value: "Stanford University",
+          label: "Stanford University - United States",
+          country: "United States",
+        },
+        {
+          value: "University of Cambridge",
+          label: "University of Cambridge - United Kingdom",
+          country: "United Kingdom",
+        },
+        {
+          value: "University of Oxford",
+          label: "University of Oxford - United Kingdom",
+          country: "United Kingdom",
+        },
+        {
+          value: "California Institute of Technology",
+          label: "California Institute of Technology - United States",
+          country: "United States",
+        },
+        {
+          value: "University of California Berkeley",
+          label: "University of California Berkeley - United States",
+          country: "United States",
+        },
+        {
+          value: "University of Toronto",
+          label: "University of Toronto - Canada",
+          country: "Canada",
+        },
+        {
+          value: "University of Melbourne",
+          label: "University of Melbourne - Australia",
+          country: "Australia",
+        },
+        {
+          value: "National University of Singapore",
+          label: "National University of Singapore - Singapore",
+          country: "Singapore",
+        },
+        {
+          value: "University of Tokyo",
+          label: "University of Tokyo - Japan",
+          country: "Japan",
+        },
+        {
+          value: "Tsinghua University",
+          label: "Tsinghua University - China",
+          country: "China",
+        },
+        {
+          value: "Peking University",
+          label: "Peking University - China",
+          country: "China",
+        },
+        {
+          value: "ETH Zurich",
+          label: "ETH Zurich - Switzerland",
+          country: "Switzerland",
+        },
+        {
+          value: "University of Edinburgh",
+          label: "University of Edinburgh - United Kingdom",
+          country: "United Kingdom",
+        },
+        {
+          value: "King's College London",
+          label: "King's College London - United Kingdom",
+          country: "United Kingdom",
+        },
+        {
+          value: "University of Sydney",
+          label: "University of Sydney - Australia",
+          country: "Australia",
+        },
+        {
+          value: "University of British Columbia",
+          label: "University of British Columbia - Canada",
+          country: "Canada",
+        },
+        {
+          value: "McGill University",
+          label: "McGill University - Canada",
+          country: "Canada",
+        },
+        {
+          value: "Seoul National University",
+          label: "Seoul National University - South Korea",
+          country: "South Korea",
+        },
+      ];
+
+      // Use fetched data if available, otherwise use fallback
+      const finalUniversities =
+        allUniversities.length > 0 ? allUniversities : fallbackUniversities;
+
+      // Sort with Indian universities first, then alphabetically
+      const sortedUniversities = finalUniversities.sort((a, b) => {
+        if (a.country === "India" && b.country !== "India") return -1;
+        if (a.country !== "India" && b.country === "India") return 1;
+        return a.label.localeCompare(b.label);
+      });
+
+      // Add "Other" option at the end
+      sortedUniversities.push({
+        value: "other",
+        label: "Other (Please specify)",
+        country: "Other",
+      });
+
+      setUniversities(sortedUniversities);
+    } catch (error) {
+      console.error("Error fetching universities:", error);
+      // Fallback to basic options if everything fails
+      setUniversities([
+        { value: "other", label: "Other (Please specify)", country: "Other" },
+      ]);
+    } finally {
+      setLoading((prev) => ({ ...prev, universities: false }));
+    }
+  };
+
+  // Fetch Qualifications
+  const fetchQualifications = async () => {
+    setLoading((prev) => ({ ...prev, qualifications: true }));
+    try {
+      // Comprehensive qualification levels
+      const qualificationLevels = [
+        { value: "high_school", label: "High School/Secondary Education" },
+        { value: "diploma", label: "Diploma" },
+        { value: "bachelor", label: "Bachelor's Degree" },
+        { value: "master", label: "Master's Degree" },
+        { value: "phd", label: "PhD/Doctorate" },
+        { value: "certificate", label: "Professional Certificate" },
+        { value: "associate", label: "Associate Degree" },
+        { value: "postgraduate_diploma", label: "Postgraduate Diploma" },
+        {
+          value: "professional_degree",
+          label: "Professional Degree (Law, Medicine, etc.)",
+        },
+        { value: "other", label: "Other" },
+      ];
+
+      setQualifications(qualificationLevels);
+    } catch (error) {
+      console.error("Error setting qualifications:", error);
+    } finally {
+      setLoading((prev) => ({ ...prev, qualifications: false }));
+    }
+  };
+
+  // Fetch Courses
+  const fetchCourses = async () => {
+    setLoading((prev) => ({ ...prev, courses: true }));
+    try {
+      // Comprehensive course list organized by category
+      const courseCategories = [
+        // Engineering & Technology
+        { value: "computer_science", label: "Computer Science & Engineering" },
+        { value: "information_technology", label: "Information Technology" },
+        { value: "mechanical_engineering", label: "Mechanical Engineering" },
+        { value: "electrical_engineering", label: "Electrical Engineering" },
+        { value: "civil_engineering", label: "Civil Engineering" },
+        { value: "chemical_engineering", label: "Chemical Engineering" },
+        {
+          value: "electronics_communication",
+          label: "Electronics & Communication Engineering",
+        },
+        { value: "aerospace_engineering", label: "Aerospace Engineering" },
+        { value: "biotechnology", label: "Biotechnology" },
+
+        // Business & Management
+        {
+          value: "business_administration",
+          label: "Business Administration (BBA/MBA)",
+        },
+        { value: "management", label: "Management" },
+        { value: "marketing", label: "Marketing" },
+        { value: "finance", label: "Finance" },
+        { value: "human_resources", label: "Human Resources" },
+        { value: "operations_management", label: "Operations Management" },
+        { value: "international_business", label: "International Business" },
+
+        // Arts & Humanities
+        { value: "english_literature", label: "English Literature" },
+        { value: "history", label: "History" },
+        { value: "philosophy", label: "Philosophy" },
+        { value: "psychology", label: "Psychology" },
+        { value: "sociology", label: "Sociology" },
+        { value: "political_science", label: "Political Science" },
+        { value: "journalism", label: "Journalism & Mass Communication" },
+
+        // Science
+        { value: "physics", label: "Physics" },
+        { value: "chemistry", label: "Chemistry" },
+        { value: "biology", label: "Biology" },
+        { value: "mathematics", label: "Mathematics" },
+        { value: "statistics", label: "Statistics" },
+        { value: "environmental_science", label: "Environmental Science" },
+
+        // Medical & Health Sciences
+        { value: "medicine", label: "Medicine (MBBS)" },
+        { value: "nursing", label: "Nursing" },
+        { value: "pharmacy", label: "Pharmacy" },
+        { value: "dentistry", label: "Dentistry" },
+        { value: "physiotherapy", label: "Physiotherapy" },
+        { value: "public_health", label: "Public Health" },
+
+        // Law
+        { value: "law", label: "Law (LLB/LLM)" },
+        { value: "corporate_law", label: "Corporate Law" },
+        { value: "criminal_law", label: "Criminal Law" },
+
+        // Education
+        { value: "education", label: "Education (B.Ed/M.Ed)" },
+        { value: "early_childhood", label: "Early Childhood Education" },
+
+        // Commerce & Economics
+        { value: "commerce", label: "Commerce" },
+        { value: "economics", label: "Economics" },
+        { value: "accounting", label: "Accounting" },
+        { value: "banking", label: "Banking & Finance" },
+
+        // Arts & Design
+        { value: "fine_arts", label: "Fine Arts" },
+        { value: "graphic_design", label: "Graphic Design" },
+        { value: "fashion_design", label: "Fashion Design" },
+        { value: "interior_design", label: "Interior Design" },
+
+        // Agriculture & Food Sciences
+        { value: "agriculture", label: "Agriculture" },
+        { value: "food_technology", label: "Food Technology" },
+        { value: "veterinary", label: "Veterinary Science" },
+
+        // Other
+        { value: "other", label: "Other (Please specify)" },
+      ];
+
+      setCourses(courseCategories);
+    } catch (error) {
+      console.error("Error setting courses:", error);
+    } finally {
+      setLoading((prev) => ({ ...prev, courses: false }));
+    }
+  };
+
+  // Fetch Specializations based on selected course
+  const fetchSpecializations = async (courseValue) => {
+    setLoading((prev) => ({ ...prev, specializations: true }));
+    try {
+      let specializationOptions = [];
+
+      // Define specializations based on course
+      const specializationMap = {
+        computer_science: [
+          {
+            value: "artificial_intelligence",
+            label: "Artificial Intelligence",
+          },
+          { value: "machine_learning", label: "Machine Learning" },
+          { value: "data_science", label: "Data Science" },
+          { value: "cybersecurity", label: "Cybersecurity" },
+          { value: "software_engineering", label: "Software Engineering" },
+          { value: "web_development", label: "Web Development" },
+          { value: "mobile_development", label: "Mobile Development" },
+          { value: "cloud_computing", label: "Cloud Computing" },
+          { value: "blockchain", label: "Blockchain Technology" },
+          { value: "computer_networks", label: "Computer Networks" },
+          { value: "database_systems", label: "Database Systems" },
+          {
+            value: "human_computer_interaction",
+            label: "Human-Computer Interaction",
+          },
+        ],
+        business_administration: [
+          { value: "strategic_management", label: "Strategic Management" },
+          { value: "entrepreneurship", label: "Entrepreneurship" },
+          { value: "digital_marketing", label: "Digital Marketing" },
+          { value: "financial_management", label: "Financial Management" },
+          { value: "supply_chain", label: "Supply Chain Management" },
+          { value: "project_management", label: "Project Management" },
+          { value: "business_analytics", label: "Business Analytics" },
+          { value: "international_business", label: "International Business" },
+        ],
+        medicine: [
+          { value: "cardiology", label: "Cardiology" },
+          { value: "neurology", label: "Neurology" },
+          { value: "pediatrics", label: "Pediatrics" },
+          { value: "surgery", label: "Surgery" },
+          { value: "internal_medicine", label: "Internal Medicine" },
+          { value: "orthopedics", label: "Orthopedics" },
+          { value: "radiology", label: "Radiology" },
+          { value: "emergency_medicine", label: "Emergency Medicine" },
+        ],
+        mechanical_engineering: [
+          { value: "automotive", label: "Automotive Engineering" },
+          { value: "aerospace", label: "Aerospace Engineering" },
+          { value: "thermal", label: "Thermal Engineering" },
+          { value: "manufacturing", label: "Manufacturing Engineering" },
+          { value: "robotics", label: "Robotics" },
+          { value: "fluid_mechanics", label: "Fluid Mechanics" },
+          { value: "materials", label: "Materials Engineering" },
+        ],
+        // Add more specializations for other courses as needed
+        default: [
+          { value: "general", label: "General" },
+          { value: "research", label: "Research" },
+          { value: "applied", label: "Applied" },
+          { value: "theoretical", label: "Theoretical" },
+        ],
+      };
+
+      specializationOptions =
+        specializationMap[courseValue] || specializationMap.default;
+      specializationOptions.push({
+        value: "other",
+        label: "Other (Please specify)",
+      });
+
+      setSpecializations(specializationOptions);
+    } catch (error) {
+      console.error("Error setting specializations:", error);
+    } finally {
+      setLoading((prev) => ({ ...prev, specializations: false }));
+    }
+  };
 
   useEffect(() => {
-    if (formData.qualifications && Array.isArray(formData.qualifications)) {
-      setQualList(formData.qualifications);
-    }
-    // eslint-disable-next-line
+    fetchUniversities();
+    fetchQualifications();
+    fetchCourses();
   }, []);
 
   useEffect(() => {
@@ -90,6 +552,17 @@ const Qualification = ({
     const { name, value } = e.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
     updateFormData({ [name]: value });
+  };
+
+  const handleCourseChange = (e) => {
+    const { value } = e.target;
+    setFormValues((prev) => ({ ...prev, course: value, specialization: "" }));
+    updateFormData({ course: value, specialization: "" });
+
+    // Fetch specializations for the selected course
+    if (value) {
+      fetchSpecializations(value);
+    }
   };
 
   const handleUniversityChange = (selectedOption) => {
@@ -332,7 +805,12 @@ const Qualification = ({
                         updateFormData({ qualification: option.value });
                       }}
                       options={qualifications}
-                      placeholder="Select"
+                      placeholder={
+                        loading.qualifications
+                          ? "Loading qualifications..."
+                          : "Select"
+                      }
+                      isLoading={loading.qualifications}
                       className="text-[13px]"
                       styles={{
                         control: (base) => ({
@@ -363,15 +841,17 @@ const Qualification = ({
                       University*
                     </label>
                     <Select
-                      options={[
-                        ...universities,
-                        { value: "other", label: "Other" },
-                      ]}
+                      options={universities}
                       value={universities.find(
                         (uni) => uni.value === formValues.university
                       )}
                       onChange={handleUniversityChange}
-                      placeholder="Select"
+                      placeholder={
+                        loading.universities
+                          ? "Loading universities..."
+                          : "Select"
+                      }
+                      isLoading={loading.universities}
                       className="text-[13px]"
                       styles={{
                         control: (base) => ({
@@ -407,7 +887,7 @@ const Qualification = ({
                         <button
                           type="button"
                           onClick={handleAddOtherUniversity}
-                          className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                         >
                           Add
                         </button>
@@ -426,14 +906,18 @@ const Qualification = ({
                       <select
                         name="course"
                         value={formValues.course}
-                        onChange={handleChange}
-                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onChange={handleCourseChange}
+                        disabled={loading.courses}
+                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                       >
-                        <option value="">Select</option>
-                        <option value="btech">B.Tech</option>
-                        <option value="mtech">M.Tech</option>
-                        <option value="bca">BCA</option>
-                        <option value="mca">MCA</option>
+                        <option value="">
+                          {loading.courses ? "Loading courses..." : "Select"}
+                        </option>
+                        {courses.map((course) => (
+                          <option key={course.value} value={course.value}>
+                            {course.label}
+                          </option>
+                        ))}
                       </select>
                       <ChevronDown
                         size={20}
@@ -453,11 +937,14 @@ const Qualification = ({
                         className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select</option>
-                        {Array.from({ length: 10 }, (_, i) => (
-                          <option key={i} value={2025 - i}>
-                            {2025 - i}
-                          </option>
-                        ))}
+                        {Array.from({ length: 50 }, (_, i) => {
+                          const year = new Date().getFullYear() - i;
+                          return (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          );
+                        })}
                       </select>
                       <ChevronDown
                         size={20}
@@ -478,12 +965,21 @@ const Qualification = ({
                         name="specialization"
                         value={formValues.specialization}
                         onChange={handleChange}
-                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={loading.specializations || !formValues.course}
+                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                       >
-                        <option value="">Select</option>
-                        <option value="cs">Computer Science</option>
-                        <option value="me">Mechanical Engineering</option>
-                        <option value="ee">Electrical Engineering</option>
+                        <option value="">
+                          {loading.specializations
+                            ? "Loading specializations..."
+                            : !formValues.course
+                            ? "Select course first"
+                            : "Select"}
+                        </option>
+                        {specializations.map((spec) => (
+                          <option key={spec.value} value={spec.value}>
+                            {spec.label}
+                          </option>
+                        ))}
                       </select>
                       <ChevronDown
                         size={20}
@@ -503,8 +999,11 @@ const Qualification = ({
                         className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select</option>
-                        <option value="fulltime">Full Time</option>
-                        <option value="parttime">Part Time</option>
+                        <option value="full-time">Full-time</option>
+                        <option value="part-time">Part-time</option>
+                        <option value="distance">Distance Learning</option>
+                        <option value="online">Online</option>
+                        <option value="correspondence">Correspondence</option>
                       </select>
                       <ChevronDown
                         size={20}

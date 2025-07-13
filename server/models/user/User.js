@@ -93,7 +93,20 @@ const userSchema = new mongoose.Schema(
         },
         type: {
           type: String, // Added to store employment type (e.g., "Full-Time")
-          enum: ["Full-Time", "Part-Time", "Contract", ""], // Optional: restrict to valid values
+          enum: [
+            "fullTime",
+            "partTime",
+            "contract",
+            "internship",
+            "volunteer",
+            // Legacy format support for existing users
+            "Full-Time",
+            "Part-Time",
+            "Contract",
+            "Internship",
+            "Volunteer",
+            "",
+          ], // Updated to support both old and new format values
           default: "",
         },
         location: {
@@ -206,6 +219,39 @@ const userSchema = new mongoose.Schema(
       ref: "Job",
       default: [],
     },
+    // New field for tracking application status from user's perspective
+    jobApplications: [
+      {
+        job: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Job",
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: [
+            "Applied",
+            "Under Review",
+            "Interview",
+            "Accepted",
+            "Rejected",
+          ],
+          default: "Applied",
+        },
+        appliedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        statusUpdatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        note: {
+          type: String,
+          default: "",
+        },
+      },
+    ],
     savedJobs: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: "Job",

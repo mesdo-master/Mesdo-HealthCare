@@ -46,6 +46,35 @@ const Onboarding = () => {
     useState(false);
   const [forceAchievementPreview, setForceAchievementPreview] = useState(false);
 
+  // Load saved form data from localStorage on component mount
+  useEffect(() => {
+    const savedFormData = localStorage.getItem("onboardingFormData");
+    const savedStep = localStorage.getItem("onboardingStep");
+
+    if (savedFormData) {
+      try {
+        const parsedData = JSON.parse(savedFormData);
+        setFormData(parsedData);
+      } catch (error) {
+        console.error("Error parsing saved form data:", error);
+      }
+    }
+
+    if (savedStep) {
+      setStep(parseInt(savedStep, 10));
+    }
+  }, []);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("onboardingFormData", JSON.stringify(formData));
+  }, [formData]);
+
+  // Save current step to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("onboardingStep", step.toString());
+  }, [step]);
+
   useEffect(() => {
     const fetchPredata = async () => {
       try {
@@ -112,6 +141,10 @@ const Onboarding = () => {
 
       if (completeOnboarding.fulfilled.match(resultAction)) {
         console.log("Data saved successfully:", resultAction.payload);
+
+        // Clear localStorage data after successful completion
+        localStorage.removeItem("onboardingFormData");
+        localStorage.removeItem("onboardingStep");
 
         // Update local formData
         const updatedFormData = { ...formData, onboardingCompleted: true };

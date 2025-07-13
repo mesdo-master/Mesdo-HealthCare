@@ -11,36 +11,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../lib/axio";
 
-// Animation variants
-const containerVariants = {
-  initial: {
-    opacity: 0,
-  },
-  animate: {
-    opacity: 1,
-    transition: {
-      duration: 0.4,
-      ease: [0.4, 0, 0.2, 1],
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  initial: {
-    opacity: 0,
-    y: 20,
-  },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.3,
-      ease: [0.4, 0, 0.2, 1],
-    },
-  },
-};
-
 const AppliedJob = ({ inUserProfile }) => {
   const navigate = useNavigate();
   const [appliedJobs, setAppliedJobs] = useState([]);
@@ -64,12 +34,28 @@ const AppliedJob = ({ inUserProfile }) => {
     getAppliedJobs();
   }, []);
 
-  const stages = [
-    "Application Received",
-    "Application Under Review",
-    "Interview Stage",
-    "Final Stage",
-  ];
+  const statusStages = ["Applied", "Under Review", "Interview", "Accepted"];
+
+  const getStatusIndex = (status) => {
+    return statusStages.indexOf(status);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Applied":
+        return "text-blue-600";
+      case "Under Review":
+        return "text-blue-600";
+      case "Interview":
+        return "text-purple-600";
+      case "Accepted":
+        return "text-green-600";
+      case "Rejected":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  };
 
   function formatRelativeTime(isoDateStr) {
     const postedDate = new Date(isoDateStr);
@@ -81,8 +67,8 @@ const AppliedJob = ({ inUserProfile }) => {
       hour: 3600,
       day: 86400,
       week: 604800,
-      month: 2629746, // Approx: 30.44 days
-      year: 31556952, // Approx: 365.24 days
+      month: 2629746,
+      year: 31556952,
     };
 
     if (diffInSeconds < secondsIn.minute) {
@@ -108,19 +94,6 @@ const AppliedJob = ({ inUserProfile }) => {
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return "from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-200";
-      case "pending":
-        return "from-amber-50 to-amber-100 text-amber-700 border-amber-200";
-      case "closed":
-        return "from-red-50 to-red-100 text-red-700 border-red-200";
-      default:
-        return "from-blue-50 to-blue-100 text-blue-700 border-blue-200";
-    }
-  };
-
   const formatSalary = (from, to) => {
     const formatAmount = (amount) => {
       if (amount >= 100000) {
@@ -142,13 +115,13 @@ const AppliedJob = ({ inUserProfile }) => {
   if (loading) {
     return (
       <div
-        className={`h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 ${
+        className={`h-screen bg-gray-50 ${
           !inUserProfile && " ml-[5vw] pt-[10vh]"
         }`}
       >
         <div className="flex justify-center items-center h-64">
           <div className="relative">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1890FF]"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             <div className="absolute inset-0 rounded-full border-2 border-blue-100"></div>
           </div>
         </div>
@@ -157,104 +130,86 @@ const AppliedJob = ({ inUserProfile }) => {
   }
 
   return (
-    <motion.div
-      className={`min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 ${
+    <div
+      className={`min-h-screen bg-gray-50 ${
         !inUserProfile && " ml-[5vw] pt-[10vh]"
       }`}
-      variants={containerVariants}
-      initial="initial"
-      animate="animate"
     >
-      {/* Top Bar */}
+      {/* Header */}
       {!inUserProfile && (
-        <motion.div
-          className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shadow-sm"
-          variants={itemVariants}
-        >
-          <div className="px-8 pt-6 pb-4 flex flex-col md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start md:items-center gap-4">
-              {/* Back Arrow */}
-              <motion.button
+        <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-6xl mx-auto px-6 pt-8 pb-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button
                 onClick={() => navigate(-1)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200/60 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-200 shadow-sm"
-                whileHover={{ scale: 1.05, y: -1 }}
-                whileTap={{ scale: 0.95 }}
+                className="w-12 h-12 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm"
               >
-                <ArrowLeft size={18} className="text-slate-600" />
-              </motion.button>
-
-              {/* Text block */}
-              <div className="flex flex-col justify-center">
-                <span className="text-sm text-slate-500 mb-1 font-medium">
-                  Total Jobs Applied
-                </span>
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-semibold text-slate-800">
+                <ArrowLeft size={20} className="text-gray-600" />
+              </button>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-gray-900">
                     Applied Jobs
-                  </h2>
-                  <span className="bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 text-sm font-medium px-3 py-1.5 rounded-full border border-blue-200/60 shadow-sm">
+                  </h1>
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
                     {appliedJobs.length} Total
                   </span>
                 </div>
+                <p className="text-gray-600">
+                  Track your job applications and their current status
+                </p>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Main Content */}
-      <motion.div className="max-w-7xl mx-auto p-6" variants={itemVariants}>
+      <div className="max-w-6xl mx-auto p-6">
         {/* Header Controls */}
-        <motion.div
-          className="flex justify-between items-center mb-8"
-          variants={itemVariants}
-        >
-          <p className="text-sm text-slate-600 font-medium">
-            Showing {appliedJobs.length} results
-          </p>
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-gray-600">
+              Showing{" "}
+              <span className="font-semibold text-gray-900">
+                {appliedJobs.length}
+              </span>{" "}
+              results
+            </p>
+            {appliedJobs.length > 0 && (
+              <div className="h-4 w-px bg-gray-300"></div>
+            )}
+          </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600 font-medium">Sort by:</span>
-            <select className="text-sm bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-300 cursor-pointer transition-all">
+            <span className="text-sm text-gray-600 font-medium">Sort by:</span>
+            <select className="text-sm bg-white border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm">
               <option>Recently Applied</option>
               <option>Job Title</option>
               <option>Company Name</option>
+              <option>Status</option>
             </select>
           </div>
-        </motion.div>
+        </div>
 
         {/* Jobs List */}
-        <AnimatePresence>
-          {appliedJobs.map((job, index) => (
-            <motion.div
-              key={job._id}
-              variants={itemVariants}
-              initial="initial"
-              animate="animate"
-              exit="initial"
-              transition={{ delay: index * 0.05 }}
-              whileHover={{
-                scale: 1.01,
-                y: -3,
-                boxShadow:
-                  "0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-              }}
-              whileTap={{ scale: 0.99 }}
-              className="bg-white/80 backdrop-blur-md rounded-2xl p-6 mb-6 shadow-lg border border-white/60 relative cursor-pointer transition-all duration-300 hover:border-white/80 hover:bg-white/90 group overflow-hidden"
-            >
-              {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        <div className="space-y-6">
+          {appliedJobs.map((application, index) => {
+            const job = application.job || application;
+            const applicationStatus = application.status || "Applied";
+            const appliedAt = application.appliedAt || job.createdAt;
+            const currentStatusIndex = getStatusIndex(applicationStatus);
 
-              {/* Job Card Content */}
-              <div className="relative z-10">
-                {/* Header Section */}
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex gap-4 flex-1">
-                    {/* Company Logo */}
-                    <motion.div
-                      className="flex-shrink-0"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <div className="w-16 h-16 rounded-xl border border-slate-200/60 shadow-sm flex items-center justify-center bg-white/90 backdrop-blur-sm overflow-hidden">
+            return (
+              <div
+                key={job._id}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden"
+              >
+                {/* Job Header */}
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex gap-4 flex-1">
+                      {/* Company Logo */}
+                      <div className="w-16 h-16 rounded-xl border border-gray-200 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden flex-shrink-0">
                         <img
                           src={
                             job.hospitalLogo ||
@@ -268,242 +223,135 @@ const AppliedJob = ({ inUserProfile }) => {
                           }}
                         />
                       </div>
-                    </motion.div>
 
-                    {/* Job Details */}
-                    <div className="flex-1 min-w-0">
-                      {/* Status Badge */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <motion.span
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-full border shadow-sm bg-gradient-to-r ${getStatusColor(
-                            job.jobStatus
-                          )}`}
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <CheckCircle className="w-3 h-3 inline-block mr-1.5" />
-                          {job.jobStatus || "Active"}
-                        </motion.span>
-                        <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Applied {formatRelativeTime(job.createdAt)}
-                        </span>
-                      </div>
-
-                      {/* Job Title */}
-                      <h3 className="text-xl font-bold text-slate-800 mb-2 leading-tight truncate">
-                        {job.jobTitle}
-                      </h3>
-
-                      {/* Company & Location */}
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 mb-3">
-                        <div className="flex items-center gap-1.5">
-                          <Building className="w-4 h-4 text-slate-400" />
-                          <span className="font-medium">
-                            {job.HospitalName}
+                      {/* Job Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-semibold text-gray-900 truncate">
+                            {job.jobTitle}
+                          </h3>
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                              applicationStatus
+                            )} bg-current bg-opacity-10 flex-shrink-0`}
+                          >
+                            {applicationStatus}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="w-4 h-4 text-slate-400" />
-                          <span>{job.location}</span>
-                        </div>
-                      </div>
 
-                      {/* Job Details Tags */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {job.employmentType && (
-                          <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md font-medium">
-                            {job.employmentType.charAt(0).toUpperCase() +
-                              job.employmentType.slice(1)}
+                        <div className="flex items-center gap-6 text-sm text-gray-600 mb-3">
+                          <div className="flex items-center gap-2">
+                            <Building className="w-4 h-4 text-gray-400" />
+                            <span className="font-medium">
+                              {job.HospitalName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-gray-400" />
+                            <span>{job.location}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-gray-400" />
+                            <span>Applied {formatRelativeTime(appliedAt)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {job.employmentType && (
+                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                              {job.employmentType}
+                            </span>
+                          )}
+                          {job.experience && (
+                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                              {job.experience}+ years
+                            </span>
+                          )}
+                          <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                            {formatSalary(
+                              job.salaryRangeFrom,
+                              job.salaryRangeTo
+                            )}
                           </span>
-                        )}
-                        {job.experience && (
-                          <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">
-                            {job.experience}+ years
-                          </span>
-                        )}
-                        <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-md font-medium">
-                          {formatSalary(job.salaryRangeFrom, job.salaryRangeTo)}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right Section - Match & Actions */}
-                  <div className="flex flex-col items-end gap-3 ml-4">
-                    {/* Actions Menu */}
-                    <motion.button
-                      className="p-2 hover:bg-white/60 rounded-lg transition-colors backdrop-blur-sm"
-                      onClick={(e) => e.stopPropagation()}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <BsThreeDotsVertical className="text-slate-400" />
-                    </motion.button>
-
-                    {/* Match Percentage */}
-                    <motion.div
-                      className="flex flex-col items-center"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.4 }}
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <div className="relative w-14 h-14">
-                        <svg
-                          className="w-14 h-14 -rotate-90"
-                          viewBox="0 0 56 56"
+                  {/* Status Progress Tracker */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <div className="flex items-center justify-between relative">
+                      {statusStages.map((stage, index) => (
+                        <div
+                          key={stage}
+                          className="flex flex-col items-center relative z-10"
                         >
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="24"
-                            stroke="#e5e7eb"
-                            strokeWidth="3"
-                            fill="none"
-                          />
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="24"
-                            stroke="url(#gradient)"
-                            strokeWidth="3"
-                            fill="none"
-                            strokeDasharray={`${
-                              (job.progress || 85) * 1.51
-                            } 151`}
-                            strokeLinecap="round"
-                            className="transition-all duration-1000"
-                          />
-                          <defs>
-                            <linearGradient
-                              id="gradient"
-                              x1="0%"
-                              y1="0%"
-                              x2="100%"
-                              y2="100%"
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                              index <= currentStatusIndex
+                                ? "bg-blue-500 text-white shadow-lg"
+                                : "bg-gray-200 text-gray-500"
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+                          <div className="mt-3 text-center">
+                            <div
+                              className={`text-xs font-medium ${
+                                index <= currentStatusIndex
+                                  ? "text-blue-600"
+                                  : "text-gray-500"
+                              }`}
                             >
-                              <stop offset="0%" stopColor="#10b981" />
-                              <stop offset="100%" stopColor="#059669" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-sm font-bold text-green-600">
-                            {job.progress || 85}%
-                          </span>
+                              {stage}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <span className="text-xs text-slate-500 font-medium mt-1">
-                        Match
-                      </span>
-                    </motion.div>
-                  </div>
-                </div>
-
-                {/* Application Progress Section */}
-                <div className="bg-gradient-to-r from-slate-50/80 to-blue-50/80 rounded-xl p-4 border border-slate-200/40">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-slate-700">
-                      Application Progress
-                    </h4>
-                    <span className="text-xs text-slate-500 font-medium">
-                      {job.currentStage + 1} of {stages.length} stages
-                    </span>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="relative">
-                    <div className="h-2 bg-slate-200/60 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-[#1890FF] to-[#40A9FF] rounded-full"
-                        style={{
-                          width: `${
-                            ((job.currentStage || 0) / (stages.length - 1)) *
-                            100
-                          }%`,
-                        }}
-                        initial={{ width: 0 }}
-                        animate={{
-                          width: `${
-                            ((job.currentStage || 0) / (stages.length - 1)) *
-                            100
-                          }%`,
-                        }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                      />
-                    </div>
-
-                    {/* Stage Indicators */}
-                    <div className="absolute top-1/2 left-0 w-full flex justify-between -translate-y-1/2">
-                      {stages.map((_, idx) => (
-                        <motion.div
-                          key={idx}
-                          className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
-                            idx <= (job.currentStage || 0)
-                              ? "bg-[#1890FF] border-[#1890FF] shadow-sm"
-                              : "bg-white border-slate-300"
-                          }`}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: idx * 0.1 + 0.3 }}
-                        />
                       ))}
-                    </div>
-                  </div>
 
-                  {/* Stage Labels */}
-                  <div className="flex justify-between mt-3">
-                    {stages.map((stage, index) => (
-                      <div
-                        key={index}
-                        className={`flex-1 text-center ${
-                          index < stages.length - 1 ? "pr-2" : ""
-                        }`}
-                      >
-                        <span
-                          className={`text-xs leading-tight font-medium ${
-                            index === (job.currentStage || 0)
-                              ? "text-[#1890FF] font-semibold"
-                              : index <= (job.currentStage || 0)
-                              ? "text-green-600"
-                              : "text-slate-500"
-                          }`}
-                        >
-                          {stage}
-                        </span>
+                      {/* Progress Line */}
+                      <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-0">
+                        <div
+                          className="h-full bg-blue-500 transition-all duration-500 ease-out"
+                          style={{
+                            width: `${
+                              (currentStatusIndex / (statusStages.length - 1)) *
+                              100
+                            }%`,
+                          }}
+                        />
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+            );
+          })}
+        </div>
 
         {/* Empty State */}
         {appliedJobs.length === 0 && (
-          <motion.div className="text-center py-16" variants={itemVariants}>
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-blue-50 rounded-full flex items-center justify-center shadow-sm">
-              <BsFillBookmarkCheckFill className="text-slate-400 text-2xl" />
+          <div className="text-center py-20">
+            <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center">
+              <BsFillBookmarkCheckFill className="text-blue-500 text-4xl" />
             </div>
-            <h3 className="text-xl font-semibold text-slate-800 mb-2">
-              No Applied Jobs
+            <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+              No Applied Jobs Yet
             </h3>
-            <p className="text-slate-600 mb-6">
-              You haven't applied to any jobs yet.
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              You haven't applied to any jobs yet. Start exploring opportunities
+              and take the next step in your career journey.
             </p>
-            <motion.button
+            <button
               onClick={() => navigate("/jobs")}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm"
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
             >
               Browse Jobs
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         )}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

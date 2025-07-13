@@ -12,30 +12,35 @@ const { writeFile } = require("fs").promises;
 const cloudinary = require("../../config/cloudinary");
 
 const generateUsername = async (fullName) => {
+  // Handle empty or invalid names
+  if (!fullName || !fullName.trim()) {
+    fullName = "user"; // Default fallback
+  }
+
   // Convert full name to a base username
   let baseUsername = fullName
     .toLowerCase()
     .replace(/\s+/g, "") // Remove all spaces
     .replace(/[^a-z0-9]/g, ""); // Remove special characters
 
-  let username = baseUsername;
+  // If baseUsername is empty after cleaning, use default
+  if (!baseUsername) {
+    baseUsername = "user";
+  }
 
+  let username = baseUsername;
   let isUnique = false;
   let counter = 1000;
 
-  if (
-    !(await User.findOne({
-      username,
-    }))
-  ) {
+  // Check if the base username is unique
+  const existingUser = await User.findOne({ username });
+  if (!existingUser) {
     isUnique = true;
   }
 
   // Check uniqueness and append number if needed
   while (!isUnique) {
-    const existingUser = await User.findOne({
-      username,
-    });
+    const existingUser = await User.findOne({ username });
     if (!existingUser) {
       isUnique = true;
     } else {
@@ -80,6 +85,14 @@ const completeOnboarding = async (req, res) => {
     // Extract formData from the request body
     const formData = req.body;
 
+    // Validate that essential fields are present
+    if (!formData.name || !formData.name.trim()) {
+      return res.status(400).json({
+        message: "Name is required for onboarding",
+        success: false,
+      });
+    }
+
     // Update basic profile fields
     user.name = formData.name;
     user.email = formData.email;
@@ -92,43 +105,56 @@ const completeOnboarding = async (req, res) => {
     user.dob = formData.dob ? new Date(formData.dob) : null;
 
     // Update education array (qualifications)
-    user.education = formData.qualifications.map((qual) => ({
-      schoolName: qual.university,
-      degree: qual.course,
-      fieldOfStudy: qual.specialization,
-      endDate: qual.passingYear ? new Date(`${qual.passingYear}-01-01`) : null,
-      description: qual.description,
-    }));
+    user.education = formData.qualifications
+      ? formData.qualifications.map((qual) => ({
+          qualification: qual.qualification,
+          university: qual.university,
+          course: qual.course,
+          specialization: qual.specialization,
+          passingYear: qual.passingYear,
+          description: qual.description || "",
+          skills: qual.skills || [], // Map skills from qualification
+        }))
+      : [];
 
     // Update experience array (workExperience)
-    user.experience = formData.workExperience.map((exp) => ({
-      title: exp.jobTitle,
-      company: exp.hospital,
-      location: exp.location,
-      startDate: exp.startDate,
-      current: exp.currentlyWorking,
-      endDate: exp.currentlyWorking ? null : exp.endDate,
-      description: exp.description,
-    }));
+    user.experience = formData.workExperience
+      ? formData.workExperience.map((exp) => ({
+          title: exp.jobTitle,
+          institution: exp.hospital,
+          type: exp.employmentType || "",
+          location: exp.location,
+          startDate: exp.startDate,
+          currentlyWorking: exp.currentlyWorking,
+          endDate: exp.currentlyWorking ? null : exp.endDate,
+          description: exp.description || "",
+          tags: exp.skills || [], // Map skills to tags field
+        }))
+      : [];
 
     // Update skills
-    user.skills = formData.Skills;
+    user.skills = formData.Skills || [];
 
     // Update achievements
-    user.achievements = formData.Achievements.map((ach) => ({
-      award: ach.award,
-      issuer: ach.issuer,
-      year: ach.year,
-      description: ach.description,
-    }));
+    user.achievements = formData.Achievements
+      ? formData.Achievements.map((ach) => ({
+          title: ach.award,
+          issuer: ach.issuer,
+          date: ach.year,
+          description: ach.description || "",
+        }))
+      : [];
 
     // Update interests
-    user.interests = formData.interest;
+    user.interests = formData.interest || [];
+
+    // Generate username only if user doesn't already have one or if it's empty
+    if (!user.username || user.username.trim() === "") {
+      user.username = await generateUsername(formData.name);
+    }
 
     // Mark onboarding as completed
     user.onboardingCompleted = true;
-
-    user.username = await generateUsername(formData.name);
 
     // Save the updated user document to the database
     await user.save();

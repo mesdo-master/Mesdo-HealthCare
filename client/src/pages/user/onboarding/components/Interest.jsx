@@ -38,7 +38,7 @@ function Interest({
   ];
 
   const [interests, setInterests] = useState(() => {
-    const savedInterests = formData.Interests || [];
+    const savedInterests = formData.interest || [];
     return initialInterests.map((interest) => ({
       ...interest,
       selected: savedInterests.includes(interest.label),
@@ -57,7 +57,7 @@ function Interest({
       .filter((interest) => interest.selected)
       .map((interest) => interest.label);
 
-    updateFormData({ interests: selectedInterests });
+    updateFormData({ interest: selectedInterests });
   };
 
   const selectedCount = interests.filter((i) => i.selected).length;

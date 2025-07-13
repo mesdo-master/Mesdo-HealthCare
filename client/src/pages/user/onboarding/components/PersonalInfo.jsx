@@ -7,6 +7,13 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
   const [cities, setCities] = useState([]);
   const [selectedState, setSelectedState] = useState("");
 
+  // Initialize selectedState with existing data when component mounts
+  useEffect(() => {
+    if (formData && formData.state) {
+      setSelectedState(formData.state);
+    }
+  }, [formData]);
+
   useEffect(() => {
     const getStateFunc = async () => {
       // Fetch states on component mount
@@ -38,6 +45,13 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
   const handleChange = (e) => {
     const { id, value } = e.target;
     updateFormData({ [id]: value });
+  };
+
+  // Handle state selection
+  const handleStateChange = (e) => {
+    const { value } = e.target;
+    setSelectedState(value);
+    updateFormData({ state: value });
   };
 
   return (
@@ -171,7 +185,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                 <select
                   id="state"
                   value={selectedState}
-                  onChange={(e) => setSelectedState(e.target.value)}
+                  onChange={handleStateChange}
                   className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select</option>

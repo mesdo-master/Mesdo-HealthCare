@@ -187,23 +187,38 @@ const applyJob = async (req, res) => {
 
     console.log("User found:", user.email || user.name || "Unknown");
 
-    // Check if user already applied
+    // Check if user already applied (check both old and new tracking systems)
     const alreadyApplied = job.applied.some(
       (appliedUserId) => appliedUserId.toString() === req.user._id.toString()
     );
 
-    if (alreadyApplied) {
+    const alreadyAppliedNew = job.applicants.some(
+      (applicant) => applicant.user.toString() === req.user._id.toString()
+    );
+
+    if (alreadyApplied || alreadyAppliedNew) {
       console.log("User already applied to this job");
       return res.status(400).json({ message: "Already applied to this job" });
     }
 
     console.log("Attempting to update job...");
 
-    // Try a simple update first
+    // Update job with both old and new tracking systems
     try {
       const updateResult = await Job.updateOne(
         { _id: jobId },
-        { $push: { applied: req.user._id } }
+        {
+          $push: {
+            applied: req.user._id,
+            applicants: {
+              user: req.user._id,
+              status: "Applied",
+              appliedAt: new Date(),
+              statusUpdatedAt: new Date(),
+              note: note || "",
+            },
+          },
+        }
       );
 
       console.log("Job update result:", updateResult);
@@ -218,15 +233,29 @@ const applyJob = async (req, res) => {
 
     console.log("Attempting to update user...");
 
-    // Update user's applied jobs
+    // Update user with both old and new tracking systems
     try {
       if (!user.appliedJobs.includes(jobId)) {
         user.appliedJobs.push(jobId);
-        await user.save();
-        console.log("User appliedJobs updated successfully");
-      } else {
-        console.log("Job already in user's appliedJobs");
       }
+
+      // Add to new tracking system
+      const existingApplication = user.jobApplications.find(
+        (app) => app.job.toString() === jobId
+      );
+
+      if (!existingApplication) {
+        user.jobApplications.push({
+          job: jobId,
+          status: "Applied",
+          appliedAt: new Date(),
+          statusUpdatedAt: new Date(),
+          note: note || "",
+        });
+      }
+
+      await user.save();
+      console.log("User appliedJobs and jobApplications updated successfully");
     } catch (userUpdateError) {
       console.log("ERROR updating user:", userUpdateError);
       // Don't fail the entire operation if user update fails
@@ -302,10 +331,39 @@ const checkSave = async (req, res) => {
 
 const getAppliedJobs = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate("appliedJobs");
+    const user = await User.findById(req.user._id).populate({
+      path: "jobApplications.job",
+      model: "Job",
+    });
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.status(200).json({ appliedJobs: user.appliedJobs });
+    // If using new tracking system, return with status
+    if (user.jobApplications && user.jobApplications.length > 0) {
+      const appliedJobsWithStatus = user.jobApplications.map((application) => ({
+        job: application.job,
+        status: application.status,
+        appliedAt: application.appliedAt,
+        statusUpdatedAt: application.statusUpdatedAt,
+        note: application.note,
+      }));
+
+      res.status(200).json({ appliedJobs: appliedJobsWithStatus });
+    } else {
+      // Fallback to old system for backward compatibility
+      const userWithOldJobs = await User.findById(req.user._id).populate(
+        "appliedJobs"
+      );
+      const appliedJobsWithStatus = userWithOldJobs.appliedJobs.map((job) => ({
+        job: job,
+        status: "Applied", // Default status for old applications
+        appliedAt: job.createdAt || new Date(),
+        statusUpdatedAt: job.createdAt || new Date(),
+        note: "",
+      }));
+
+      res.status(200).json({ appliedJobs: appliedJobsWithStatus });
+    }
   } catch (err) {
     console.error("Error getting applied jobs:", err);
     res.status(500).json({ message: "Server error" });

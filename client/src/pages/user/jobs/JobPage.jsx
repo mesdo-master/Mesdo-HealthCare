@@ -1,13 +1,21 @@
-import { useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  useNavigate,
+  useParams,
+  Outlet,
+  useOutletContext,
+} from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
+import JobCard from "./components/JobCard";
+import JobDetails from "./components/JobDetails";
 import JobStats from "./components/JobStats";
 import JobFilters from "./components/JobFilters";
 import JobSort from "./components/JobSort";
-import JobCard from "./components/JobCard";
-import axiosInstance from "../../../lib/axio";
-import { useNavigate, Outlet, useParams } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+// import { fetchJobs } from "../../../store/features/jobSlice";
 import { setFilteredJobs } from "../../../store/features/authSlice";
-import { AnimatePresence, motion } from "framer-motion";
+import { calculateMatchPercentage } from "../../../utils/matchPercentage";
+import axiosInstance from "../../../lib/axio";
 import ReactDOM from "react-dom";
 
 const JobPage = () => {
@@ -69,73 +77,6 @@ const JobPage = () => {
       navigate("/jobs");
     }
   }, [isClosing, navigate]);
-
-  // Weighted job match calculation
-  function calculateMatchPercentage(job, user) {
-    if (!user) return 0;
-    // --- Skills ---
-    const jobSkills = Array.isArray(job.skills)
-      ? job.skills.map((s) => s.toLowerCase())
-      : [];
-    const userSkills = Array.isArray(user.skills)
-      ? user.skills.map((s) => s.toLowerCase())
-      : [];
-    let skillScore = 0;
-    if (jobSkills.length > 0 && userSkills.length > 0) {
-      const matchedSkills = userSkills.filter((s) => jobSkills.includes(s));
-      skillScore = matchedSkills.length / jobSkills.length;
-    }
-    // --- Experience ---
-    let userExp = 0;
-    if (Array.isArray(user.workExperience) && user.workExperience.length > 0) {
-      userExp = Math.max(
-        ...user.workExperience.map((exp) => {
-          if (exp.startDate && exp.endDate) {
-            return (
-              (new Date(exp.endDate) - new Date(exp.startDate)) /
-              (1000 * 60 * 60 * 24 * 365)
-            );
-          } else if (exp.startDate && exp.currentlyWorking) {
-            return (
-              (Date.now() - new Date(exp.startDate)) /
-              (1000 * 60 * 60 * 24 * 365)
-            );
-          }
-          return 0;
-        })
-      );
-    }
-    const jobExp = Number(job.experience) || 0;
-    let expScore = 0;
-    if (jobExp > 0) {
-      expScore = Math.min(userExp / jobExp, 1);
-    } else {
-      expScore = 1; // If job doesn't specify, full score
-    }
-    // --- Location ---
-    let locationScore = 0;
-    if (user.city && job.location) {
-      locationScore =
-        user.city.toLowerCase() === job.location.toLowerCase() ? 1 : 0;
-    } else {
-      locationScore = 0.5; // Partial if missing
-    }
-    // --- Salary ---
-    let salaryScore = 0;
-    if (user.expectedSalary && job.salaryRangeFrom && job.salaryRangeTo) {
-      salaryScore =
-        user.expectedSalary >= job.salaryRangeFrom &&
-        user.expectedSalary <= job.salaryRangeTo
-          ? 1
-          : 0;
-    } else {
-      salaryScore = 0.5; // Partial if missing
-    }
-    // --- Weighted sum ---
-    const match =
-      skillScore * 65 + expScore * 20 + locationScore * 10 + salaryScore * 5;
-    return Math.round(match);
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 mt-[-40px] ml-[30px] mr-[10px] ">

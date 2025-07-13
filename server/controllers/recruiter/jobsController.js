@@ -94,11 +94,36 @@ const getOrgLogo = async (req, res) => {
 const getAllApplicants = async (req, res) => {
   try {
     const { jobId } = req.query;
-    const job = await Job.findById(jobId).populate("applied");
+
+    const job = await Job.findById(jobId)
+      .populate("applied") // Keep for backward compatibility
+      .populate("applicants.user"); // New tracking system
+
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
-    res.status(200).json(job);
+
+    // If using new tracking system, return with status
+    if (job.applicants && job.applicants.length > 0) {
+      res.status(200).json({
+        ...job.toObject(),
+        applicantsWithStatus: job.applicants,
+      });
+    } else {
+      // Fallback to old system for backward compatibility
+      const applicantsWithStatus = job.applied.map((applicant) => ({
+        user: applicant,
+        status: "Applied", // Default status for old applications
+        appliedAt: job.createdAt || new Date(),
+        statusUpdatedAt: job.createdAt || new Date(),
+        note: "",
+      }));
+
+      res.status(200).json({
+        ...job.toObject(),
+        applicantsWithStatus: applicantsWithStatus,
+      });
+    }
   } catch (error) {
     console.error("Error fetching applicants:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -318,6 +343,167 @@ const updateJob = async (req, res) => {
   }
 };
 
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { jobId, userId, status, note } = req.body;
+
+    // Validate status
+    const validStatuses = [
+      "Applied",
+      "Under Review",
+      "Interview",
+      "Accepted",
+      "Rejected",
+    ];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+
+    // Find the job and verify ownership
+    const job = await Job.findById(jobId).populate("applied");
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    // Check if the recruiter owns this job
+    const businessProfile = await Business.findOne({ userId: req.user._id });
+    if (
+      !businessProfile ||
+      job.organization.toString() !== businessProfile._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to update this job's applications" });
+    }
+
+    // Check if applicant exists in new tracking system
+    let applicantIndex = job.applicants.findIndex(
+      (app) => app.user.toString() === userId
+    );
+
+    // If not found in new system, check old system and migrate
+    if (applicantIndex === -1) {
+      const oldApplicant = job.applied.find(
+        (user) => user._id.toString() === userId
+      );
+
+      if (oldApplicant) {
+        // Migrate from old system to new system
+        job.applicants.push({
+          user: userId,
+          status: "Applied",
+          appliedAt: job.createdAt || new Date(),
+          statusUpdatedAt: new Date(),
+          note: "",
+        });
+        applicantIndex = job.applicants.length - 1;
+      } else {
+        return res.status(404).json({ error: "Applicant not found" });
+      }
+    }
+
+    // Update applicant status
+    job.applicants[applicantIndex].status = status;
+    job.applicants[applicantIndex].statusUpdatedAt = new Date();
+    if (note) {
+      job.applicants[applicantIndex].note = note;
+    }
+
+    await job.save();
+
+    // Update user's application status
+    const user = await User.findById(userId);
+    if (user) {
+      let userApplicationIndex = user.jobApplications.findIndex(
+        (app) => app.job.toString() === jobId
+      );
+
+      // If not found in new system, create entry
+      if (userApplicationIndex === -1) {
+        user.jobApplications.push({
+          job: jobId,
+          status: "Applied",
+          appliedAt: job.createdAt || new Date(),
+          statusUpdatedAt: new Date(),
+          note: "",
+        });
+        userApplicationIndex = user.jobApplications.length - 1;
+      }
+
+      // Update status
+      user.jobApplications[userApplicationIndex].status = status;
+      user.jobApplications[userApplicationIndex].statusUpdatedAt = new Date();
+      if (note) {
+        user.jobApplications[userApplicationIndex].note = note;
+      }
+      await user.save();
+    }
+
+    res.status(200).json({
+      message: "Application status updated successfully",
+      status: status,
+    });
+  } catch (error) {
+    console.error("Error updating application status:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const acceptApplication = async (req, res) => {
+  try {
+    const { jobId, userId, note } = req.body;
+
+    // Use the updateApplicationStatus function
+    req.body.status = "Accepted";
+    return updateApplicationStatus(req, res);
+  } catch (error) {
+    console.error("Error accepting application:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const rejectApplication = async (req, res) => {
+  try {
+    const { jobId, userId, note } = req.body;
+
+    // Use the updateApplicationStatus function
+    req.body.status = "Rejected";
+    return updateApplicationStatus(req, res);
+  } catch (error) {
+    console.error("Error rejecting application:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const getApplicationStatus = async (req, res) => {
+  try {
+    const { jobId, userId } = req.query;
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const applicant = job.applicants.find(
+      (app) => app.user.toString() === userId
+    );
+
+    if (!applicant) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    res.status(200).json({
+      status: applicant.status,
+      appliedAt: applicant.appliedAt,
+      statusUpdatedAt: applicant.statusUpdatedAt,
+      note: applicant.note,
+    });
+  } catch (error) {
+    console.error("Error getting application status:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getAllJobs,
   createJob,
@@ -328,4 +514,8 @@ module.exports = {
   sendMessage,
   deleteJob,
   updateJob,
+  updateApplicationStatus,
+  acceptApplication,
+  rejectApplication,
+  getApplicationStatus,
 };

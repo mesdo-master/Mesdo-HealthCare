@@ -103,6 +103,39 @@ const jobSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    // New field for tracking application status
+    applicants: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: [
+            "Applied",
+            "Under Review",
+            "Interview",
+            "Accepted",
+            "Rejected",
+          ],
+          default: "Applied",
+        },
+        appliedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        statusUpdatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        note: {
+          type: String,
+          default: "",
+        },
+      },
+    ],
   },
   {
     timestamps: true, // adds createdAt and updatedAt

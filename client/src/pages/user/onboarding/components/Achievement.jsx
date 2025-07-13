@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   PlusCircle,
@@ -11,7 +11,7 @@ import "react-quill/dist/quill.snow.css";
 import PropTypes from "prop-types";
 import StepProgressCircle from "../../../../components/StepProgressCircle";
 
-const Achievement = ({ updateFormData, onNext, onPrevious }) => {
+const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
   const [achievements, setAchievements] = useState([
     {
       id: 1,
@@ -24,6 +24,21 @@ const Achievement = ({ updateFormData, onNext, onPrevious }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
+
+  // Initialize achievements with existing data when component mounts
+  useEffect(() => {
+    if (formData && formData.Achievements && formData.Achievements.length > 0) {
+      const formattedAchievements = formData.Achievements.map((ach, index) => ({
+        id: index + 1,
+        award: ach.award || "",
+        issuer: ach.issuer || "",
+        year: ach.year || "",
+        description: ach.description || "",
+      }));
+      setAchievements(formattedAchievements);
+      setShowPreview(true);
+    }
+  }, [formData]);
 
   // ReactQuill Modules & Formats
   const modules = {

@@ -5,15 +5,30 @@ import StepProgressCircle from "../../../../components/StepProgressCircle";
 
 const defaultSkillOptions = ["Communication", "Teamwork", "Critical Thinking"];
 
-const SkillsSpecialization = ({ updateFormData, onNext, onPrevious }) => {
+const SkillsSpecialization = ({
+  formData,
+  updateFormData,
+  onNext,
+  onPrevious,
+}) => {
   const [formValues, setFormValues] = useState({
     skills: defaultSkillOptions,
   });
   const [skillInput, setSkillInput] = useState("");
 
+  // Initialize form values with existing data when component mounts
+  useEffect(() => {
+    if (formData && formData.Skills) {
+      setFormValues({
+        skills:
+          formData.Skills.length > 0 ? formData.Skills : defaultSkillOptions,
+      });
+    }
+  }, [formData]);
+
   // Only update parent when skills change
   useEffect(() => {
-    updateFormData({ skills: formValues.skills });
+    updateFormData({ Skills: formValues.skills });
     // eslint-disable-next-line
   }, [formValues.skills]);
 

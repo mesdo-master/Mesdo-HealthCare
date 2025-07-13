@@ -1,15 +1,30 @@
 import { ArrowLeft } from "lucide-react";
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "react-quill/dist/quill.snow.css";
 import ReactQuill from "react-quill";
 import StepProgressCircle from "../../../../components/StepProgressCircle";
 
-const ProfessionalSummary = ({ updateFormData, onPrevious, onNext }) => {
+const ProfessionalSummary = ({
+  formData,
+  updateFormData,
+  onPrevious,
+  onNext,
+}) => {
   const [formValues, setFormValues] = useState({
     tagline: "",
     aboutYou: "",
   });
+
+  // Initialize form values with existing data when component mounts
+  useEffect(() => {
+    if (formData) {
+      setFormValues({
+        tagline: formData.tagline || "",
+        aboutYou: formData.aboutYou || "",
+      });
+    }
+  }, [formData]);
 
   // ReactQuill Modules
   const modules = {
