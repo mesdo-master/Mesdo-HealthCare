@@ -52,7 +52,9 @@ const Login = () => {
   // Handle Google Login
   const handleGoogleLogin = () => {
     // Redirect to backend Google auth route
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = `${
+      process.env.REACT_APP_API_URL || "http://localhost:5020"
+    }/auth/google`;
   };
 
   return (
@@ -79,14 +81,17 @@ const Login = () => {
                 Email <span className="text-red-500">*</span>
               </label>
               <input
-                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${errors.email ? "border-red-500" : "border-gray-300"
-                  } text-gray-900 bg-gray-100`}
+                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } text-gray-900 bg-gray-100`}
                 placeholder="example@mail.com"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Password Input */}
@@ -95,14 +100,17 @@ const Login = () => {
                 Password <span className="text-red-500">*</span>
               </label>
               <input
-                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${errors.password ? "border-red-500" : "border-gray-300"
-                  } text-gray-900 bg-gray-100`}
+                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
+                  errors.password ? "border-red-500" : "border-gray-300"
+                } text-gray-900 bg-gray-100`}
                 placeholder="Enter Your Password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Login Button */}

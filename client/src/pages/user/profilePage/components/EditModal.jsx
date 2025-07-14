@@ -496,15 +496,18 @@ const EditModal = ({
 
   // Extra Information handlers
   const handleSaveExtraInfo = async (data) => {
+    console.log("handleSaveExtraInfo called with data:", data);
     try {
       const response = await axiosInstance.put(`/users/updateProfile`, {
         languages: data.languages,
         publications: data.publications,
       });
+      console.log("Update profile response:", response.data);
       setLanguages(data.languages);
       setPublications(data.publications);
       setIsEditing(false);
       onDataUpdate();
+      console.log("Languages saved successfully:", data.languages);
     } catch (error) {
       console.error("Error saving extra information:", error);
     }

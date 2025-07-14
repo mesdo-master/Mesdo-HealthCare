@@ -1,5 +1,14 @@
 import { io } from "socket.io-client";
 
-const socket = io("https://mesdo-lbvk.onrender.com");
+let socket;
 
-export default socket;
+export function initSocket(userId) {
+  socket = io(process.env.REACT_APP_SOCKET_URL || "http://localhost:5020", {
+    auth: { userId },
+  });
+  return socket;
+}
+
+export function getSocket() {
+  return socket;
+}

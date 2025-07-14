@@ -197,6 +197,10 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    languages: {
+      type: [String],
+      default: [],
+    },
     connections: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: "User",

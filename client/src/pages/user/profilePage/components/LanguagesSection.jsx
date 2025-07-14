@@ -5,8 +5,12 @@ const LanguagesSection = ({ isOwnProfile, userData, openModal }) => {
   const [userLanguages, setUserLanguages] = useState([]);
 
   useEffect(() => {
+    console.log("LanguagesSection - userData:", userData);
+    console.log("LanguagesSection - userData.languages:", userData?.languages);
     setUserLanguages(userData?.languages || []);
   }, [userData]);
+
+  console.log("LanguagesSection - userLanguages:", userLanguages);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mt-6">

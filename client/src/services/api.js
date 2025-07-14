@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/',
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5020",
   withCredentials: true,
 });
 
@@ -22,14 +22,14 @@ api.interceptors.response.use(
       // Request was made but no response received
       return Promise.reject({
         status: null,
-        message: 'Network error: No response received from server',
+        message: "Network error: No response received from server",
         details: error.message,
       });
     }
     // Other errors
     return Promise.reject({
       status: null,
-      message: 'Unexpected error occurred',
+      message: "Unexpected error occurred",
       details: error.message,
     });
   }
@@ -37,7 +37,7 @@ api.interceptors.response.use(
 
 export async function fetchNotifications() {
   try {
-    const response = await api.get('/notification');
+    const response = await api.get("/notification");
     return {
       success: true,
       data: response.data,
@@ -46,7 +46,7 @@ export async function fetchNotifications() {
     return {
       success: false,
       error: {
-        message: error.message || 'Failed to fetch notifications',
+        message: error.message || "Failed to fetch notifications",
         status: error.status || null,
         details: error.details || null,
       },
@@ -57,7 +57,7 @@ export async function fetchNotifications() {
 export async function markNotificationRead(id) {
   try {
     if (!id) {
-      throw new Error('Notification ID is required');
+      throw new Error("Notification ID is required");
     }
     const response = await api.put(`/notifications/${id}/read`);
     return {
@@ -68,7 +68,7 @@ export async function markNotificationRead(id) {
     return {
       success: false,
       error: {
-        message: error.message || 'Failed to mark notification as read',
+        message: error.message || "Failed to mark notification as read",
         status: error.status || null,
         details: error.details || null,
       },
@@ -79,9 +79,9 @@ export async function markNotificationRead(id) {
 export async function respondToConnection(fromUserId, accept) {
   try {
     if (!fromUserId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
-    const action = accept ? 'accept' : 'reject';
+    const action = accept ? "accept" : "reject";
     const response = await api.post(`/connections/${fromUserId}/${action}`);
     return {
       success: true,
@@ -91,7 +91,9 @@ export async function respondToConnection(fromUserId, accept) {
     return {
       success: false,
       error: {
-        message: error.message || `Failed to ${accept ? 'accept' : 'reject'} connection`,
+        message:
+          error.message ||
+          `Failed to ${accept ? "accept" : "reject"} connection`,
         status: error.status || null,
         details: error.details || null,
       },
@@ -102,7 +104,7 @@ export async function respondToConnection(fromUserId, accept) {
 export async function sendConnectionRequest(toUserId) {
   try {
     if (!toUserId) {
-      throw new Error('Target user ID is required');
+      throw new Error("Target user ID is required");
     }
     const response = await api.post(`/users/${toUserId}/connect`);
     return {
@@ -113,7 +115,7 @@ export async function sendConnectionRequest(toUserId) {
     return {
       success: false,
       error: {
-        message: error.message || 'Failed to send connection request',
+        message: error.message || "Failed to send connection request",
         status: error.status || null,
         details: error.details || null,
       },

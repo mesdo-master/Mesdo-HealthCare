@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { io } from "socket.io-client";
 import { useSelector } from "react-redux";
 
@@ -14,11 +20,14 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!currentUser) return;
 
-    const socket = io("https://mesdo-lbvk.onrender.com", {
-      withCredentials: true,
-      transports: ["websocket"], // 💡 Force websocket
-      query: { userId: currentUser._id },
-    });
+    const socket = io(
+      process.env.REACT_APP_SOCKET_URL || "http://localhost:5020",
+      {
+        withCredentials: true,
+        transports: ["websocket"], // 💡 Force websocket
+        query: { userId: currentUser._id },
+      }
+    );
 
     socket.emit("joinUser", currentUser._id);
 
@@ -28,6 +37,10 @@ export const SocketProvider = ({ children }) => {
 
     socket.on("disconnect", () => {
       console.log("❌ Disconnected from socket");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("❌ Socket connection error:", error);
     });
 
     socketRef.current = socket;
