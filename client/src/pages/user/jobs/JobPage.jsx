@@ -17,6 +17,7 @@ import { setFilteredJobs } from "../../../store/features/authSlice";
 import { calculateMatchPercentage } from "../../../utils/matchPercentage";
 import axiosInstance from "../../../lib/axio";
 import ReactDOM from "react-dom";
+import ProfileCompletionNudge from "../../../components/ProfileCompletionNudge";
 
 const JobPage = () => {
   const { filteredJobs, currentUser } = useSelector((state) => state.auth);
@@ -28,6 +29,9 @@ const JobPage = () => {
 
   // Animation close state
   const [isClosing, setIsClosing] = useState(false);
+
+  // Profile completion nudge state
+  const [showProfileNudge, setShowProfileNudge] = useState(true);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -146,6 +150,11 @@ const JobPage = () => {
           </AnimatePresence>,
           document.body
         )}
+
+      {/* Profile Completion Nudge */}
+      {showProfileNudge && (
+        <ProfileCompletionNudge onClose={() => setShowProfileNudge(false)} />
+      )}
     </div>
   );
 };

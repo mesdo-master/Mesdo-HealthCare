@@ -4,6 +4,7 @@ import axiosInstance from "../../../lib/axio";
 import ProfileHeader from "./components/ProfileHeader";
 import OverviewTab from "./components/OverviewTab";
 import EditModal from "./components/EditModal";
+import ProfileCompletionNudge from "../../../components/ProfileCompletionNudge";
 
 const ProfilePage = () => {
   const { userId } = useParams();
@@ -13,6 +14,9 @@ const ProfilePage = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("Basic Information");
+
+  // Profile completion nudge state
+  const [showProfileNudge, setShowProfileNudge] = useState(true);
 
   // Additional state for qualification and experience management
   const [editingQualification, setEditingQualification] = useState(null);
@@ -382,6 +386,11 @@ const ProfilePage = () => {
         activeAchievementTab={activeAchievementTab}
         setActiveAchievementTab={setActiveAchievementTab}
       />
+
+      {/* Profile Completion Nudge */}
+      {showProfileNudge && isOwnProfile && (
+        <ProfileCompletionNudge onClose={() => setShowProfileNudge(false)} />
+      )}
     </div>
   );
 };

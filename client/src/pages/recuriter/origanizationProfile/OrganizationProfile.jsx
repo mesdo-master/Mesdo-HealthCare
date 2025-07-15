@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import ProfileSection from "./component/ProfileSection";
 import SkillsSpecialization from "../../recuriter/origanizationProfile/component/SkillsSpecialization";
+import ProfileCompletionNudge from "../../../components/ProfileCompletionNudge";
 import { useDispatch, useSelector } from "react-redux";
 import axiosInstance from "../../../lib/axio";
 import { useParams } from "react-router-dom";
@@ -1006,6 +1007,9 @@ const OrganizationProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("");
 
+  // Profile completion nudge state
+  const [showProfileNudge, setShowProfileNudge] = useState(true);
+
   const { businessProfile } = useSelector((state) => state.auth);
   const [orgData, setOrgData] = useState();
   const dispatch = useDispatch();
@@ -1613,6 +1617,11 @@ const OrganizationProfile = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Profile Completion Nudge */}
+      {showProfileNudge && (
+        <ProfileCompletionNudge onClose={() => setShowProfileNudge(false)} />
       )}
     </div>
   );

@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { NotificationPopup } from "../pages/notification/NotificationsPopup";
 import axiosInstance from "../lib/axio";
 import { useSocket } from "../context/SocketProvider";
-
+import NotificationIcon from "../../src/assets/Notification.png";
 const Header = ({ className = "" }) => {
   const [showPreview, setShowPreview] = useState(false);
   const { currentUser, mode, businessProfile } = useSelector(
@@ -14,6 +14,7 @@ const Header = ({ className = "" }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const bellRef = useRef(null);
   const popupRef = useRef(null);
+  const notificationIconRef = useRef(null); // Add proper ref for notification icon
   const socket = useSocket();
   const navigate = useNavigate();
 
@@ -435,12 +436,16 @@ const Header = ({ className = "" }) => {
         <div className="flex items-center gap-5 relative">
           {/* Notifications */}
           <div
-            ref={bellRef}
+            ref={notificationIconRef}
             className="relative"
             onMouseEnter={() => setShowPreview(true)}
           >
             <Link to="/notifications">
-              <Bell className="text-gray-600 hover:text-blue-600 transition" />
+              <img
+                src={NotificationIcon}
+                alt="Notifications"
+                className="w-5 h-5 text-gray-600 hover:text-blue-600 transition"
+              />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-semibold px-[6px] py-[4px] rounded-full leading-none">
                   {unreadCount}
