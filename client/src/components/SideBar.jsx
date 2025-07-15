@@ -104,10 +104,10 @@ export default function Sidebar({ className = "" }) {
                   {/* Recruiter Side */}
                   <div className="mb-5">
                     <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                      Main Menu
+                      DASHBOARD
                     </h3>
                     <ul className="space-y-2">
-                      <NavItem
+                      {/* <NavItem
                         icon={
                           <img
                             src={SettingsIcon}
@@ -116,18 +116,7 @@ export default function Sidebar({ className = "" }) {
                           />
                         }
                         text="Dashboard"
-                      />
-                      <NavItem
-                        icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
-                          />
-                        }
-                        text="Profile"
-                        navTo={`/organization/${businessProfile?._id}`}
-                      />
+                      /> */}
                       <NavItem
                         icon={
                           <img
@@ -139,7 +128,8 @@ export default function Sidebar({ className = "" }) {
                         navTo={"/recruitment"}
                         text="Recruitment"
                       />
-                      <NavItem
+
+                      {/* <NavItem
                         icon={
                           <img
                             src={SettingsIcon}
@@ -148,7 +138,7 @@ export default function Sidebar({ className = "" }) {
                           />
                         }
                         text="Feed"
-                      />
+                      /> */}
                       <NavItem
                         icon={
                           <img
@@ -159,6 +149,17 @@ export default function Sidebar({ className = "" }) {
                         }
                         navTo={"/organization/messages"}
                         text="Messages"
+                      />
+                      <NavItem
+                        icon={
+                          <img
+                            src={SettingsIcon}
+                            alt="Settings"
+                            className="w-5 h-5"
+                          />
+                        }
+                        text="Profile"
+                        navTo={`/organization/${businessProfile?._id}`}
                       />
                     </ul>
                   </div>
@@ -206,6 +207,17 @@ export default function Sidebar({ className = "" }) {
                         }
                         text="Help Center"
                       />
+                      <NavItem
+                        icon={
+                          <img
+                            src={SettingsIcon}
+                            alt="Settings"
+                            className="w-5 h-5"
+                          />
+                        }
+                        text="Settings"
+                        // navTo={`/organization/${businessProfile?._id}`}
+                      />
                     </ul>
                   </div>
                 </>
@@ -213,6 +225,9 @@ export default function Sidebar({ className = "" }) {
                 <>
                   {/* User Side */}
                   <div className="mb-5 relative">
+                    <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                      DASHBOARD
+                    </h3>
                     <ul className="space-y-2">
                       {/* <NavItem icon={<Home size={18} />} text="Home" navTo={'/'} /> */}
                       <NavItem
@@ -248,6 +263,15 @@ export default function Sidebar({ className = "" }) {
                         text="Profile"
                         navTo={`/profile/${currentUser?.username}`}
                       />
+                    </ul>
+                  </div>
+                  <div className="mb-5 relative">
+                    <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                      Preference
+                    </h3>
+                    <ul className="space-y-2">
+                      {/* <NavItem icon={<Home size={18} />} text="Home" navTo={'/'} /> */}
+
                       <NavItem
                         icon={
                           <img
@@ -258,6 +282,16 @@ export default function Sidebar({ className = "" }) {
                         }
                         text="Settings"
                         navTo={"/settings"}
+                      />
+                      <NavItem
+                        icon={
+                          <img
+                            src={SettingsIcon}
+                            alt="Settings"
+                            className="w-5 h-5"
+                          />
+                        }
+                        text="Help Center"
                       />
 
                       <li>
