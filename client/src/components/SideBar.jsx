@@ -17,14 +17,13 @@ export default function Sidebar({ className = "" }) {
 
   const handleLogout = async () => {
     try {
-      dispatch(logoutUser());
-      alert("Logout successful");
-      navigate("/");
+      await dispatch(logoutUser()).unwrap();
+      // Force a page reload to clear any cached state
+      window.location.href = "/";
     } catch (error) {
       console.error("Logout error:", error);
-      alert(
-        "Logout failed: " + (error.response?.data?.message || error.message)
-      );
+      // Even if logout fails, clear local state and redirect
+      window.location.href = "/";
     }
   };
 

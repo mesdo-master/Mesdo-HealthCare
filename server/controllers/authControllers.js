@@ -293,8 +293,8 @@ const logout = (req, res) => {
   res.clearCookie("jwt-mesdo", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    // sameSite: "none",
-    // path: "/",
+    sameSite: "none",
+    path: "/",
   });
   res.json({
     message: "Logged out successfully",

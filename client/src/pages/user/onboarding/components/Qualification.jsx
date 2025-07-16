@@ -48,6 +48,9 @@ const Qualification = ({
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState("");
 
+  // Cache for universities to avoid repeated API calls
+  const [universitiesCache, setUniversitiesCache] = useState(null);
+
   // Initialize qualifications with existing data when component mounts
   useEffect(() => {
     if (
@@ -71,52 +74,17 @@ const Qualification = ({
     ],
   };
 
-  // Fetch Universities from APIs
+  // Fetch Universities from APIs with caching
   const fetchUniversities = async () => {
+    // Return cached data if available
+    if (universitiesCache) {
+      setUniversities(universitiesCache);
+      return;
+    }
+
     setLoading((prev) => ({ ...prev, universities: true }));
     try {
-      let allUniversities = [];
-
-      // Try multiple API sources for better reliability
-      try {
-        // Try the worldwide universities API first
-        const worldResponse = await axios.get(
-          "https://universities.hipolabs.com/search?limit=200"
-        );
-        if (worldResponse.data && Array.isArray(worldResponse.data)) {
-          const worldOptions = worldResponse.data.map((uni) => ({
-            value: uni.name,
-            label: `${uni.name} - ${uni.country}`,
-            country: uni.country,
-          }));
-          allUniversities = [...worldOptions];
-        }
-      } catch (error) {
-        console.warn("World universities API failed:", error);
-      }
-
-      // Try Indian colleges API as secondary source
-      try {
-        const indianResponse = await axios.get(
-          "https://colleges-api.onrender.com/colleges?limit=100"
-        );
-        if (
-          indianResponse.data &&
-          indianResponse.data.colleges &&
-          Array.isArray(indianResponse.data.colleges)
-        ) {
-          const indianOptions = indianResponse.data.colleges.map((college) => ({
-            value: college.Name,
-            label: `${college.Name} - ${college.City}, ${college.State}`,
-            country: "India",
-          }));
-          allUniversities = [...allUniversities, ...indianOptions];
-        }
-      } catch (error) {
-        console.warn("Indian colleges API failed:", error);
-      }
-
-      // Fallback data for major universities if APIs fail
+      // Fallback data for major universities - prioritize this for speed
       const fallbackUniversities = [
         // Indian Universities
         {
@@ -189,56 +157,40 @@ const Qualification = ({
           label: "Jamia Millia Islamia - Delhi, India",
           country: "India",
         },
-        {
-          value: "Manipal Academy of Higher Education",
-          label: "Manipal Academy of Higher Education - Manipal, India",
-          country: "India",
-        },
-
         // International Universities
         {
           value: "Harvard University",
-          label: "Harvard University - United States",
-          country: "United States",
-        },
-        {
-          value: "Massachusetts Institute of Technology",
-          label: "Massachusetts Institute of Technology - United States",
-          country: "United States",
+          label: "Harvard University - Cambridge, USA",
+          country: "USA",
         },
         {
           value: "Stanford University",
-          label: "Stanford University - United States",
-          country: "United States",
+          label: "Stanford University - Stanford, USA",
+          country: "USA",
+        },
+        {
+          value: "Massachusetts Institute of Technology",
+          label: "Massachusetts Institute of Technology - Cambridge, USA",
+          country: "USA",
         },
         {
           value: "University of Cambridge",
-          label: "University of Cambridge - United Kingdom",
-          country: "United Kingdom",
+          label: "University of Cambridge - Cambridge, UK",
+          country: "UK",
         },
         {
           value: "University of Oxford",
-          label: "University of Oxford - United Kingdom",
-          country: "United Kingdom",
-        },
-        {
-          value: "California Institute of Technology",
-          label: "California Institute of Technology - United States",
-          country: "United States",
-        },
-        {
-          value: "University of California Berkeley",
-          label: "University of California Berkeley - United States",
-          country: "United States",
+          label: "University of Oxford - Oxford, UK",
+          country: "UK",
         },
         {
           value: "University of Toronto",
-          label: "University of Toronto - Canada",
+          label: "University of Toronto - Toronto, Canada",
           country: "Canada",
         },
         {
           value: "University of Melbourne",
-          label: "University of Melbourne - Australia",
+          label: "University of Melbourne - Melbourne, Australia",
           country: "Australia",
         },
         {
@@ -248,81 +200,39 @@ const Qualification = ({
         },
         {
           value: "University of Tokyo",
-          label: "University of Tokyo - Japan",
+          label: "University of Tokyo - Tokyo, Japan",
           country: "Japan",
         },
         {
-          value: "Tsinghua University",
-          label: "Tsinghua University - China",
-          country: "China",
-        },
-        {
-          value: "Peking University",
-          label: "Peking University - China",
-          country: "China",
-        },
-        {
           value: "ETH Zurich",
-          label: "ETH Zurich - Switzerland",
+          label: "ETH Zurich - Zurich, Switzerland",
           country: "Switzerland",
-        },
-        {
-          value: "University of Edinburgh",
-          label: "University of Edinburgh - United Kingdom",
-          country: "United Kingdom",
-        },
-        {
-          value: "King's College London",
-          label: "King's College London - United Kingdom",
-          country: "United Kingdom",
-        },
-        {
-          value: "University of Sydney",
-          label: "University of Sydney - Australia",
-          country: "Australia",
-        },
-        {
-          value: "University of British Columbia",
-          label: "University of British Columbia - Canada",
-          country: "Canada",
-        },
-        {
-          value: "McGill University",
-          label: "McGill University - Canada",
-          country: "Canada",
-        },
-        {
-          value: "Seoul National University",
-          label: "Seoul National University - South Korea",
-          country: "South Korea",
         },
       ];
 
-      // Use fetched data if available, otherwise use fallback
-      const finalUniversities =
-        allUniversities.length > 0 ? allUniversities : fallbackUniversities;
+      // Set fallback data immediately for better UX
+      const fallbackWithOther = [
+        ...fallbackUniversities,
+        {
+          value: "other",
+          label: "Other (Please specify)",
+          country: "Other",
+        },
+      ];
 
-      // Sort with Indian universities first, then alphabetically
-      const sortedUniversities = finalUniversities.sort((a, b) => {
-        if (a.country === "India" && b.country !== "India") return -1;
-        if (a.country !== "India" && b.country === "India") return 1;
-        return a.label.localeCompare(b.label);
-      });
+      setUniversities(fallbackWithOther);
+      setUniversitiesCache(fallbackWithOther);
 
-      // Add "Other" option at the end
-      sortedUniversities.push({
-        value: "other",
-        label: "Other (Please specify)",
-        country: "Other",
-      });
-
-      setUniversities(sortedUniversities);
+      // Optionally fetch more universities in background (removed for performance)
+      // Users can use "Other" option if their university is not listed
     } catch (error) {
-      console.error("Error fetching universities:", error);
+      console.error("Error setting up universities:", error);
       // Fallback to basic options if everything fails
-      setUniversities([
+      const basicOptions = [
         { value: "other", label: "Other (Please specify)", country: "Other" },
-      ]);
+      ];
+      setUniversities(basicOptions);
+      setUniversitiesCache(basicOptions);
     } finally {
       setLoading((prev) => ({ ...prev, universities: false }));
     }
