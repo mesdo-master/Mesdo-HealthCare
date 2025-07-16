@@ -15,7 +15,11 @@ app.set("trust proxy", true);
 //!Middilewares
 app.use(
   cors({
-    origin: ["https://mesdo.vercel.app", "http://localhost:3000"],
+    origin: [
+      "https://mesdo.vercel.app",
+      "https://mesdo-health-care-u5s9.vercel.app",
+      "http://localhost:3000",
+    ],
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
