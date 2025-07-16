@@ -13,6 +13,7 @@ import { checkAuth } from "./store/features/authSlice";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignUpPage";
+import EmailVerificationPage from "./pages/auth/EmailVerificationPage";
 import ForgotPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import JobPage from "./pages/user/jobs/JobPage";
@@ -247,6 +248,7 @@ function AppRoutes({ isAuthenticated, currentUser, mode }) {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/jobs/:jobId" element={<PublicJobPage />} />

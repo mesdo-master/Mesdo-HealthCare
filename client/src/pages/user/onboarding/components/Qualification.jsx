@@ -632,6 +632,10 @@ const Qualification = ({
       updatedList.push(newEntry);
     }
     setQualList(updatedList);
+
+    // Update parent form data with the new qualifications list
+    updateFormData({ qualifications: updatedList });
+
     setShowPreview(true);
     setEditIdx(null);
     setFormValues({
@@ -649,14 +653,33 @@ const Qualification = ({
 
   const handleEdit = (idx) => {
     setEditIdx(idx);
-    setFormValues({ ...qualList[idx], skills: undefined });
-    setSkills(Array.isArray(qualList[idx].skills) ? qualList[idx].skills : []);
+    const qualItem = qualList[idx];
+
+    // Properly handle skills field
+    const skillsArray = Array.isArray(qualItem.skills)
+      ? qualItem.skills
+      : typeof qualItem.skills === "string"
+      ? qualItem.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s)
+      : [];
+
+    setFormValues({
+      ...qualItem,
+      skills: skillsArray.join(", "), // Convert back to string for form display
+    });
+    setSkills(skillsArray);
     setShowPreview(false);
   };
 
   const handleDelete = (idx) => {
     const updated = qualList.filter((_, i) => i !== idx);
     setQualList(updated);
+
+    // Update parent form data with the updated qualifications list
+    updateFormData({ qualifications: updated });
+
     setShowPreview(true);
   };
 
@@ -672,6 +695,7 @@ const Qualification = ({
       skills: "",
       description: "",
     });
+    setSkills([]); // Reset skills array
     setShowPreview(false);
   };
 

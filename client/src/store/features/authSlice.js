@@ -202,8 +202,14 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
-        state.isAuthenticated = true;
-        state.currentUser = action.payload;
+        // If email verification is required, don't set as authenticated yet
+        if (action.payload.requiresVerification) {
+          state.isAuthenticated = false;
+          state.currentUser = null;
+        } else {
+          state.isAuthenticated = true;
+          state.currentUser = action.payload;
+        }
         state.error = null;
         state.loading = false;
       })

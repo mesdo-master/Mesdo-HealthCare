@@ -21,8 +21,20 @@ const SignUpPage = () => {
     return strength;
   };
 
-  const strengthLabels = ["Very Weak", "Weak", "Moderate", "Strong", "Very Strong"];
-  const strengthColors = ["bg-[#DD4963]", "bg-[#FF9A40]", "bg-[#F2E03E]", "bg-[#B6E949]", "bg-[#48C61C]"];
+  const strengthLabels = [
+    "Very Weak",
+    "Weak",
+    "Moderate",
+    "Strong",
+    "Very Strong",
+  ];
+  const strengthColors = [
+    "bg-[#DD4963]",
+    "bg-[#FF9A40]",
+    "bg-[#F2E03E]",
+    "bg-[#B6E949]",
+    "bg-[#48C61C]",
+  ];
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");
@@ -52,8 +64,14 @@ const SignUpPage = () => {
 
     setErrors({});
     try {
-      await dispatch(signupUser({ email, password })).unwrap();
-      navigate("/");
+      const response = await dispatch(signupUser({ email, password })).unwrap();
+
+      // Check if email verification is required
+      if (response.requiresVerification) {
+        navigate("/verify-email", { state: { email } });
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       setErrors({ general: error?.message || "Unable to Signup" });
       console.log(error);
@@ -83,7 +101,9 @@ const SignUpPage = () => {
           <h2 className="text-[#DB4E82] font-bold text-sm">START FOR FREE</h2>
           <h1 className="text-3xl font-bold mt-2">Create new account.</h1>
 
-          {errors.general && <p className="text-red-500 text-sm mt-2">{errors.general}</p>}
+          {errors.general && (
+            <p className="text-red-500 text-sm mt-2">{errors.general}</p>
+          )}
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
@@ -99,7 +119,9 @@ const SignUpPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             <div>
@@ -115,7 +137,9 @@ const SignUpPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
 
             {password && (
@@ -133,9 +157,9 @@ const SignUpPage = () => {
                   ))}
                 </div>
                 <p
-                  className={`text-sm mt-1 font-small ${
-                    strengthColors[getPasswordStrength(password)].replace("bg", "text")
-                  }`}
+                  className={`text-sm mt-1 font-small ${strengthColors[
+                    getPasswordStrength(password)
+                  ].replace("bg", "text")}`}
                 >
                   {strengthLabels[getPasswordStrength(password)]}
                 </p>

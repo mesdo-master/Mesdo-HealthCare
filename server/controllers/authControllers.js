@@ -1,10 +1,13 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user/User");
-const { resetPasswordEmail } = require("../utils/emailHandlers");
+const {
+  resetPasswordEmail,
+  sendVerificationEmail,
+  generateVerificationCode,
+} = require("../utils/emailHandlers");
 const passport = require("../utils/passport");
 const BusinessProfile = require("../models/recruiter/BusinessProfile");
-// const { sendVerificationEmail } = require("../utils/emailServices");
 
 const googleAuth = (req, res) => {
   passport.authenticate("google", { scope: ["profile", "email"] })(req, res);
@@ -54,10 +57,6 @@ const generateUsername = async (email) => {
   return username;
 };
 
-const generateVerificationCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
 const signup = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -78,7 +77,7 @@ const signup = async (req, res) => {
       });
     }
 
-    // const verificationCode = generateVerificationCode();
+    const verificationCode = generateVerificationCode();
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -87,53 +86,34 @@ const signup = async (req, res) => {
       username: await generateUsername(email),
       email,
       password: hashedPassword,
-      // verificationToken: verificationCode,
-      // verificationTokenExpires: Date.now() + 3600000, // 1 hour
+      verificationToken: verificationCode,
+      verificationTokenExpires: Date.now() + 3600000, // 1 hour
+      isVerified: false, // Explicitly set to false for new users
     });
     console.log("user create :", user);
 
     await user.save();
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
-
-    // try {
-    //   const emailSent = await sendVerificationEmail(email, verificationCode);
-    //   if (!emailSent) {
-    //     // If email fails, delete the user and return error
-    //     await User.findByIdAndDelete(newUser._id);
-    //     return res
-    //       .status(500)
-    //       .json({ message: "Error sending verification email" });
-    //   }
-    // } catch (emailError) {
-    //   // If email fails, delete the user and return error
-    //   await User.findByIdAndDelete(newUser._id);
-    //   return res
-    //     .status(500)
-    //     .json({ message: "Error sending verification email" });
-    // }
-
-    res.cookie("jwt-mesdo", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      // sameSite: "none",
-      // path: "/",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    const emailSent = await sendVerificationEmail(email, verificationCode);
+    if (!emailSent.success) {
+      // If email fails, delete the user and return error
+      await User.findByIdAndDelete(user._id);
+      return res
+        .status(500)
+        .json({ message: "Error sending verification email" });
+    }
 
     res.status(201).json({
-      message: "User registered successfully",
+      message:
+        "Registration successful. Please check your email for verification code.",
       success: true,
-      reDirectUrl: "/",
-      token: token,
+      email: email,
+      requiresVerification: true,
     });
   } catch (error) {
     console.log("Error in signup: ", error);
     res.status(500).json({
       message: "Internal server error",
-      reDirectUrl: "/",
       success: false,
     });
   }
@@ -145,19 +125,28 @@ const verifyEmail = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(404)
+        .json({ message: "User not found", success: false });
     }
 
     if (user.isVerified) {
-      return res.status(400).json({ message: "Email already verified" });
+      return res
+        .status(400)
+        .json({ message: "Email already verified", success: false });
     }
+
     console.log(user.verificationToken, code, email);
     if (user.verificationToken !== code) {
-      return res.status(400).json({ message: "Invalid verification code" });
+      return res
+        .status(400)
+        .json({ message: "Invalid verification code", success: false });
     }
 
     if (Date.now() > user.verificationTokenExpires) {
-      return res.status(400).json({ message: "Verification code has expired" });
+      return res
+        .status(400)
+        .json({ message: "Verification code has expired", success: false });
     }
 
     // Update user verification status
@@ -166,11 +155,31 @@ const verifyEmail = async (req, res) => {
     user.verificationTokenExpires = undefined;
     await user.save();
 
-    res.json({ message: "Email verified successfully" });
+    // Generate JWT token after successful verification
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
+
+    res.cookie("jwt-mesdo", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      message: "Email verified successfully",
+      success: true,
+      token: token,
+      reDirectUrl: "/",
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error verifying email", error: error.message });
+    res.status(500).json({
+      message: "Error verifying email",
+      error: error.message,
+      success: false,
+    });
   }
 };
 
@@ -180,11 +189,15 @@ const resendVerification = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(404)
+        .json({ message: "User not found", success: false });
     }
 
     if (user.isVerified) {
-      return res.status(400).json({ message: "Email already verified" });
+      return res
+        .status(400)
+        .json({ message: "Email already verified", success: false });
     }
 
     // Generate new verification code
@@ -197,17 +210,18 @@ const resendVerification = async (req, res) => {
 
     // Send new verification email
     const emailSent = await sendVerificationEmail(email, verificationCode);
-    if (!emailSent) {
+    if (!emailSent.success) {
       return res
         .status(500)
-        .json({ message: "Error sending verification email" });
+        .json({ message: "Error sending verification email", success: false });
     }
 
-    res.json({ message: "Verification email sent" });
+    res.json({ message: "Verification email sent", success: true });
   } catch (error) {
     res.status(500).json({
       message: "Error resending verification email",
       error: error.message,
+      success: false,
     });
   }
 };
@@ -222,12 +236,29 @@ const login = async (req, res) => {
       return res.status(400).json({ email: "user not found", success: false });
     }
 
-    // Check password
+    // Check password first
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
         .status(400)
         .json({ password: "Invalid Password", success: false });
+    }
+
+    // For existing users (those who don't have verificationToken field or have null verificationToken),
+    // automatically verify them and allow login
+    if (!user.verificationToken && !user.isVerified) {
+      user.isVerified = true;
+      await user.save();
+    }
+
+    // Only require verification for users who have a verificationToken (new signups)
+    if (user.verificationToken && !user.isVerified) {
+      return res.status(400).json({
+        message: "Please verify your email before logging in",
+        success: false,
+        requiresVerification: true,
+        email: email,
+      });
     }
 
     // Create and send token

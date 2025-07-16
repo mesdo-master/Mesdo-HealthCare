@@ -44,6 +44,13 @@ const Login = () => {
       window.location.href = "/jobs";
     } catch (error) {
       console.log(error);
+
+      // Check if email verification is required
+      if (error?.requiresVerification) {
+        navigate("/verify-email", { state: { email } });
+        return;
+      }
+
       setErrors({ email: error?.email, password: error?.password });
       console.error(error);
     }
