@@ -37,7 +37,7 @@ const googleAuthCallback = async (req, res, next) => {
     });
 
     // Redirect to frontend
-    res.redirect("https://mesdo.vercel.app");
+    res.redirect("https://mesdo-health-care-u5s9.vercel.app");
   })(req, res, next);
 };
 
