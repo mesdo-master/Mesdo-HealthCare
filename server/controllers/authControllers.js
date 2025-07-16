@@ -271,8 +271,8 @@ const login = async (req, res) => {
     await res.cookie("jwt-mesdo", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      // sameSite: "none",
-      // path: "/",
+      sameSite: "none",
+      path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     console.log("login cookie :", req.cookies["jwt-mesdo"]);
