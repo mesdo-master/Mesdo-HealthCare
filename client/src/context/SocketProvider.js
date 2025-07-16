@@ -21,7 +21,8 @@ export const SocketProvider = ({ children }) => {
     if (!currentUser) return;
 
     const socket = io(
-      process.env.REACT_APP_SOCKET_URL || "http://localhost:5020",
+      process.env.REACT_APP_SOCKET_URL ||
+        "https://mesdo-healthcare-1.onrender.com",
       {
         withCredentials: true,
         transports: ["websocket"], // 💡 Force websocket
