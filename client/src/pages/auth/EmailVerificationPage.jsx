@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../lib/axio";
-import { checkAuth } from "../../store/features/authSlice";
+import {
+  checkAuth,
+  verifyEmail,
+  resendVerification,
+} from "../../store/features/authSlice";
 
 const EmailVerificationPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { loading, error } = useSelector((state) => state.auth);
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [email, setEmail] = useState("");
 
@@ -82,48 +85,37 @@ const EmailVerificationPage = () => {
       return;
     }
 
-    setIsLoading(true);
     setErrors({});
 
     try {
-      const response = await axiosInstance.post("/verify-email", {
-        email,
-        code: verificationCode,
-      });
+      const result = await dispatch(
+        verifyEmail({ email, verificationCode })
+      ).unwrap();
 
-      if (response.data.success) {
+      if (result.success) {
         // Clear stored email
         localStorage.removeItem("pendingVerificationEmail");
 
-        // Dispatch checkAuth to update the auth state
-        await dispatch(checkAuth());
-
         // Navigate to main app
-        navigate("/");
+        navigate("/", { replace: true });
       }
     } catch (error) {
+      console.log("Email verification error:", error);
       setErrors({
-        general:
-          error.response?.data?.message ||
-          "Verification failed. Please try again.",
+        general: error.message || "Verification failed. Please try again.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleResendCode = async () => {
     if (resendTimer > 0) return;
 
-    setIsResending(true);
     setErrors({});
 
     try {
-      const response = await axiosInstance.post("/resend-verification", {
-        email,
-      });
+      const result = await dispatch(resendVerification(email)).unwrap();
 
-      if (response.data.success) {
+      if (result.success) {
         setResendTimer(60);
         setCode(["", "", "", "", "", ""]);
         // Focus first input
@@ -132,12 +124,8 @@ const EmailVerificationPage = () => {
       }
     } catch (error) {
       setErrors({
-        general:
-          error.response?.data?.message ||
-          "Failed to resend code. Please try again.",
+        general: error.message || "Failed to resend code. Please try again.",
       });
-    } finally {
-      setIsResending(false);
     }
   };
 
@@ -213,10 +201,10 @@ const EmailVerificationPage = () => {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className="w-full py-3 px-4 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Verifying..." : "Verify Email"}
+              {loading ? "Verifying..." : "Verify Email"}
             </button>
           </form>
 
@@ -226,14 +214,10 @@ const EmailVerificationPage = () => {
             </p>
             <button
               onClick={handleResendCode}
-              disabled={resendTimer > 0 || isResending}
+              disabled={resendTimer > 0}
               className="text-blue-600 font-medium hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
             >
-              {isResending
-                ? "Sending..."
-                : resendTimer > 0
-                ? `Resend in ${resendTimer}s`
-                : "Resend code"}
+              {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend code"}
             </button>
           </div>
 

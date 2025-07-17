@@ -55,6 +55,37 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// Verify email
+export const verifyEmail = createAsyncThunk(
+  "auth/verifyEmail",
+  async ({ email, verificationCode }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post("/verify-email", {
+        email,
+        verificationCode,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Resend verification code
+export const resendVerification = createAsyncThunk(
+  "auth/resendVerification",
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post("/resend-verification", {
+        email,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Complete normal onboarding
 export const completeOnboarding = createAsyncThunk(
   "auth/completeOnboarding",
@@ -248,6 +279,46 @@ const authSlice = createSlice({
 
         // Clear token from localStorage on login failure
         localStorage.removeItem("jwt-mesdo-token");
+      })
+
+      // ✅ Verify Email
+      .addCase(verifyEmail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyEmail.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+        state.currentUser = action.payload.user;
+        state.error = null;
+        state.loading = false;
+        state.authChecked = true;
+
+        // Store token in localStorage if provided
+        if (action.payload.token) {
+          localStorage.setItem("jwt-mesdo-token", action.payload.token);
+          console.log("Token stored in localStorage after email verification");
+        }
+      })
+      .addCase(verifyEmail.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.currentUser = null;
+        state.error = action.payload;
+        state.loading = false;
+        state.authChecked = true;
+      })
+
+      .addCase(resendVerification.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resendVerification.fulfilled, (state, action) => {
+        state.error = null;
+        state.loading = false;
+        // Don't change authentication state, just clear errors
+      })
+      .addCase(resendVerification.rejected, (state, action) => {
+        state.error = action.payload;
+        state.loading = false;
       })
 
       .addCase(logoutUser.pending, (state) => {
