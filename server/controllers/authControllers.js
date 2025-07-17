@@ -30,7 +30,7 @@ const googleAuthCallback = async (req, res, next) => {
     // Set cookie (same as signup/login)
     res.cookie("jwt-mesdo", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true, // Always true for production deployment
       sameSite: "none",
       path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -121,63 +121,56 @@ const signup = async (req, res) => {
 
 const verifyEmail = async (req, res) => {
   try {
-    const { email, code } = req.body;
+    const { email, verificationCode } = req.body;
 
-    const user = await User.findOne({ email });
+    if (!email || !verificationCode) {
+      return res.status(400).json({
+        message: "Email and verification code are required",
+        success: false,
+      });
+    }
+
+    const user = await User.findOne({
+      email,
+      verificationToken: verificationCode,
+      verificationTokenExpires: { $gt: Date.now() },
+    });
+
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found", success: false });
+      return res.status(400).json({
+        message: "Invalid or expired verification code",
+        success: false,
+      });
     }
 
-    if (user.isVerified) {
-      return res
-        .status(400)
-        .json({ message: "Email already verified", success: false });
-    }
-
-    console.log(user.verificationToken, code, email);
-    if (user.verificationToken !== code) {
-      return res
-        .status(400)
-        .json({ message: "Invalid verification code", success: false });
-    }
-
-    if (Date.now() > user.verificationTokenExpires) {
-      return res
-        .status(400)
-        .json({ message: "Verification code has expired", success: false });
-    }
-
-    // Update user verification status
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
     await user.save();
 
-    // Generate JWT token after successful verification
+    // Create and send token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
 
     res.cookie("jwt-mesdo", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true, // Always true for production deployment
       sameSite: "none",
       path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     res.json({
-      message: "Email verified successfully",
+      message: "Email verified successfully. You are now logged in.",
       success: true,
+      user: user,
       token: token,
-      reDirectUrl: "/",
     });
   } catch (error) {
+    console.error("Error in verifyEmail:", error);
     res.status(500).json({
-      message: "Error verifying email",
-      error: error.message,
+      message: "Internal server error",
       success: false,
     });
   }
@@ -270,7 +263,7 @@ const login = async (req, res) => {
 
     await res.cookie("jwt-mesdo", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true, // Always true for production deployment
       sameSite: "none",
       path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -298,7 +291,7 @@ const login = async (req, res) => {
 const logout = (req, res) => {
   res.clearCookie("jwt-mesdo", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, // Always true for production deployment
     sameSite: "none",
     path: "/",
   });
