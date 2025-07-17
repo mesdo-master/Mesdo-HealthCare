@@ -89,6 +89,14 @@ const Header = ({ className = "" }) => {
   useEffect(() => {
     if (!currentUser) return;
 
+    console.log("=== HEADER DEBUG INFO ===");
+    console.log("Current user from Redux:", currentUser);
+    console.log("Current user ID:", currentUser?._id);
+    console.log("Current user email:", currentUser?.email);
+    console.log("Current user name:", currentUser?.name);
+    console.log("Mode:", mode);
+    console.log("========================");
+
     fetchUnreadNotifications();
   }, [currentUser, mode]);
 

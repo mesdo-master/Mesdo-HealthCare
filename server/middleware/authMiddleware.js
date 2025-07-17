@@ -8,6 +8,9 @@ const protectRoute = async (req, res, next) => {
     console.log("Request method:", req.method);
     console.log("All cookies:", req.cookies);
     console.log("Authorization header:", req.headers.authorization);
+    console.log("User-Agent:", req.headers["user-agent"]);
+    console.log("Origin:", req.headers.origin);
+    console.log("Referer:", req.headers.referer);
 
     // Get token from cookie or Authorization header
     const tokenFromCookie = req.cookies["jwt-mesdo"];
@@ -39,6 +42,7 @@ const protectRoute = async (req, res, next) => {
     }
 
     console.log("Token verified, decoded:", decoded);
+    console.log("User ID from token:", decoded.userId);
 
     // Find user
     const user = await User.findById(decoded.userId).select("-password");
@@ -49,7 +53,10 @@ const protectRoute = async (req, res, next) => {
         .json({ message: "User not found", success: false });
     }
 
-    console.log("User found:", user.email || user.name || "Unknown");
+    console.log("User found - ID:", user._id);
+    console.log("User found - Email:", user.email);
+    console.log("User found - Name:", user.name);
+    console.log("User found - Username:", user.username);
     req.user = user;
     console.log("=== AUTH MIDDLEWARE SUCCESS ===");
     next();
