@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { logoutUser, modeToggle } from "../store/features/authSlice";
+import { useDispatch } from "react-redux";
+import { modeToggle } from "../store/features/authSlice";
+import { useAuth } from "../hooks/useAuth";
 import hospitalicon from "../assets/hospitalicon.png";
 import axiosInstance from "../lib/axio";
 import SettingsIcon from "../assets/Settings.png";
@@ -10,21 +11,11 @@ import SettingsIcon from "../assets/Settings.png";
 export default function Sidebar({ className = "" }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const mode = useSelector((state) => state.auth.mode);
-  const { isAuthenticated, currentUser, businessProfile } = useSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticated, currentUser, businessProfile, mode, logout } =
+    useAuth();
 
   const handleLogout = async () => {
-    try {
-      await dispatch(logoutUser()).unwrap();
-      // Force a page reload to clear any cached state
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Even if logout fails, clear local state and redirect
-      window.location.href = "/";
-    }
+    await logout();
   };
 
   const handleModeToggle = async () => {

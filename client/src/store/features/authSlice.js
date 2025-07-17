@@ -227,7 +227,8 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isAuthenticated = true;
-        state.currentUser = action.payload;
+        state.currentUser = action.payload.user; // Extract user from payload
+        state.businessProfile = action.payload.orgInfo || null;
         state.error = null;
         state.loading = false;
         state.authChecked = true;

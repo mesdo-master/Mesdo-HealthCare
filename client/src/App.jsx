@@ -6,9 +6,11 @@ import {
   useLocation,
   matchPath,
 } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth } from "./store/features/authSlice";
+import { useAuth } from "./hooks/useAuth";
+import { Toaster } from "react-hot-toast";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -29,7 +31,6 @@ import OrganizationProfile from "./pages/recuriter/origanizationProfile/Organiza
 import Messages from "./pages/user/messages/MessagesPage";
 import MessagesRecuriter from "./pages/recuriter/messages/MessagesPage";
 import JobDetails from "./pages/user/jobs/components/JobDetails";
-import { AuthProvider } from "./context/AuthContext";
 import OnboardingRecruiter from "./pages/recuriter/onBoarding/Onboarding";
 import NotificationPage from "./pages/notification/NotificationsPage";
 import Applicants from "./pages/recuriter/recuritement/recuritmentPage/Applicants";
@@ -37,11 +38,17 @@ import AppliedJob from "./pages/user/jobs/AppliedJobsPage";
 import SavedJobs from "./pages/user/jobs/SavedJobsPage";
 import HiddenJobs from "./pages/user/jobs/HiddenJobsPage";
 import Settings from "./pages/settings/Settings";
-import { Toaster } from "react-hot-toast";
-import PublicJobPage from "./pages/user/jobs/PublicJobPage";
 import SearchResults from "./pages/SearchResults";
+import PublicJobPage from "./pages/user/jobs/PublicJobPage";
 
-function AppRoutes({ isAuthenticated, currentUser, mode }) {
+function AppRoutes() {
+  const {
+    isAuthenticated,
+    currentUser,
+    needsOnboarding,
+    needsRecruiterOnboarding,
+    mode,
+  } = useAuth();
   const location = useLocation();
   const noSidebarOffsetRoutes = ["/jobs", "/settings"];
   const isNoSidebarOffset =
@@ -52,20 +59,19 @@ function AppRoutes({ isAuthenticated, currentUser, mode }) {
 
   return isAuthenticated ? (
     // Handle onboarding routes
-    mode === "individual" && !currentUser?.onboardingCompleted ? (
+    needsOnboarding ? (
       <Routes>
         <Route
           path="/onboarding"
           element={
             <ProtectedRoute role="individual">
-              {" "}
-              <OnboardingPage />{" "}
+              <OnboardingPage />
             </ProtectedRoute>
           }
         />
         <Route path="*" element={<Navigate to="/onboarding" />} />
       </Routes>
-    ) : mode === "recruiter" && !currentUser?.recruiterOnboardingCompleted ? (
+    ) : needsRecruiterOnboarding ? (
       <Routes>
         <Route
           path="/onboarding-recruiter"
@@ -260,13 +266,7 @@ function AppRoutes({ isAuthenticated, currentUser, mode }) {
 
 function App() {
   const dispatch = useDispatch();
-  const {
-    isAuthenticated,
-    currentUser,
-    authChecked,
-    mode,
-    onboardingCompleted,
-  } = useSelector((state) => state.auth);
+  const { authChecked } = useAuth();
 
   useEffect(() => {
     dispatch(checkAuth());
@@ -281,18 +281,12 @@ function App() {
       </div>
     );
   }
-  // console.log(currentUser?.onboardingCompleted);
+
   return (
-    <AuthProvider>
-      <Router>
-        <Toaster position="top-right" />
-        <AppRoutes
-          isAuthenticated={isAuthenticated}
-          currentUser={currentUser}
-          mode={mode}
-        />
-      </Router>
-    </AuthProvider>
+    <Router>
+      <Toaster position="top-right" />
+      <AppRoutes />
+    </Router>
   );
 }
 

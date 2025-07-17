@@ -277,12 +277,17 @@ const login = async (req, res) => {
     });
     console.log("login cookie :", req.cookies["jwt-mesdo"]);
 
+    const businessProfile = await BusinessProfile.findOne({
+      userId: user._id,
+    });
+
     res.json({
       message: "Logged in successfully",
       success: true,
       reDirectUrl: "/",
       token: token,
-      user: req.user || user, // Include user data in response
+      user: user, // Standardized user object
+      orgInfo: businessProfile, // Include business profile for consistency
     });
   } catch (error) {
     console.error("Error in login controller:", error);
@@ -307,6 +312,20 @@ const logout = (req, res) => {
 const getCurrentUser = async (req, res) => {
   try {
     console.log("Current User: ", req.user.name);
+
+    // Auto-migrate existing users: if onboardingCompleted is undefined, set it to true
+    if (
+      req.user.onboardingCompleted === undefined ||
+      req.user.onboardingCompleted === null
+    ) {
+      await User.findByIdAndUpdate(req.user._id, {
+        onboardingCompleted: true,
+        recruiterOnboardingCompleted: true,
+      });
+      req.user.onboardingCompleted = true;
+      req.user.recruiterOnboardingCompleted = true;
+    }
+
     const businessProfile = await BusinessProfile.findOne({
       userId: req.user._id,
     });
