@@ -27,17 +27,32 @@ const googleAuthCallback = async (req, res, next) => {
       expiresIn: "30d",
     });
 
-    // Set cookie (same as signup/login)
+    // Set multiple cookie variations for better browser compatibility
     res.cookie("jwt-mesdo", token, {
       httpOnly: true,
-      secure: true, // Always true for production deployment
+      secure: true,
       sameSite: "none",
       path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-    // Redirect to frontend
-    res.redirect("https://mesdo-health-care-u5s9.vercel.app");
+    res.cookie("jwt-mesdo-fallback", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    res.cookie("jwt-mesdo-legacy", token, {
+      httpOnly: true,
+      secure: true,
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    // Redirect to frontend with token in URL as additional fallback
+    res.redirect(`https://mesdo-health-care-u5s9.vercel.app?token=${token}`);
   })(req, res, next);
 };
 
@@ -153,10 +168,26 @@ const verifyEmail = async (req, res) => {
       expiresIn: "30d",
     });
 
+    // Set multiple cookie variations for better browser compatibility
     res.cookie("jwt-mesdo", token, {
       httpOnly: true,
-      secure: true, // Always true for production deployment
+      secure: true,
       sameSite: "none",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    res.cookie("jwt-mesdo-fallback", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    res.cookie("jwt-mesdo-legacy", token, {
+      httpOnly: true,
+      secure: true,
       path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
@@ -165,7 +196,7 @@ const verifyEmail = async (req, res) => {
       message: "Email verified successfully. You are now logged in.",
       success: true,
       user: user,
-      token: token,
+      token: token, // Include token in response for frontend storage
     });
   } catch (error) {
     console.error("Error in verifyEmail:", error);
@@ -227,6 +258,7 @@ const login = async (req, res) => {
     console.log("Login email:", email);
     console.log("Request origin:", req.headers.origin);
     console.log("Request referer:", req.headers.referer);
+    console.log("User-Agent:", req.headers["user-agent"]);
     console.log("Existing cookies:", req.cookies);
 
     // Check if user exists
@@ -279,9 +311,10 @@ const login = async (req, res) => {
     console.log("JWT token created for user:", user._id);
     console.log("Token length:", token.length);
 
+    // Set multiple cookie variations for better browser compatibility
     const cookieOptions = {
       httpOnly: true,
-      secure: true, // Always true for production deployment
+      secure: true,
       sameSite: "none",
       path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -289,9 +322,27 @@ const login = async (req, res) => {
 
     console.log("Setting cookie with options:", cookieOptions);
 
-    await res.cookie("jwt-mesdo", token, cookieOptions);
-    console.log("Cookie set successfully");
-    console.log("Response cookies after setting:", req.cookies);
+    // Set primary cookie
+    res.cookie("jwt-mesdo", token, cookieOptions);
+
+    // Set fallback cookie for browsers that don't support sameSite: "none"
+    res.cookie("jwt-mesdo-fallback", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax", // More permissive for some browsers
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    // Set another fallback without sameSite for older browsers
+    res.cookie("jwt-mesdo-legacy", token, {
+      httpOnly: true,
+      secure: true,
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    console.log("All cookies set successfully");
 
     const businessProfile = await BusinessProfile.findOne({
       userId: user._id,
@@ -303,12 +354,13 @@ const login = async (req, res) => {
       message: "Logged in successfully",
       success: true,
       reDirectUrl: "/",
-      token: token,
-      user: user, // Standardized user object
-      orgInfo: businessProfile, // Include business profile for consistency
+      token: token, // Include token in response for frontend storage
+      user: user,
+      orgInfo: businessProfile,
     };
 
     console.log("Sending response with user ID:", user._id);
+    console.log("Token included in response:", !!responseData.token);
     console.log("=== LOGIN ATTEMPT SUCCESS ===");
 
     res.json(responseData);
@@ -320,12 +372,29 @@ const login = async (req, res) => {
 };
 
 const logout = (req, res) => {
-  res.clearCookie("jwt-mesdo", {
+  // Clear all cookie variations
+  const cookieOptions = {
     httpOnly: true,
-    secure: true, // Always true for production deployment
+    secure: true,
     sameSite: "none",
     path: "/",
+  };
+
+  res.clearCookie("jwt-mesdo", cookieOptions);
+  res.clearCookie("jwt-mesdo-fallback", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
   });
+  res.clearCookie("jwt-mesdo-legacy", {
+    httpOnly: true,
+    secure: true,
+    path: "/",
+  });
+
+  console.log("All authentication cookies cleared");
+
   res.json({
     message: "Logged out successfully",
     success: true,

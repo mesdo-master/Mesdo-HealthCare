@@ -232,6 +232,12 @@ const authSlice = createSlice({
         state.error = null;
         state.loading = false;
         state.authChecked = true;
+
+        // Store token in localStorage as fallback for browsers with cookie issues
+        if (action.payload.token) {
+          localStorage.setItem("jwt-mesdo-token", action.payload.token);
+          console.log("Token stored in localStorage for fallback");
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isAuthenticated = false;
@@ -239,6 +245,9 @@ const authSlice = createSlice({
         state.error = action.payload;
         state.loading = false;
         state.authChecked = true;
+
+        // Clear token from localStorage on login failure
+        localStorage.removeItem("jwt-mesdo-token");
       })
 
       .addCase(logoutUser.pending, (state) => {
@@ -250,6 +259,10 @@ const authSlice = createSlice({
         state.error = null;
         state.loading = false;
         state.authChecked = true;
+
+        // Clear token from localStorage on logout
+        localStorage.removeItem("jwt-mesdo-token");
+
         state.formData = {
           name: "",
           email: "",

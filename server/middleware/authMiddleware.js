@@ -12,25 +12,44 @@ const protectRoute = async (req, res, next) => {
     console.log("Origin:", req.headers.origin);
     console.log("Referer:", req.headers.referer);
 
-    // Get token from cookie or Authorization header
+    // Get token from multiple sources (in order of preference)
     const tokenFromCookie = req.cookies["jwt-mesdo"];
+    const tokenFromFallback = req.cookies["jwt-mesdo-fallback"];
+    const tokenFromLegacy = req.cookies["jwt-mesdo-legacy"];
     const tokenFromHeader = req.headers.authorization?.startsWith("Bearer ")
       ? req.headers.authorization.split(" ")[1]
       : null;
 
-    console.log("Token from cookie:", tokenFromCookie);
+    console.log("Token from primary cookie:", tokenFromCookie);
+    console.log("Token from fallback cookie:", tokenFromFallback);
+    console.log("Token from legacy cookie:", tokenFromLegacy);
     console.log("Token from header:", tokenFromHeader);
 
-    const token = tokenFromCookie || tokenFromHeader;
+    // Use the first available token
+    const token =
+      tokenFromCookie ||
+      tokenFromFallback ||
+      tokenFromLegacy ||
+      tokenFromHeader;
 
     if (!token) {
-      console.log("ERROR: No token found");
+      console.log("ERROR: No token found in any source");
       return res
         .status(401)
         .json({ message: "Unauthorized - No Token Provided", success: false });
     }
 
     console.log("Token found, verifying...");
+    console.log(
+      "Token source:",
+      tokenFromCookie
+        ? "primary-cookie"
+        : tokenFromFallback
+        ? "fallback-cookie"
+        : tokenFromLegacy
+        ? "legacy-cookie"
+        : "header"
+    );
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

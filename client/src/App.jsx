@@ -269,6 +269,19 @@ function App() {
   const { authChecked } = useAuth();
 
   useEffect(() => {
+    // Check for token in URL parameters (Google auth fallback)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get("token");
+
+    if (tokenFromUrl) {
+      // Store token in localStorage
+      localStorage.setItem("jwt-mesdo-token", tokenFromUrl);
+      console.log("Token extracted from URL and stored in localStorage");
+
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     dispatch(checkAuth());
   }, [dispatch]);
 
