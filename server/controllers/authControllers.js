@@ -223,29 +223,46 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log("=== LOGIN ATTEMPT START ===");
+    console.log("Login email:", email);
+    console.log("Request origin:", req.headers.origin);
+    console.log("Request referer:", req.headers.referer);
+    console.log("Existing cookies:", req.cookies);
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("ERROR: User not found for email:", email);
       return res.status(400).json({ email: "user not found", success: false });
     }
+
+    console.log("User found - ID:", user._id);
+    console.log("User found - Email:", user.email);
+    console.log("User found - Name:", user.name);
+    console.log("User found - Username:", user.username);
 
     // Check password first
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log("ERROR: Password mismatch for user:", user.email);
       return res
         .status(400)
         .json({ password: "Invalid Password", success: false });
     }
 
+    console.log("Password verified successfully");
+
     // For existing users (those who don't have verificationToken field or have null verificationToken),
     // automatically verify them and allow login
     if (!user.verificationToken && !user.isVerified) {
+      console.log("Auto-verifying existing user");
       user.isVerified = true;
       await user.save();
     }
 
     // Only require verification for users who have a verificationToken (new signups)
     if (user.verificationToken && !user.isVerified) {
+      console.log("User requires email verification");
       return res.status(400).json({
         message: "Please verify your email before logging in",
         success: false,
@@ -259,30 +276,44 @@ const login = async (req, res) => {
       expiresIn: "30d",
     });
 
-    console.log("login token", token);
+    console.log("JWT token created for user:", user._id);
+    console.log("Token length:", token.length);
 
-    await res.cookie("jwt-mesdo", token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: true, // Always true for production deployment
       sameSite: "none",
       path: "/",
       maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-    console.log("login cookie :", req.cookies["jwt-mesdo"]);
+    };
+
+    console.log("Setting cookie with options:", cookieOptions);
+
+    await res.cookie("jwt-mesdo", token, cookieOptions);
+    console.log("Cookie set successfully");
+    console.log("Response cookies after setting:", req.cookies);
 
     const businessProfile = await BusinessProfile.findOne({
       userId: user._id,
     });
 
-    res.json({
+    console.log("Business profile found:", businessProfile ? "Yes" : "No");
+
+    const responseData = {
       message: "Logged in successfully",
       success: true,
       reDirectUrl: "/",
       token: token,
       user: user, // Standardized user object
       orgInfo: businessProfile, // Include business profile for consistency
-    });
+    };
+
+    console.log("Sending response with user ID:", user._id);
+    console.log("=== LOGIN ATTEMPT SUCCESS ===");
+
+    res.json(responseData);
   } catch (error) {
+    console.log("=== LOGIN ATTEMPT ERROR ===");
     console.error("Error in login controller:", error);
     res.status(500).json({ message: "Server error", success: false });
   }
@@ -304,13 +335,25 @@ const logout = (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   try {
-    console.log("Current User: ", req.user.name);
+    console.log("=== GET CURRENT USER START ===");
+    console.log("Request URL:", req.originalUrl);
+    console.log("Request origin:", req.headers.origin);
+    console.log("User from middleware - ID:", req.user._id);
+    console.log("User from middleware - Email:", req.user.email);
+    console.log("User from middleware - Name:", req.user.name);
+    console.log("User from middleware - Username:", req.user.username);
+    console.log("User onboarding status:", req.user.onboardingCompleted);
+    console.log(
+      "User recruiter onboarding status:",
+      req.user.recruiterOnboardingCompleted
+    );
 
     // Auto-migrate existing users: if onboardingCompleted is undefined, set it to true
     if (
       req.user.onboardingCompleted === undefined ||
       req.user.onboardingCompleted === null
     ) {
+      console.log("Auto-migrating user onboarding status");
       await User.findByIdAndUpdate(req.user._id, {
         onboardingCompleted: true,
         recruiterOnboardingCompleted: true,
@@ -322,8 +365,23 @@ const getCurrentUser = async (req, res) => {
     const businessProfile = await BusinessProfile.findOne({
       userId: req.user._id,
     });
-    res.json({ user: req.user, orgInfo: businessProfile, success: true });
+
+    console.log("Business profile found:", businessProfile ? "Yes" : "No");
+    if (businessProfile) {
+      console.log("Business profile org name:", businessProfile.orgName);
+    }
+
+    const responseData = {
+      user: req.user,
+      orgInfo: businessProfile,
+      success: true,
+    };
+    console.log("Sending user data - ID:", req.user._id);
+    console.log("=== GET CURRENT USER SUCCESS ===");
+
+    res.json(responseData);
   } catch (error) {
+    console.log("=== GET CURRENT USER ERROR ===");
     console.error("Error in getCurrentUser controller:", error);
     res.status(500).json({ message: "Server error", success: false });
   }
