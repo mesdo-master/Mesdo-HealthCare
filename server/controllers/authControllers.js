@@ -282,6 +282,7 @@ const login = async (req, res) => {
       success: true,
       reDirectUrl: "/",
       token: token,
+      user: req.user || user, // Include user data in response
     });
   } catch (error) {
     console.error("Error in login controller:", error);

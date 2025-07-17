@@ -6,7 +6,7 @@ import {
   Plus,
   Check,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Select from "react-select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -521,7 +521,7 @@ const Qualification = ({
     }
   };
 
-  const handleAddOrUpdate = () => {
+  const handleAddOrUpdate = useCallback(() => {
     if (
       !formValues.qualification ||
       !formValues.university ||
@@ -559,41 +559,51 @@ const Qualification = ({
       description: "",
     });
     setSkills([]);
-  };
+  }, [formValues, skills, qualList, editIdx, updateFormData]);
 
-  const handleEdit = (idx) => {
-    setEditIdx(idx);
-    const qualItem = qualList[idx];
+  const handleEdit = useCallback(
+    (idx) => {
+      setEditIdx(idx);
+      const qualItem = qualList[idx];
 
-    // Properly handle skills field
-    const skillsArray = Array.isArray(qualItem.skills)
-      ? qualItem.skills
-      : typeof qualItem.skills === "string"
-      ? qualItem.skills
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s)
-      : [];
+      // Properly handle skills field
+      const skillsArray = Array.isArray(qualItem.skills)
+        ? qualItem.skills
+        : typeof qualItem.skills === "string"
+        ? qualItem.skills
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s)
+        : [];
 
-    setFormValues({
-      ...qualItem,
-      skills: skillsArray.join(", "), // Convert back to string for form display
-    });
-    setSkills(skillsArray);
-    setShowPreview(false);
-  };
+      setFormValues({
+        ...qualItem,
+        skills: skillsArray.join(", "), // Convert back to string for form display
+      });
+      setSkills(skillsArray);
 
-  const handleDelete = (idx) => {
-    const updated = qualList.filter((_, i) => i !== idx);
-    setQualList(updated);
+      // Add a small delay to prevent glitch effect
+      setTimeout(() => {
+        setShowPreview(false);
+      }, 50);
+    },
+    [qualList]
+  );
 
-    // Update parent form data with the updated qualifications list
-    updateFormData({ qualifications: updated });
+  const handleDelete = useCallback(
+    (idx) => {
+      const updated = qualList.filter((_, i) => i !== idx);
+      setQualList(updated);
 
-    setShowPreview(true);
-  };
+      // Update parent form data with the updated qualifications list
+      updateFormData({ qualifications: updated });
 
-  const handleAddNew = () => {
+      setShowPreview(true);
+    },
+    [qualList, updateFormData]
+  );
+
+  const handleAddNew = useCallback(() => {
     setEditIdx(null);
     setFormValues({
       qualification: "",
@@ -606,8 +616,12 @@ const Qualification = ({
       description: "",
     });
     setSkills([]); // Reset skills array
-    setShowPreview(false);
-  };
+
+    // Add a small delay to prevent glitch effect
+    setTimeout(() => {
+      setShowPreview(false);
+    }, 50);
+  }, []);
 
   return (
     <div className="flex h-screen">

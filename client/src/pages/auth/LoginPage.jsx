@@ -3,7 +3,6 @@ import { FcGoogle } from "react-icons/fc";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../../store/features/authSlice";
-import { checkAuth } from "../../store/features/authSlice";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -43,14 +42,11 @@ const Login = () => {
     try {
       const result = await dispatch(loginUser({ email, password })).unwrap();
 
-      // Check authentication status after login
-      await dispatch(checkAuth());
-
-      // Navigate based on user type and onboarding status
+      // Navigate based on user type and onboarding status with replace to prevent back button issues
       if (result.reDirectUrl) {
-        navigate(result.reDirectUrl);
+        navigate(result.reDirectUrl, { replace: true });
       } else {
-        navigate("/jobs");
+        navigate("/jobs", { replace: true });
       }
     } catch (error) {
       console.log(error);
