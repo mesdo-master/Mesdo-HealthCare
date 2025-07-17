@@ -109,21 +109,36 @@ const signup = async (req, res) => {
 
     await user.save();
 
+    console.log(`📧 Attempting to send verification email to ${email}`);
+    console.log(`🔐 Verification code: ${verificationCode}`);
+
     const emailSent = await sendVerificationEmail(email, verificationCode);
+
     if (!emailSent.success) {
+      console.error(
+        `❌ Failed to send verification email to ${email}:`,
+        emailSent.error
+      );
       // If email fails, delete the user and return error
       await User.findByIdAndDelete(user._id);
-      return res
-        .status(500)
-        .json({ message: "Error sending verification email" });
+      return res.status(500).json({
+        message:
+          "Error sending verification email. Please try again with a different email address.",
+        success: false,
+        emailError: true,
+      });
     }
+
+    console.log(`✅ Verification email sent successfully to ${email}`);
+    console.log(`📧 Message ID: ${emailSent.messageId}`);
 
     res.status(201).json({
       message:
-        "Registration successful. Please check your email for verification code.",
+        "Registration successful. Please check your email (including spam folder) for verification code.",
       success: true,
       email: email,
       requiresVerification: true,
+      emailSent: true,
     });
   } catch (error) {
     console.log("Error in signup: ", error);
@@ -232,16 +247,36 @@ const resendVerification = async (req, res) => {
     user.verificationTokenExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
+    console.log(`📧 Resending verification email to ${email}`);
+    console.log(`🔐 New verification code: ${verificationCode}`);
+
     // Send new verification email
     const emailSent = await sendVerificationEmail(email, verificationCode);
+
     if (!emailSent.success) {
-      return res
-        .status(500)
-        .json({ message: "Error sending verification email", success: false });
+      console.error(
+        `❌ Failed to resend verification email to ${email}:`,
+        emailSent.error
+      );
+      return res.status(500).json({
+        message:
+          "Error sending verification email. Please try again later or contact support.",
+        success: false,
+        emailError: true,
+      });
     }
 
-    res.json({ message: "Verification email sent", success: true });
+    console.log(`✅ Verification email resent successfully to ${email}`);
+    console.log(`📧 Message ID: ${emailSent.messageId}`);
+
+    res.json({
+      message:
+        "Verification email sent successfully. Please check your email (including spam folder).",
+      success: true,
+      emailSent: true,
+    });
   } catch (error) {
+    console.error("Error in resendVerification:", error);
     res.status(500).json({
       message: "Error resending verification email",
       error: error.message,
