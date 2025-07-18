@@ -4,9 +4,11 @@ import NoChatSelected from "./components/NoChatSelected";
 import ChatContainer from "./components/ChatContainer";
 import { useParams } from "react-router-dom";
 import axiosInstance from "../../../lib/axio";
+import { useSocket } from "../../../context/SocketProvider";
 
 function Messages() {
   const { conversationId } = useParams();
+  const socket = useSocket();
   const [selectedConversation, setSelectedConversation] =
     useState(conversationId);
 
@@ -29,10 +31,10 @@ function Messages() {
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
-  const [fetchConvo, setFetchConvo] = useState(true); // Initialize state
+  const [fetchConvo, setFetchConvo] = useState(true);
 
   const toggleFetch = () => {
-    setFetchConvo(!fetchConvo); // Update the state using the setter function
+    setFetchConvo(!fetchConvo);
   };
 
   // ✅ Fetch all conversations on load
@@ -42,12 +44,16 @@ function Messages() {
         try {
           setLoadingConversations(true);
           const res = await axiosInstance.get("chats/getjobsConversations");
-          console.log(res);
-          setAllConversations(res.data);
+          console.log("Jobs conversations response:", res.data);
+
+          // ✅ Fix: Extract conversations array from response
+          const conversations = res.data.conversations || res.data || [];
+          setAllConversations(conversations);
           setFetchError(null);
         } catch (err) {
           console.error("Error fetching conversations:", err);
           setFetchError("Failed to load conversations.");
+          setAllConversations([]); // ✅ Set empty array on error
         } finally {
           setLoadingConversations(false);
         }
@@ -59,11 +65,16 @@ function Messages() {
         try {
           setLoadingConversations(true);
           const res = await axiosInstance.get("chats/allConversations");
-          setAllConversations(res.data);
+          console.log("All conversations response:", res.data);
+
+          // ✅ Fix: Extract conversations array from response
+          const conversations = res.data.conversations || res.data || [];
+          setAllConversations(conversations);
           setFetchError(null);
         } catch (err) {
           console.error("Error fetching conversations:", err);
           setFetchError("Failed to load conversations.");
+          setAllConversations([]); // ✅ Set empty array on error
         } finally {
           setLoadingConversations(false);
         }
@@ -72,6 +83,56 @@ function Messages() {
       fetchConversations();
     }
   }, [conversationId, activeTab]);
+
+  // ✅ Socket integration for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (messageData) => {
+      console.log("New message received:", messageData);
+
+      // Refresh conversations list to update last message
+      const refreshConversations = async () => {
+        try {
+          const endpoint =
+            activeTab === "Jobs"
+              ? "chats/getjobsConversations"
+              : "chats/allConversations";
+          const res = await axiosInstance.get(endpoint);
+          const conversations = res.data.conversations || res.data || [];
+          setAllConversations(conversations);
+        } catch (err) {
+          console.error("Error refreshing conversations:", err);
+        }
+      };
+
+      refreshConversations();
+    };
+
+    const handleConversationUpdate = (conversationData) => {
+      console.log("Conversation updated:", conversationData);
+
+      // Update the specific conversation in the list
+      setAllConversations((prev) => {
+        const updated = prev.map((conv) =>
+          conv.id === conversationData.id || conv._id === conversationData.id
+            ? { ...conv, ...conversationData }
+            : conv
+        );
+        return updated;
+      });
+    };
+
+    // Listen for socket events
+    socket.on("newMessage", handleNewMessage);
+    socket.on("conversationUpdate", handleConversationUpdate);
+
+    // Cleanup
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("conversationUpdate", handleConversationUpdate);
+    };
+  }, [socket, activeTab]);
 
   const handleProfileClick = (user) => {
     if (user.isGroup) {
@@ -84,33 +145,22 @@ function Messages() {
   };
 
   const handleCreateGroup = async (newGroup) => {
-    console.log("New group created:", newGroup); // Debug log
+    console.log("New group created:", newGroup);
 
     try {
       // Add the new group to conversations list immediately
+      const groupData = newGroup.conversation || newGroup;
       setAllConversations((prevConversations) => [
+        groupData,
         ...prevConversations,
-        newGroup,
       ]);
 
-      // Switch to Groups tab to show the new group
-      setActiveTab("Groups");
-
-      // Close the modal
-      setShowGroupModal(false);
-
-      // Clear form states
-      setGroupName("");
-      setGroupDescription("");
-
-      // Navigate to the new group
-      setSelectedConversation(newGroup._id);
-
-      // Refresh conversations from server to ensure consistency
+      // Refresh conversations after a short delay
       setTimeout(async () => {
         try {
           const res = await axiosInstance.get("chats/allConversations");
-          setAllConversations(res.data);
+          const conversations = res.data.conversations || res.data || [];
+          setAllConversations(conversations);
         } catch (error) {
           console.error("Error refreshing conversations:", error);
         }
@@ -120,12 +170,15 @@ function Messages() {
     }
   };
 
-  // Add this before return
-  const selectedConversationObj = allConversations.find(
-    (c) => c._id === selectedConversation
-  );
+  // ✅ Safe conversation lookup with array check
+  const selectedConversationObj = Array.isArray(allConversations)
+    ? allConversations.find(
+        (c) => c._id === selectedConversation || c.id === selectedConversation
+      )
+    : null;
 
-  console.log(selectedConversationObj);
+  console.log("Selected conversation object:", selectedConversationObj);
+  console.log("All conversations:", allConversations);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -138,7 +191,7 @@ function Messages() {
             setSelectedUser={setSelectedUser}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            onCreateGroup={handleCreateGroup} // Pass the actual function instead of just opening modal
+            onCreateGroup={handleCreateGroup}
             loading={loadingConversations}
             error={fetchError}
           />

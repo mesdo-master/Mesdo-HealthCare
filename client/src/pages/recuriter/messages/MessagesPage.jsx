@@ -4,9 +4,11 @@ import MessageList from "./components/MessageList";
 import NoChatSelected from "../../user/messages/components/NoChatSelected";
 import ChatContainer from "./components/ChatContainer";
 import axiosInstance from "../../../lib/axio";
+import { useSocket } from "../../../context/SocketProvider";
 
 function MessagesRecuriter() {
   const { conversationId } = useParams();
+  const socket = useSocket();
   console.log(conversationId);
   const [selectedConversation, setSelectedConversation] =
     useState(conversationId);
@@ -30,10 +32,10 @@ function MessagesRecuriter() {
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
-  const [fetchConvo, setFetchConvo] = useState(true); // Initialize state
+  const [fetchConvo, setFetchConvo] = useState(true);
 
   const toggleFetch = () => {
-    setFetchConvo(!fetchConvo); // Update the state using the setter function
+    setFetchConvo(!fetchConvo);
   };
 
   // ✅ Fetch all conversations on load
@@ -42,12 +44,16 @@ function MessagesRecuriter() {
       try {
         setLoadingConversations(true);
         const res = await axiosInstance.get("recuriter/allConversations");
-        console.log(res);
-        setAllConversations(res.data);
+        console.log("Recruiter conversations response:", res.data);
+
+        // ✅ Fix: Extract conversations array from response
+        const conversations = res.data.conversations || res.data || [];
+        setAllConversations(conversations);
         setFetchError(null);
       } catch (err) {
         console.error("Error fetching conversations:", err);
         setFetchError("Failed to load conversations.");
+        setAllConversations([]); // ✅ Set empty array on error
       } finally {
         setLoadingConversations(false);
       }
@@ -55,6 +61,52 @@ function MessagesRecuriter() {
 
     fetchConversations();
   }, []);
+
+  // ✅ Socket integration for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (messageData) => {
+      console.log("New message received:", messageData);
+
+      // Refresh conversations list to update last message
+      const refreshConversations = async () => {
+        try {
+          const res = await axiosInstance.get("recuriter/allConversations");
+          const conversations = res.data.conversations || res.data || [];
+          setAllConversations(conversations);
+        } catch (err) {
+          console.error("Error refreshing conversations:", err);
+        }
+      };
+
+      refreshConversations();
+    };
+
+    const handleConversationUpdate = (conversationData) => {
+      console.log("Conversation updated:", conversationData);
+
+      // Update the specific conversation in the list
+      setAllConversations((prev) => {
+        const updated = prev.map((conv) =>
+          conv.id === conversationData.id || conv._id === conversationData.id
+            ? { ...conv, ...conversationData }
+            : conv
+        );
+        return updated;
+      });
+    };
+
+    // Listen for socket events
+    socket.on("newMessage", handleNewMessage);
+    socket.on("conversationUpdate", handleConversationUpdate);
+
+    // Cleanup
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("conversationUpdate", handleConversationUpdate);
+    };
+  }, [socket]);
 
   const handleProfileClick = (user) => {
     if (user.isGroup) {
@@ -85,10 +137,15 @@ function MessagesRecuriter() {
     setGroupDescription("");
   };
 
-  // Add this before return
-  const selectedConversationObj = allConversations.find(
-    (c) => c._id === selectedConversation
-  );
+  // ✅ Safe conversation lookup with array check
+  const selectedConversationObj = Array.isArray(allConversations)
+    ? allConversations.find(
+        (c) => c._id === selectedConversation || c.id === selectedConversation
+      )
+    : null;
+
+  console.log("Selected conversation object:", selectedConversationObj);
+  console.log("All conversations:", allConversations);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 ml-[9px]">

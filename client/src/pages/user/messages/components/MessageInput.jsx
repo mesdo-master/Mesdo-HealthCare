@@ -2,13 +2,23 @@ import { useState, useRef } from "react";
 import { Paperclip, Smile, Send, X } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import axiosInstance from "../../../../lib/axio";
+import { useSocket } from "../../../../context/SocketProvider";
 
-const MessageInput = ({ selectedUser, setMessages, selectedConveresationId, toggleFetch, selectedConveresation, activeTab }) => {
+const MessageInput = ({
+  selectedUser,
+  setMessages,
+  selectedConveresationId,
+  toggleFetch,
+  selectedConveresation,
+  activeTab,
+}) => {
   const [inputMessage, setInputMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
+  const socket = useSocket();
 
   const handleEmojiClick = (emojiData) => {
     setInputMessage((prev) => prev + emojiData.emoji);
@@ -24,129 +34,206 @@ const MessageInput = ({ selectedUser, setMessages, selectedConveresationId, togg
 
   const handleJobSend = async () => {
     if (!inputMessage.trim() && !selectedFile) return;
+    if (isLoading) return;
 
-    const messageData = {
-      conversationId: selectedConveresationId,
-      text: inputMessage,
-      receiverId: await selectedUser
-    };
+    const messageText = inputMessage.trim();
+    setIsLoading(true);
 
-    const res = await axiosInstance.post('/jobs/sendMessage', messageData);
-    console.log(res)
-    setInputMessage("");
-    setSelectedFile(null);
+    try {
+      const messageData = {
+        conversationId: selectedConveresationId,
+        text: messageText,
+        receiverId: selectedUser?._id || selectedUser?.id,
+      };
+
+      console.log("Sending job message:", messageData);
+
+      const res = await axiosInstance.post("/jobs/sendMessage", messageData);
+      console.log("Job message sent:", res.data);
+
+      // Clear input immediately for better UX
+      setInputMessage("");
+      setSelectedFile(null);
+
+      // Emit socket event for real-time update
+      if (socket) {
+        socket.emit("send-message", {
+          conversationId: selectedConveresationId,
+          message: messageText,
+          messageType: "text",
+          category: "Recruitment",
+        });
+      }
+
+      // Trigger refresh if needed
+      if (toggleFetch) {
+        toggleFetch();
+      }
+    } catch (error) {
+      console.error("Error sending job message:", error);
+      // Restore input on error
+      setInputMessage(messageText);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
 
   const handleSend = async () => {
     if (!inputMessage.trim() && !selectedFile) return;
+    if (isLoading) return;
 
-    const messageData = {
-      conversationId: selectedConveresationId,
-      text: inputMessage,
-    };
+    const messageText = inputMessage.trim();
+    setIsLoading(true);
 
-    // Only include receiverId if it's an individual chat
-    if (!selectedConveresation?.isGroup) {
-      messageData.receiverId = selectedUser._id;
+    try {
+      const messageData = {
+        conversationId: selectedConveresationId,
+        text: messageText,
+      };
+
+      // Only include receiverId if it's an individual chat
+      if (!selectedConveresation?.isGroup && selectedUser) {
+        messageData.receiverId = selectedUser._id || selectedUser.id;
+      }
+
+      console.log("Sending message:", messageData);
+
+      const res = await axiosInstance.post("/chats/sendMessage", messageData);
+      console.log("Message sent:", res.data);
+
+      // Clear input immediately for better UX
+      setInputMessage("");
+      setSelectedFile(null);
+
+      // Emit socket event for real-time update
+      if (socket) {
+        socket.emit("send-message", {
+          conversationId: selectedConveresationId,
+          message: messageText,
+          messageType: "text",
+          category: selectedConveresation?.category || "Personal",
+        });
+      }
+
+      // Trigger refresh if needed
+      if (toggleFetch) {
+        toggleFetch();
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Restore input on error
+      setInputMessage(messageText);
+    } finally {
+      setIsLoading(false);
     }
-
-    await axiosInstance.post('/chats/sendMessage', messageData);
-
-    setInputMessage("");
-    setSelectedFile(null);
   };
 
-  console.log("conversation", selectedConveresation)
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (selectedConveresation?.category === "Recruitment") {
+        handleJobSend();
+      } else {
+        handleSend();
+      }
+    }
+  };
+
+  const handleSendClick = () => {
+    if (selectedConveresation?.category === "Recruitment") {
+      handleJobSend();
+    } else {
+      handleSend();
+    }
+  };
+
+  console.log("MessageInput - conversation:", selectedConveresation);
+  console.log("MessageInput - selectedUser:", selectedUser);
+
   return (
-    <div className="p-4 border-t border-gray-200 bg-white sticky bottom-0">
-      {/* File preview */}
+    <div className="border-t bg-white p-4">
+      {/* File Preview */}
       {selectedFile && (
-        <div className="mb-2 flex items-center justify-between bg-blue-100 px-3 py-2 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-gray-700 truncate">
-            <Paperclip size={16} className="text-blue-600" />
-            {selectedFile.name}
+        <div className="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Paperclip size={16} className="text-gray-500" />
+            <span className="text-sm text-gray-700">{selectedFile.name}</span>
           </div>
           <button
             onClick={() => setSelectedFile(null)}
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="Remove file"
+            className="text-gray-400 hover:text-gray-600"
           >
             <X size={16} />
           </button>
         </div>
       )}
 
-      {/* Input row */}
+      {/* Emoji Picker */}
+      {showEmojiPicker && (
+        <div className="absolute bottom-20 left-4 z-10">
+          <EmojiPicker
+            onEmojiClick={handleEmojiClick}
+            ref={emojiPickerRef}
+            width={300}
+            height={400}
+          />
+        </div>
+      )}
+
+      {/* Input Area */}
       <div className="flex items-center gap-2">
-        {/* Hidden File Input */}
+        {/* File Upload */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
+          aria-label="Attach file"
+        >
+          <Paperclip size={20} />
+        </button>
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
-          accept="image/*,.pdf,.doc,.docx,.txt"
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
         />
 
-        {/* File Upload Button */}
+        {/* Emoji Button */}
         <button
-          onClick={() => fileInputRef.current.click()}
-          className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-          aria-label="Attach file"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
+          aria-label="Add emoji"
         >
-          <Paperclip size={20} />
+          <Smile size={20} />
         </button>
 
-        {/* Emoji Picker */}
-        <div className="relative" ref={emojiPickerRef}>
-          <button
-            onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-            aria-label="Add emoji"
-          >
-            <Smile size={20} />
-          </button>
-          {showEmojiPicker && (
-            <div className="absolute bottom-12 left-0 z-10 shadow-lg">
-              <EmojiPicker
-                onEmojiClick={handleEmojiClick}
-                width={300}
-                height={400}
-                theme="light"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Message Input */}
+        {/* Text Input */}
         <input
           type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              selectedConveresation?.category === "Recruitment" ? handleJobSend() : handleSend();
-            }
-          }}
-
+          onKeyDown={handleKeyDown}
           placeholder="Type a message..."
           className="flex-1 p-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          disabled={isLoading}
         />
 
         {/* Send Button */}
         <button
-          onClick={() => {
-            if (selectedConveresation?.category === "Recruitment") { handleJobSend(); }
-            else { handleSend(); }
-          }}
-          disabled={!inputMessage.trim() && !selectedFile}
-          className={`p-2 rounded-full transition ${inputMessage.trim() || selectedFile
-            ? "bg-blue-500 text-white hover:bg-blue-600"
-            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
+          onClick={handleSendClick}
+          disabled={(!inputMessage.trim() && !selectedFile) || isLoading}
+          className={`p-2 rounded-full transition ${
+            (inputMessage.trim() || selectedFile) && !isLoading
+              ? "bg-blue-500 text-white hover:bg-blue-600"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          }`}
           aria-label="Send message"
         >
-          <Send size={20} />
+          {isLoading ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Send size={20} />
+          )}
         </button>
       </div>
     </div>
