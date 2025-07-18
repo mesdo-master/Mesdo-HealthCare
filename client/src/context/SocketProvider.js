@@ -190,8 +190,18 @@ export const SocketProvider = ({ children }) => {
       });
     });
 
-    newSocket.on("online-users", (users) => {
-      console.log("👥 Received online users list:", users.length);
+    newSocket.on("online-users", (data) => {
+      console.log("👥 Received online users list:", data);
+
+      // Handle both array format (legacy) and object format (new)
+      const users = Array.isArray(data) ? data : data.users || [];
+
+      if (!Array.isArray(users)) {
+        console.warn("⚠️ Invalid online users data format:", data);
+        return;
+      }
+
+      console.log("👥 Processing", users.length, "online users");
       const usersMap = new Map();
       users.forEach((user) => {
         usersMap.set(user.userId, {
