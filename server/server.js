@@ -54,6 +54,7 @@ const messagesRoutes = require("./routes/user/messageRoutes");
 const followRoutes = require("./routes/user/followRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const searchRoutes = require("./routes/searchRoutes");
+const socketRoutes = require("./routes/socketRoutes");
 
 //Routes
 app.use("/", authRoutes);
@@ -68,6 +69,7 @@ app.use("/messages", messagesRoutes);
 app.use("/follow", followRoutes);
 app.use("/settings", settingsRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/socket", socketRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hey, welcome to Mesdo");
