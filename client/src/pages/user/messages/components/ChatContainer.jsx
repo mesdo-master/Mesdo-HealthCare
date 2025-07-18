@@ -180,13 +180,7 @@ const ChatContainer = ({
   if (!selectedId || selectedId === "undefined") {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
-        <div className="text-center">
-          <div className="text-6xl mb-4">💬</div>
-          <h2 className="text-xl font-semibold mb-2">Select a conversation</h2>
-          <p className="text-gray-400">
-            Choose a conversation to start chatting
-          </p>
-        </div>
+        Select a conversation to start chatting.
       </div>
     );
   }
@@ -201,81 +195,96 @@ const ChatContainer = ({
       }, {})
     : {};
 
+  const getUserById = (id) => {
+    if (id === currentUser._id) return currentUser;
+    return otherUsers.find((user) => user._id === id) || {};
+  };
+
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 flex flex-col overflow-hidden bg-white shadow-md rounded-lg">
       <ChatHeader
-        selectedUser={otherUsers[0]}
-        onProfileClick={() => {}}
+        selectedUser={
+          conversation?.category === "group" ? otherUsers : otherUsers[0]
+        }
+        piimage={piimage}
         conversation={conversation}
-        isGroup={conversation?.isGroup}
-        participants={otherUsers}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {isMessageLoading ? (
           <MessageSkeleton />
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <div className="text-6xl mb-4">💬</div>
-            <p className="text-lg font-medium mb-2">No messages yet</p>
-            <p className="text-sm text-center max-w-md">
-              {getRandomEmptyText()}
-            </p>
+          <div className="text-center text-gray-400 mt-10">
+            <p className="text-lg font-medium">No messages here yet.</p>
+            <p className="text-sm">{getRandomEmptyText()}</p>
           </div>
         ) : (
           Object.entries(groupedMessages).map(([dateLabel, msgs]) => (
             <div key={dateLabel}>
-              <div className="flex justify-center mb-4">
-                <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+              <div className="flex justify-center my-6">
+                <span className="bg-gray-300 text-xs px-4 py-1 rounded-full text-gray-700 shadow-sm">
                   {dateLabel}
                 </span>
               </div>
-              {msgs.map((msg, index) => {
-                const isOwnMessage =
-                  msg.sender?.user?._id === currentUser?._id ||
-                  msg.sender?.user === currentUser?._id ||
-                  msg.sender === currentUser?._id;
+              {msgs.map((message) => {
+                const isCurrentUser = message.sender === currentUser._id;
+                const senderUser = getUserById(message.sender);
 
                 return (
                   <div
-                    key={msg._id || index}
-                    className={`flex mb-4 ${
-                      isOwnMessage ? "justify-end" : "justify-start"
+                    key={message._id}
+                    className={`flex ${
+                      isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {!isOwnMessage && (
-                      <img
-                        src={
-                          msg.sender?.user?.profilePicture ||
-                          otherUsers[0]?.profilePicture ||
-                          piimage
-                        }
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full mr-2 flex-shrink-0"
-                      />
-                    )}
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        isOwnMessage
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 text-gray-800"
-                      }`}
+                      className={`flex items-end gap-2 ${
+                        isCurrentUser ? "flex-row-reverse" : ""
+                      } max-w-[75%]`}
                     >
-                      <p className="text-sm">{msg.message || msg.text}</p>
-                      <p className="text-xs mt-1 opacity-70">
-                        {new Date(msg.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                    {isOwnMessage && (
                       <img
-                        src={currentUser?.profilePicture || piimage}
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full ml-2 flex-shrink-0"
+                        src={senderUser?.profilePicture || piimage}
+                        alt="User avatar"
+                        className="w-8 h-8 rounded-full border"
                       />
-                    )}
+                      <div className="text-left">
+                        {conversation?.category === "group" &&
+                          !isCurrentUser && (
+                            <p className="text-xs text-gray-500 mb-1 font-medium">
+                              {senderUser?.name}
+                            </p>
+                          )}
+                        {message.image && (
+                          <img
+                            src={message.image}
+                            alt="Attachment"
+                            className="sm:max-w-[200px] rounded-md mb-1"
+                          />
+                        )}
+                        {message.message && (
+                          <div
+                            className={`px-4 py-2 rounded-lg text-sm whitespace-pre-line ${
+                              isCurrentUser
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-900"
+                            }`}
+                          >
+                            {message.message}
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-400 mt-1">
+                          {new Date(message.createdAt).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                              timeZone: "Asia/Kolkata",
+                            }
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

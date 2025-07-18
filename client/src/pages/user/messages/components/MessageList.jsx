@@ -12,15 +12,26 @@ const MessageList = ({
   activeTab,
   setActiveTab,
   onCreateGroup,
+  loading,
+  error,
 }) => {
-  // console.log(users)
+  console.log("MessageList - users:", users);
+  console.log("MessageList - activeTab:", activeTab);
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const navigate = useNavigate();
-  const filteredConversations = users.filter((conv) => {
-    if (activeTab === "Jobs") return conv.category === "Recruitment";
-    return conv.category === activeTab;
-  });
+
+  // ✅ Improved filtering logic with proper safety checks
+  const filteredConversations = Array.isArray(users)
+    ? users.filter((conv) => {
+        if (activeTab === "Jobs") {
+          return conv.category === "Recruitment" || conv.category === "Jobs";
+        }
+        return conv.category === activeTab;
+      })
+    : [];
+
+  console.log("Filtered conversations:", filteredConversations);
 
   const handleOpenMessage = (conversation) => {
     navigate(`/messages/${conversation._id}`);
@@ -32,9 +43,10 @@ const MessageList = ({
     const fetchConnections = async () => {
       try {
         const response = await axiosInstance.get("/users/getConnections");
-        setConnections(response.data.connections);
+        setConnections(response.data.connections || []);
       } catch (error) {
         console.error("Error fetching connections:", error);
+        setConnections([]);
       }
     };
 
@@ -55,23 +67,11 @@ const MessageList = ({
               className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none"
             />
           </div>
-
-          <button
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            onClick={() => setShowCreateGroupModal(true)}
-            aria-label="Create new chat or group"
-          >
-            <img
-              src="https://res.cloudinary.com/dy9voteoc/image/upload/v1743997226/CreateMessage_vz54wg.png"
-              alt="Create"
-              className="w-5 h-5"
-            />
-          </button>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-1 mb-4">
           <div className="flex">
-            {["Personal", "Jobs", "Groups"].map((tab) => (
+            {["Personal", "Groups", "Jobs"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -89,11 +89,27 @@ const MessageList = ({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {activeTab === "Groups" && filteredConversations.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-gray-500">Loading conversations...</div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-red-500 text-center">
+              <p>{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : activeTab === "Groups" && filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <p className="mb-2">No groups yet</p>
             <button
-              onClick={() => setShowCreateGroupModal(true)} // Open modal instead of calling onCreateGroup
+              onClick={() => setShowCreateGroupModal(true)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               aria-label="Create new group"
             >
@@ -105,8 +121,16 @@ const MessageList = ({
             </button>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No {activeTab.toLowerCase()} messages
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <div className="text-5xl mb-3">💬</div>
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">
+              No {activeTab.toLowerCase()} conversations
+            </h2>
+            <p className="text-gray-500 text-center max-w-xs text-sm">
+              {activeTab === "Jobs"
+                ? "No job-related conversations yet. Apply to jobs to start chatting with recruiters!"
+                : `No ${activeTab.toLowerCase()} messages yet. Start a conversation to get started!`}
+            </p>
           </div>
         ) : (
           filteredConversations.map((conv) => {

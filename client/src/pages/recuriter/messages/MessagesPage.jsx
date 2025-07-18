@@ -43,24 +43,39 @@ function MessagesRecuriter() {
     const fetchConversations = async () => {
       try {
         setLoadingConversations(true);
-        const res = await axiosInstance.get("recuriter/allConversations");
+        setFetchError(null);
+
+        const endpoint = "/recuriter/allConversations";
+        console.log(`Fetching recruiter conversations from: ${endpoint}`);
+
+        const res = await axiosInstance.get(endpoint);
         console.log("Recruiter conversations response:", res.data);
 
-        // ✅ Fix: Extract conversations array from response
-        const conversations = res.data.conversations || res.data || [];
+        // ✅ Handle different response structures
+        let conversations = [];
+        if (res.data.success && res.data.conversations) {
+          conversations = res.data.conversations;
+        } else if (Array.isArray(res.data)) {
+          conversations = res.data;
+        } else if (res.data.conversations) {
+          conversations = res.data.conversations;
+        } else {
+          conversations = [];
+        }
+
+        console.log("Processed recruiter conversations:", conversations);
         setAllConversations(conversations);
-        setFetchError(null);
       } catch (err) {
-        console.error("Error fetching conversations:", err);
+        console.error("Error fetching recruiter conversations:", err);
         setFetchError("Failed to load conversations.");
-        setAllConversations([]); // ✅ Set empty array on error
+        setAllConversations([]);
       } finally {
         setLoadingConversations(false);
       }
     };
 
     fetchConversations();
-  }, []);
+  }, [fetchConvo]); // ✅ Added fetchConvo dependency
 
   // ✅ Socket integration for real-time updates
   useEffect(() => {
@@ -72,8 +87,15 @@ function MessagesRecuriter() {
       // Refresh conversations list to update last message
       const refreshConversations = async () => {
         try {
-          const res = await axiosInstance.get("recuriter/allConversations");
-          const conversations = res.data.conversations || res.data || [];
+          const res = await axiosInstance.get("/recuriter/allConversations");
+          let conversations = [];
+          if (res.data.success && res.data.conversations) {
+            conversations = res.data.conversations;
+          } else if (Array.isArray(res.data)) {
+            conversations = res.data;
+          } else if (res.data.conversations) {
+            conversations = res.data.conversations;
+          }
           setAllConversations(conversations);
         } catch (err) {
           console.error("Error refreshing conversations:", err);
@@ -146,6 +168,8 @@ function MessagesRecuriter() {
 
   console.log("Selected conversation object:", selectedConversationObj);
   console.log("All conversations:", allConversations);
+  console.log("Active tab:", activeTab);
+  console.log("Loading:", loadingConversations);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 ml-[9px]">

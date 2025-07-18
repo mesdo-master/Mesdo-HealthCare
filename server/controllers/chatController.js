@@ -310,8 +310,12 @@ const getAllConversations = async (req, res) => {
   try {
     const userId = req.user._id;
 
+    console.log("🔍 Fetching all conversations for user:", userId);
+
     // Use the new model's static method to find conversations
     const conversations = await Conversation.findByParticipant(userId, "User");
+
+    console.log("📊 Found conversations:", conversations.length);
 
     // Transform conversations for response
     const populatedConversations = conversations.map((conv) => {
@@ -325,6 +329,7 @@ const getAllConversations = async (req, res) => {
       );
 
       return {
+        _id: conv._id, // ✅ Added _id for consistency
         id: conv._id,
         category: conv.category,
         lastMessage: conv.lastMessage,
@@ -335,6 +340,7 @@ const getAllConversations = async (req, res) => {
         job: conv.job,
         otherParticipant: otherParticipant
           ? {
+              _id: otherParticipant.user._id, // ✅ Added _id for consistency
               id: otherParticipant.user._id,
               name: otherParticipant.user.name,
               username: otherParticipant.user.username,
@@ -348,6 +354,11 @@ const getAllConversations = async (req, res) => {
         updatedAt: conv.updatedAt,
       };
     });
+
+    console.log(
+      "📤 Sending response with conversations:",
+      populatedConversations.length
+    );
 
     res.status(200).json({
       success: true,
@@ -434,12 +445,16 @@ const getjobsConversations = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Get job-related conversations
+    console.log("🔍 Fetching job conversations for user:", userId);
+
+    // Get job-related conversations - try both "Jobs" and "Recruitment" categories
     const conversations = await Conversation.findByParticipant(
       userId,
       "User",
-      "Jobs"
+      "Recruitment" // ✅ Changed from "Jobs" to "Recruitment"
     );
+
+    console.log("📊 Found conversations:", conversations.length);
 
     // Transform conversations for response
     const populatedConversations = conversations.map((conv) => {
@@ -452,6 +467,7 @@ const getjobsConversations = async (req, res) => {
       );
 
       return {
+        _id: conv._id, // ✅ Added _id for consistency
         id: conv._id,
         category: conv.category,
         lastMessage: conv.lastMessage,
@@ -462,6 +478,7 @@ const getjobsConversations = async (req, res) => {
         job: conv.job,
         otherParticipant: otherParticipant
           ? {
+              _id: otherParticipant.user._id, // ✅ Added _id for consistency
               id: otherParticipant.user._id,
               name: otherParticipant.user.name,
               username: otherParticipant.user.username,
@@ -475,6 +492,11 @@ const getjobsConversations = async (req, res) => {
         updatedAt: conv.updatedAt,
       };
     });
+
+    console.log(
+      "📤 Sending response with conversations:",
+      populatedConversations.length
+    );
 
     res.status(200).json({
       success: true,

@@ -39,50 +39,47 @@ function Messages() {
 
   // ✅ Fetch all conversations on load
   useEffect(() => {
-    if (activeTab === "Jobs") {
-      const fetchJobsConversations = async () => {
-        try {
-          setLoadingConversations(true);
-          const res = await axiosInstance.get("chats/getjobsConversations");
-          console.log("Jobs conversations response:", res.data);
+    const fetchConversations = async () => {
+      try {
+        setLoadingConversations(true);
+        setFetchError(null);
 
-          // ✅ Fix: Extract conversations array from response
-          const conversations = res.data.conversations || res.data || [];
-          setAllConversations(conversations);
-          setFetchError(null);
-        } catch (err) {
-          console.error("Error fetching conversations:", err);
-          setFetchError("Failed to load conversations.");
-          setAllConversations([]); // ✅ Set empty array on error
-        } finally {
-          setLoadingConversations(false);
+        let endpoint;
+        if (activeTab === "Jobs") {
+          endpoint = "/chats/getjobsConversations";
+        } else {
+          endpoint = "/chats/allConversations";
         }
-      };
 
-      fetchJobsConversations();
-    } else {
-      const fetchConversations = async () => {
-        try {
-          setLoadingConversations(true);
-          const res = await axiosInstance.get("chats/allConversations");
-          console.log("All conversations response:", res.data);
+        console.log(`Fetching conversations from: ${endpoint}`);
+        const res = await axiosInstance.get(endpoint);
+        console.log(`${activeTab} conversations response:`, res.data);
 
-          // ✅ Fix: Extract conversations array from response
-          const conversations = res.data.conversations || res.data || [];
-          setAllConversations(conversations);
-          setFetchError(null);
-        } catch (err) {
-          console.error("Error fetching conversations:", err);
-          setFetchError("Failed to load conversations.");
-          setAllConversations([]); // ✅ Set empty array on error
-        } finally {
-          setLoadingConversations(false);
+        // ✅ Handle different response structures
+        let conversations = [];
+        if (res.data.success && res.data.conversations) {
+          conversations = res.data.conversations;
+        } else if (Array.isArray(res.data)) {
+          conversations = res.data;
+        } else if (res.data.conversations) {
+          conversations = res.data.conversations;
+        } else {
+          conversations = [];
         }
-      };
 
-      fetchConversations();
-    }
-  }, [conversationId, activeTab]);
+        console.log(`Processed ${activeTab} conversations:`, conversations);
+        setAllConversations(conversations);
+      } catch (err) {
+        console.error("Error fetching conversations:", err);
+        setFetchError("Failed to load conversations.");
+        setAllConversations([]);
+      } finally {
+        setLoadingConversations(false);
+      }
+    };
+
+    fetchConversations();
+  }, [activeTab, fetchConvo]); // ✅ Added fetchConvo dependency
 
   // ✅ Socket integration for real-time updates
   useEffect(() => {
@@ -94,12 +91,23 @@ function Messages() {
       // Refresh conversations list to update last message
       const refreshConversations = async () => {
         try {
-          const endpoint =
-            activeTab === "Jobs"
-              ? "chats/getjobsConversations"
-              : "chats/allConversations";
+          let endpoint;
+          if (activeTab === "Jobs") {
+            endpoint = "/chats/getjobsConversations";
+          } else {
+            endpoint = "/chats/allConversations";
+          }
+
           const res = await axiosInstance.get(endpoint);
-          const conversations = res.data.conversations || res.data || [];
+          let conversations = [];
+          if (res.data.success && res.data.conversations) {
+            conversations = res.data.conversations;
+          } else if (Array.isArray(res.data)) {
+            conversations = res.data;
+          } else if (res.data.conversations) {
+            conversations = res.data.conversations;
+          }
+
           setAllConversations(conversations);
         } catch (err) {
           console.error("Error refreshing conversations:", err);
@@ -158,8 +166,15 @@ function Messages() {
       // Refresh conversations after a short delay
       setTimeout(async () => {
         try {
-          const res = await axiosInstance.get("chats/allConversations");
-          const conversations = res.data.conversations || res.data || [];
+          const res = await axiosInstance.get("/chats/allConversations");
+          let conversations = [];
+          if (res.data.success && res.data.conversations) {
+            conversations = res.data.conversations;
+          } else if (Array.isArray(res.data)) {
+            conversations = res.data;
+          } else if (res.data.conversations) {
+            conversations = res.data.conversations;
+          }
           setAllConversations(conversations);
         } catch (error) {
           console.error("Error refreshing conversations:", error);
@@ -179,6 +194,8 @@ function Messages() {
 
   console.log("Selected conversation object:", selectedConversationObj);
   console.log("All conversations:", allConversations);
+  console.log("Active tab:", activeTab);
+  console.log("Loading:", loadingConversations);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
