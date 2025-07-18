@@ -1,8 +1,8 @@
 const Conversation = require("../../models/Conversation");
 const Message = require("../../models/Message");
 const Business = require("../../models/recruiter/BusinessProfile");
-const mongoose = require('mongoose');
-const { io } = require('../../utils/socket');
+const mongoose = require("mongoose");
+const { io } = require("../../utils/socket");
 const User = require("../../models/user/User");
 
 const checkRecuriter = async (req, res) => {
@@ -15,9 +15,10 @@ const checkRecuriter = async (req, res) => {
     // Check if a recruiter already exists for the user.
     const existingRecruiter = await Business.findOne({ userId: req.user._id });
     if (existingRecruiter) {
-      return res
-        .status(200)
-        .json({ message: "Recruiter already exists", recruiter: existingRecruiter });
+      return res.status(200).json({
+        message: "Recruiter already exists",
+        recruiter: existingRecruiter,
+      });
     }
 
     // Create a new recruiter and save it.
@@ -25,12 +26,15 @@ const checkRecuriter = async (req, res) => {
     await newRecruiter.save();
 
     // Return a 201 status for successful creation.
-    return res
-      .status(201)
-      .json({ message: "Recruiter created successfully", recruiter: newRecruiter });
+    return res.status(201).json({
+      message: "Recruiter created successfully",
+      recruiter: newRecruiter,
+    });
   } catch (error) {
     console.error("Error in checkRecruiter:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -51,12 +55,17 @@ const orgLogoUpload = async (req, res) => {
     existingRecruiter.orgLogo = req.file.path;
     await existingRecruiter.save();
 
-    return res.status(200).json({ message: "Logo uploaded successfully", recruiter: existingRecruiter });
+    return res.status(200).json({
+      message: "Logo uploaded successfully",
+      recruiter: existingRecruiter,
+    });
   } catch (error) {
     console.error("Error in orgLogoUpload:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
-}
+};
 
 const orgBannerUpload = async (req, res) => {
   try {
@@ -75,17 +84,20 @@ const orgBannerUpload = async (req, res) => {
     existingRecruiter.orgBanner = req.file.path;
     await existingRecruiter.save();
 
-    return res.status(200).json({ message: "Logo uploaded successfully", recruiter: existingRecruiter });
+    return res.status(200).json({
+      message: "Logo uploaded successfully",
+      recruiter: existingRecruiter,
+    });
   } catch (error) {
     console.error("Error in orgLogoUpload:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
-}
-
+};
 
 const fetchOrgData = async (req, res) => {
   try {
-
     const { orgname } = req.query;
 
     // Check if a recruiter already exists for the user.
@@ -98,10 +110,11 @@ const fetchOrgData = async (req, res) => {
     return res.status(200).json({ recruiter: existingRecruiter });
   } catch (error) {
     console.error("Error in fetchOrgData:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
-}
-
+};
 
 const updateProfile = async (req, res) => {
   try {
@@ -116,55 +129,112 @@ const updateProfile = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Profile updated successfully',
+      message: "Profile updated successfully",
       profile: updatedProfile,
     });
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error("Error updating profile:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
+      message: "Internal Server Error",
     });
   }
 };
-
 
 const initiateChatRecuriter = async (req, res) => {
   const { jobId, orgId, receiverId } = req.body;
 
   if (!jobId || !orgId || !receiverId) {
-    return res.status(400).json({ message: 'Missing required fields' });
+    return res.status(400).json({ message: "Missing required fields" });
   }
 
   if (orgId === receiverId) {
-    return res.status(400).json({ message: "Cannot initiate chat with yourself" });
+    return res
+      .status(400)
+      .json({ message: "Cannot initiate chat with yourself" });
   }
 
   const senderId = orgId;
   console.log("Recruiter controller", senderId, orgId, receiverId);
 
   try {
+    // Check if conversation already exists with new model structure
     let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, receiverId] },
+      $and: [
+        {
+          participants: {
+            $elemMatch: {
+              user: senderId,
+              userType: "BusinessProfile",
+            },
+          },
+        },
+        {
+          participants: {
+            $elemMatch: {
+              user: receiverId,
+              userType: "User",
+            },
+          },
+        },
+      ],
       category: "Recruitment",
-      job: jobId
+      job: jobId,
+      status: "active",
     });
 
     if (!conversation) {
+      // Create new conversation with enhanced structure
+      const participants = [
+        {
+          user: senderId,
+          userType: "BusinessProfile",
+          role: "owner",
+          joinedAt: new Date(),
+        },
+        {
+          user: receiverId,
+          userType: "User",
+          role: "member",
+          joinedAt: new Date(),
+        },
+      ];
+
       conversation = await Conversation.create({
-        participants: [senderId, receiverId],
+        participants: participants,
         category: "Recruitment",
-        job: jobId
+        job: jobId,
+        isGroup: false,
+        isPrivate: true,
+        createdBy: {
+          user: senderId,
+          userType: "BusinessProfile",
+        },
+        status: "active",
       });
+
+      console.log("✅ New recruitment conversation created:", conversation._id);
+    } else {
+      console.log(
+        "✅ Existing recruitment conversation found:",
+        conversation._id
+      );
     }
 
-    res.status(200).json({ conversationId: conversation._id });
+    res.status(200).json({
+      conversationId: conversation._id,
+      success: true,
+      message: "Conversation initiated successfully",
+    });
   } catch (err) {
-    console.error("initiateChatRecuriter error:", err);
-    res.status(500).json({ message: 'Server Error' });
+    console.error("❌ initiateChatRecuriter error:", err);
+    res.status(500).json({
+      message: "Server Error",
+      error: err.message,
+      success: false,
+    });
   }
 };
-
 
 const sendMessage = async (req, res) => {
   try {
@@ -181,138 +251,202 @@ const sendMessage = async (req, res) => {
       conversation = await Conversation.findById(conversationId);
     }
 
-    // 2. If not found and not a group, create/find 1-1 conversation
-    // if (!conversation && receiverId) {
-    //   conversation = await Conversation.findOne({
-    //     participants: { $all: [senderId, receiverId], $size: 2 },
-    //     category: "Recruitment",
-    //     isGroup: false,
-    //   });
-
-    //   if (!conversation) {
-    //     conversation = await Conversation.create({
-    //       participants: [senderId, receiverId],
-    //       category: "Recruitment",
-    //       isGroup: false,
-    //     });
-    //   }
-    // }
-
     if (!conversation) {
       return res.status(404).json({ error: "Conversation not found." });
     }
 
-    // 3. Create the message
+    // 3. Create the message with new model structure
     const newMessage = await Message.create({
-      sender: senderId,
-      receiver: receiverId,
-      message: text,
       conversationId: conversation._id,
+      sender: {
+        user: senderId,
+        userType: "BusinessProfile",
+      },
+      receiver: receiverId
+        ? {
+            user: receiverId,
+            userType: "User",
+          }
+        : undefined,
+      message: text,
+      messageType: "text",
+      category: "Recruitment",
+      status: "sent",
     });
 
-    const populatedMessage = await Message.findById(newMessage._id).lean();
+    // Populate the message for response
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate("sender.user", "name username profilePicture")
+      .populate("receiver.user", "name username profilePicture")
+      .lean();
 
-    // 4. Update conversation metadata
-    conversation.lastMessage = populatedMessage.message;
-    conversation.lastMessageTime = Date.now();
-    await conversation.save();
+    // 4. Update conversation metadata with new method
+    await conversation.updateLastMessage(text, senderId, "BusinessProfile");
 
-    // 5. Emit to all participants
-    // conversation.participants.forEach((participantId) => {
-    //   io.to(participantId.toString()).emit("newMessage", populatedMessage); --> Future
-    // });
-    io.emit("newMessage", populatedMessage);
-    res.status(201).json(populatedMessage);
+    // 5. Emit to conversation room using new socket structure
+    const { broadcastToConversation } = require("../../utils/socket");
+    broadcastToConversation(conversation._id, "newMessage", {
+      id: populatedMessage._id,
+      conversationId: conversation._id,
+      sender: populatedMessage.sender,
+      receiver: populatedMessage.receiver,
+      message: populatedMessage.message,
+      messageType: populatedMessage.messageType,
+      category: populatedMessage.category,
+      status: populatedMessage.status,
+      createdAt: populatedMessage.createdAt,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: populatedMessage,
+      conversationId: conversation._id,
+    });
   } catch (err) {
-    console.error("Message send error:", err);
-    res.status(500).json({ error: "Failed to send message." });
+    console.error("❌ Message send error:", err);
+    res.status(500).json({
+      error: "Failed to send message.",
+      details: err.message,
+      success: false,
+    });
   }
 };
-
 
 const getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const { orgId } = req.query;
 
-    // Fetch conversation and messages
+    // Fetch conversation and messages with proper population
     const [conversation, messages] = await Promise.all([
-      Conversation.findById(conversationId),
-      Message.find({ conversationId }).sort({ createdAt: 1 })
+      Conversation.findById(conversationId)
+        .populate("participants.user", "name username profilePicture")
+        .populate("job", "jobTitle"),
+      Message.findByConversation(conversationId, { sortOrder: 1 }),
     ]);
 
     if (!conversation) {
       return res.status(404).json({
         success: false,
-        message: "Conversation not found"
+        message: "Conversation not found",
       });
     }
 
-    const otherUser = conversation.participants.find(user => user._id.toString() !== orgId);
-    if (!otherUser) {
+    // Find the other participant (not the current org)
+    const otherParticipant = conversation.participants.find(
+      (participant) => participant.user._id.toString() !== orgId
+    );
+
+    if (!otherParticipant) {
       return res.status(400).json({
         success: false,
-        message: "Other user not found in the conversation"
+        message: "Other user not found in the conversation",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Chat history fetched successfully",
-      otherUser,
-      messages
+      otherUser: otherParticipant.user,
+      messages,
+      conversation: {
+        id: conversation._id,
+        category: conversation.category,
+        job: conversation.job,
+        lastMessage: conversation.lastMessage,
+        lastMessageTime: conversation.lastMessageTime,
+        messageCount: conversation.messageCount,
+      },
     });
-
   } catch (error) {
-    console.error("Error in getChatHistory:", error);
+    console.error("❌ Error in getMessages:", error);
     res.status(500).json({
       success: false,
       message: "Fetching chat history failed",
-      error: error.message || error
+      error: error.message || error,
     });
   }
-}
+};
 
 const getAllConversations = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const BusinessProfile = await Business.findOne({userId:userId});
+    const businessProfile = await Business.findOne({ userId: userId });
 
-    const conversations = await Conversation.find({
-      participants: BusinessProfile._id,
-    })
-      .populate({
-        path: "lastMessage",
-        select: "text image createdAt",
-      })
-      .sort({ updatedAt: -1 })
-      .lean();
+    if (!businessProfile) {
+      return res.status(404).json({
+        error: "Business profile not found",
+        success: false,
+      });
+    }
 
-    // Get participant info excluding the current user
-    const populatedConversations = await Promise.all(
-      conversations.map(async (conv) => {
-
-        const otherParticipantId = conv.participants.find(
-          (id) => id.toString() !== BusinessProfile._id.toString()
-        );
-
-        const user = await User.findById(otherParticipantId).select(
-          "name profilePicture"
-        );
-
-        return {
-          ...conv,
-          otherParticipant: user,
-        };
-      })
+    // Use the new model's static method to find conversations
+    const conversations = await Conversation.findByParticipant(
+      businessProfile._id,
+      "BusinessProfile"
     );
 
-    res.status(200).json(populatedConversations);
+    // Transform conversations for response
+    const populatedConversations = conversations.map((conv) => {
+      // Find the other participant (not the current business)
+      const otherParticipant = conv.participants.find(
+        (participant) =>
+          !(
+            participant.user._id.toString() ===
+              businessProfile._id.toString() &&
+            participant.userType === "BusinessProfile"
+          )
+      );
+
+      return {
+        id: conv._id,
+        category: conv.category,
+        lastMessage: conv.lastMessage,
+        lastMessageTime: conv.lastMessageTime,
+        messageCount: conv.messageCount,
+        isGroup: conv.isGroup,
+        name: conv.name,
+        job: conv.job,
+        otherParticipant: otherParticipant
+          ? {
+              id: otherParticipant.user._id,
+              name: otherParticipant.user.name,
+              username: otherParticipant.user.username,
+              profilePicture: otherParticipant.user.profilePicture,
+              userType: otherParticipant.userType,
+              role: otherParticipant.role,
+            }
+          : null,
+        participants: conv.participants,
+        createdAt: conv.createdAt,
+        updatedAt: conv.updatedAt,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      conversations: populatedConversations,
+      count: populatedConversations.length,
+    });
   } catch (err) {
-    console.error("Get conversations error:", err);
-    res.status(500).json({ error: "Failed to fetch conversations." });
+    console.error("❌ Get conversations error:", err);
+    res.status(500).json({
+      error: "Failed to fetch conversations.",
+      details: err.message,
+      success: false,
+    });
   }
 };
 
-module.exports = { getAllConversations,sendMessage, checkRecuriter, orgLogoUpload, fetchOrgData, orgBannerUpload, updateProfile, initiateChatRecuriter, getMessages };
+module.exports = {
+  getAllConversations,
+  sendMessage,
+  checkRecuriter,
+  orgLogoUpload,
+  fetchOrgData,
+  orgBannerUpload,
+  updateProfile,
+  initiateChatRecuriter,
+  getMessages,
+};
