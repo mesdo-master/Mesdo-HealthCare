@@ -36,6 +36,12 @@ const MessageInput = ({
     if (!inputMessage.trim() && !selectedFile) return;
     if (isLoading) return;
 
+    // ✅ Enhanced validation
+    if (!selectedConveresationId || selectedConveresationId === "undefined") {
+      console.error("Cannot send message: Invalid conversation ID");
+      return;
+    }
+
     const messageText = inputMessage.trim();
     setIsLoading(true);
 
@@ -56,7 +62,11 @@ const MessageInput = ({
       setSelectedFile(null);
 
       // Emit socket event for real-time update
-      if (socket) {
+      if (
+        socket &&
+        selectedConveresationId &&
+        selectedConveresationId !== "undefined"
+      ) {
         socket.emit("send-message", {
           conversationId: selectedConveresationId,
           message: messageText,
@@ -82,6 +92,12 @@ const MessageInput = ({
     if (!inputMessage.trim() && !selectedFile) return;
     if (isLoading) return;
 
+    // ✅ Enhanced validation
+    if (!selectedConveresationId || selectedConveresationId === "undefined") {
+      console.error("Cannot send message: Invalid conversation ID");
+      return;
+    }
+
     const messageText = inputMessage.trim();
     setIsLoading(true);
 
@@ -106,7 +122,11 @@ const MessageInput = ({
       setSelectedFile(null);
 
       // Emit socket event for real-time update
-      if (socket) {
+      if (
+        socket &&
+        selectedConveresationId &&
+        selectedConveresationId !== "undefined"
+      ) {
         socket.emit("send-message", {
           conversationId: selectedConveresationId,
           message: messageText,
@@ -147,8 +167,16 @@ const MessageInput = ({
     }
   };
 
+  // ✅ Enhanced validation for disabled state
+  const isDisabled =
+    (!inputMessage.trim() && !selectedFile) ||
+    isLoading ||
+    !selectedConveresationId ||
+    selectedConveresationId === "undefined";
+
   console.log("MessageInput - conversation:", selectedConveresation);
   console.log("MessageInput - selectedUser:", selectedUser);
+  console.log("MessageInput - conversationId:", selectedConveresationId);
 
   return (
     <div className="border-t bg-white p-4">
@@ -187,6 +215,7 @@ const MessageInput = ({
           onClick={() => fileInputRef.current?.click()}
           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
           aria-label="Attach file"
+          disabled={isLoading}
         >
           <Paperclip size={20} />
         </button>
@@ -203,6 +232,7 @@ const MessageInput = ({
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
           aria-label="Add emoji"
+          disabled={isLoading}
         >
           <Smile size={20} />
         </button>
@@ -213,17 +243,25 @@ const MessageInput = ({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          className="flex-1 p-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          disabled={isLoading}
+          placeholder={
+            !selectedConveresationId || selectedConveresationId === "undefined"
+              ? "Select a conversation to start messaging..."
+              : "Type a message..."
+          }
+          className="flex-1 p-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={
+            isLoading ||
+            !selectedConveresationId ||
+            selectedConveresationId === "undefined"
+          }
         />
 
         {/* Send Button */}
         <button
           onClick={handleSendClick}
-          disabled={(!inputMessage.trim() && !selectedFile) || isLoading}
+          disabled={isDisabled}
           className={`p-2 rounded-full transition ${
-            (inputMessage.trim() || selectedFile) && !isLoading
+            !isDisabled
               ? "bg-blue-500 text-white hover:bg-blue-600"
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}

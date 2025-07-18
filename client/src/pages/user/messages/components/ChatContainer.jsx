@@ -38,7 +38,13 @@ const ChatContainer = ({
 
   // ✅ Fetch messages when selectedId changes
   useEffect(() => {
-    if (!selectedId) return;
+    // ✅ Validate selectedId before making API calls
+    if (!selectedId || selectedId === "undefined") {
+      console.log("No valid selectedId, skipping message fetch");
+      setMessages([]);
+      setOtherUsers([]);
+      return;
+    }
 
     if (activeTab === "Jobs") {
       const getMessages = async () => {
@@ -103,7 +109,13 @@ const ChatContainer = ({
 
   // ✅ Socket integration for real-time messages
   useEffect(() => {
-    if (!socket || !selectedId) return;
+    // ✅ Enhanced validation for socket operations
+    if (!socket || !selectedId || selectedId === "undefined") {
+      console.log("Socket or selectedId not available, skipping socket setup");
+      return;
+    }
+
+    console.log("Setting up socket for conversation:", selectedId);
 
     // Join the conversation room
     socket.emit("join-conversation", { conversationId: selectedId });
@@ -151,7 +163,9 @@ const ChatContainer = ({
       socket.off("stopped-typing", handleStoppedTyping);
 
       // Leave the conversation room
-      socket.emit("leave-conversation", { conversationId: selectedId });
+      if (selectedId && selectedId !== "undefined") {
+        socket.emit("leave-conversation", { conversationId: selectedId });
+      }
     };
   }, [socket, selectedId]);
 
@@ -162,10 +176,17 @@ const ChatContainer = ({
     }
   }, [messages]);
 
-  if (!selectedId) {
+  // ✅ Early return with proper validation
+  if (!selectedId || selectedId === "undefined") {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
-        Select a conversation to start chatting.
+        <div className="text-center">
+          <div className="text-6xl mb-4">💬</div>
+          <h2 className="text-xl font-semibold mb-2">Select a conversation</h2>
+          <p className="text-gray-400">
+            Choose a conversation to start chatting
+          </p>
+        </div>
       </div>
     );
   }
