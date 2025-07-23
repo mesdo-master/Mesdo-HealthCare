@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Paperclip, Smile, Send, X } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import axiosInstance from "../../../../lib/axio";
@@ -18,8 +18,24 @@ const MessageInput = ({
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
-  const socket = useSocket();
+
+  // ✅ Use socket utilities from context
+  const { sendMessage: socketSendMessage, isConnected } = useSocket();
   const { businessProfile } = useSelector((state) => state.auth);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showEmojiPicker]);
 
   const handleEmojiClick = (emojiData) => {
     setInputMessage((prev) => prev + emojiData.emoji);
@@ -35,12 +51,16 @@ const MessageInput = ({
 
   const handleSend = async () => {
     if (!inputMessage.trim() && !selectedFile) return;
-    if (!selectedConveresationId || !selectedUser || !businessProfile) return;
     if (isLoading) return;
 
     // ✅ Enhanced validation
-    if (selectedConveresationId === "undefined") {
+    if (!selectedConveresationId || selectedConveresationId === "undefined") {
       console.error("Cannot send message: Invalid conversation ID");
+      return;
+    }
+
+    if (!businessProfile) {
+      console.error("Cannot send message: No business profile");
       return;
     }
 
@@ -51,7 +71,7 @@ const MessageInput = ({
       const messageData = {
         conversationId: selectedConveresationId,
         text: messageText,
-        receiverId: selectedUser._id || selectedUser.id || selectedUser,
+        receiverId: selectedUser?._id || selectedUser?.id || selectedUser,
         senderId: businessProfile._id,
       };
 
@@ -63,30 +83,63 @@ const MessageInput = ({
       );
       console.log("Recruiter message sent:", res.data);
 
+      // ✅ Add sent message immediately for instant feedback
+      if (res.data?.message && setMessages) {
+        const messageToAdd = res.data.message;
+        console.log("✅ RECRUITER: Adding sent message immediately:", {
+          messageId: messageToAdd._id,
+          messageText: messageToAdd.message,
+          conversationId: messageToAdd.conversationId
+        });
+        setMessages((prevMessages) => {
+          // Enhanced duplicate checking for immediate message addition
+          const messageExists = prevMessages.some(
+            (msg) => {
+              // Check by _id (most reliable)
+              if (msg._id === messageToAdd._id) return true;
+              
+              // Check by content, timestamp, and conversation (fallback)
+              const timeDiff = Math.abs(new Date(msg.createdAt) - new Date(messageToAdd.createdAt));
+              if (msg.message === messageToAdd.message && 
+                  (msg.conversationId === messageToAdd.conversationId || 
+                   msg.conversationId === selectedConveresationId) &&
+                  timeDiff < 2000) { // 2 second window for immediate additions
+                return true;
+              }
+              
+              return false;
+            }
+          );
+          
+          if (!messageExists) {
+            console.log("✅ RECRUITER: Adding new message immediately");
+            // Add a temporary flag to identify immediate messages
+            const messageWithFlag = { ...messageToAdd, _isImmediate: true };
+            return [...prevMessages, messageWithFlag];
+          }
+          console.log("⚠️ RECRUITER: Duplicate message detected, skipping immediate add");
+          return prevMessages;
+        });
+      } else {
+        console.warn("📨 RECRUITER: No message data received or setMessages not available:", {
+          messageExists: !!res.data?.message,
+          setMessagesExists: !!setMessages,
+          responseData: res.data
+        });
+      }
+
       // Clear input immediately for better UX
       setInputMessage("");
       setSelectedFile(null);
 
-      // Emit socket event for real-time update
-      if (
-        socket &&
-        selectedConveresationId &&
-        selectedConveresationId !== "undefined"
-      ) {
-        socket.emit("send-message", {
-          conversationId: selectedConveresationId,
-          message: messageText,
-          messageType: "text",
-          category: "Recruitment",
-        });
-      }
+      // ✅ Socket emission is handled by server, no need for client-side emission
+      console.log("✅ CLIENT: Recruiter message sent, server will handle socket broadcasting");
 
-      // Trigger refresh if needed
-      if (toggleFetch) {
-        toggleFetch();
-      }
+      // ✅ No need to trigger fetch since we're adding message immediately to local state
+      // toggleFetch() was causing unwanted reloads - removed for better UX
     } catch (error) {
       console.error("Error sending recruiter message:", error);
+      console.error("Error response:", error.response?.data);
       // Restore input on error
       setInputMessage(messageText);
     } finally {
@@ -102,24 +155,35 @@ const MessageInput = ({
   };
 
   // ✅ Enhanced validation for disabled state
-  const isDisabled =
+  const isInputDisabled =
+    isLoading ||
+    !selectedConveresationId ||
+    selectedConveresationId === "undefined" ||
+    !businessProfile;
+
+  const isSendDisabled =
     (!inputMessage.trim() && !selectedFile) ||
     isLoading ||
     !selectedConveresationId ||
     selectedConveresationId === "undefined" ||
-    !selectedUser ||
     !businessProfile;
 
   console.log("Recruiter MessageInput - conversation:", selectedConveresation);
   console.log("Recruiter MessageInput - selectedUser:", selectedUser);
-  console.log("Recruiter MessageInput - businessProfile:", businessProfile);
   console.log(
     "Recruiter MessageInput - conversationId:",
     selectedConveresationId
   );
+  console.log("Recruiter MessageInput - businessProfile:", businessProfile);
+  console.log("Recruiter MessageInput - isConnected:", isConnected);
+  console.log("Recruiter MessageInput - isInputDisabled:", isInputDisabled);
+  console.log("Recruiter MessageInput - isSendDisabled:", isSendDisabled);
+  console.log("Recruiter MessageInput - inputMessage:", inputMessage);
+  console.log("Recruiter MessageInput - isLoading:", isLoading);
+  console.log("Recruiter MessageInput - setMessages function:", typeof setMessages);
 
   return (
-    <div className="border-t bg-white p-4">
+    <div className="relative border-t bg-white p-4">
       {/* File Preview */}
       {selectedFile && (
         <div className="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-between">
@@ -138,10 +202,9 @@ const MessageInput = ({
 
       {/* Emoji Picker */}
       {showEmojiPicker && (
-        <div className="absolute bottom-20 left-4 z-10">
+        <div ref={emojiPickerRef} className="absolute bottom-20 left-4 z-50">
           <EmojiPicker
             onEmojiClick={handleEmojiClick}
-            ref={emojiPickerRef}
             width={300}
             height={400}
           />
@@ -155,7 +218,7 @@ const MessageInput = ({
           onClick={() => fileInputRef.current?.click()}
           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
           aria-label="Attach file"
-          disabled={isLoading}
+          disabled={isInputDisabled}
         >
           <Paperclip size={20} />
         </button>
@@ -172,7 +235,7 @@ const MessageInput = ({
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
           aria-label="Add emoji"
-          disabled={isLoading}
+          disabled={isInputDisabled}
         >
           <Smile size={20} />
         </button>
@@ -189,15 +252,15 @@ const MessageInput = ({
               : "Type a message..."
           }
           className="flex-1 p-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isDisabled}
+          disabled={isInputDisabled}
         />
 
         {/* Send Button */}
         <button
           onClick={handleSend}
-          disabled={isDisabled}
+          disabled={isSendDisabled}
           className={`p-2 rounded-full transition ${
-            !isDisabled
+            !isSendDisabled
               ? "bg-blue-500 text-white hover:bg-blue-600"
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}

@@ -76,13 +76,11 @@ const updateUserInfo = async (req, res) => {
       "updateUserInfo - updatedUser.languages:",
       updatedUser.languages
     );
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Profile updated successfully",
-        updatedUser,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      updatedUser,
+    });
   } catch (error) {
     console.error("updateUserInfo - error:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -393,8 +391,53 @@ const getConnections = async (req, res) => {
   }
 };
 
+const getSuggestedUsers = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const limit = parseInt(req.query.limit) || 6; // Default to 6 suggested users
+
+    // Get current user to exclude them and their existing connections
+    const currentUser = await User.findById(userId).select("connections");
+    
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Create array of user IDs to exclude (current user + existing connections)
+    const excludeIds = [userId, ...(currentUser.connections || [])];
+
+    // Find users excluding current user and existing connections
+    const suggestedUsers = await User.find({
+      _id: { $nin: excludeIds }
+    })
+    .select("name username profilePicture headline experience education location")
+    .limit(limit)
+    .sort({ createdAt: -1 }); // Sort by newest users first
+
+    // Format the response to match the expected structure
+    const formattedUsers = suggestedUsers.map(user => ({
+      _id: user._id,
+      name: user.name,
+      username: user.username,
+      image: user.profilePicture || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 50) + 1}.jpg`,
+      role: user.headline || (user.experience && user.experience[0]?.position) || "Professional",
+      company: (user.experience && user.experience[0]?.company) || (user.education && user.education[0]?.university) || "Healthcare",
+      location: user.location?.city || user.location?.state || "Location not specified"
+    }));
+
+    res.status(200).json({
+      success: true,
+      suggestedUsers: formattedUsers,
+    });
+  } catch (error) {
+    console.error("Error fetching suggested users:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   getConnections,
+  getSuggestedUsers,
   handleUploads,
   getProfileInfo,
   updateUserInfo,

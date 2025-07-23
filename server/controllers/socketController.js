@@ -230,7 +230,7 @@ const sendMessage = async (req, res) => {
     const newMessage = await Message.createMessage({
       conversationId,
       senderId: req.user._id,
-      senderType: "User",
+      senderType: req.user.role === 'recruiter' ? 'BusinessProfile' : 'User',
       message,
       messageType,
       category,
@@ -238,7 +238,7 @@ const sendMessage = async (req, res) => {
     });
 
     // Update conversation
-    await conversation.updateLastMessage(message, req.user._id, "User");
+    await conversation.updateLastMessage(message, req.user._id, req.user.role === 'recruiter' ? 'BusinessProfile' : 'User');
 
     // Populate message for response
     const populatedMessage = await Message.findById(newMessage._id)

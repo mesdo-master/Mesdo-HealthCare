@@ -238,7 +238,9 @@ const initiateChatRecuriter = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { receiverId, text, conversationId, senderId } = req.body;
+    const { receiverId, text, conversationId } = req.body;
+    const senderId = req.user._id;
+    const senderUserType = req.user.role === 'recruiter' ? 'BusinessProfile' : 'User';
 
     if (!text && !req.file) {
       return res.status(400).json({ error: "Message is empty." });
@@ -260,7 +262,7 @@ const sendMessage = async (req, res) => {
       conversationId: conversation._id,
       sender: {
         user: senderId,
-        userType: "BusinessProfile",
+        userType: senderUserType,
       },
       receiver: receiverId
         ? {

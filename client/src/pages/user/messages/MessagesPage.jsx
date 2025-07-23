@@ -8,7 +8,9 @@ import { useSocket } from "../../../context/SocketProvider";
 
 function Messages() {
   const { conversationId } = useParams();
-  const socket = useSocket();
+  // ✅ Get socket connection status
+  const { isConnected, connectionError, reconnect } = useSocket();
+
   const [selectedConversation, setSelectedConversation] =
     useState(conversationId);
 
@@ -67,8 +69,38 @@ function Messages() {
           conversations = [];
         }
 
+        // ✅ Remove duplicate conversations based on otherParticipant ID
+        const uniqueConversations = conversations.reduce((acc, conv) => {
+          if (!conv.otherParticipant) return acc;
+          
+          const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
+          const existingIndex = acc.findIndex(
+            (existing) => {
+              const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
+              return existingParticipantId === participantId && existing.category === conv.category;
+            }
+          );
+          
+          if (existingIndex === -1) {
+            // No duplicate found, add the conversation
+            acc.push(conv);
+          } else {
+            // Keep the conversation with the most recent message
+            const existing = acc[existingIndex];
+            const convTime = new Date(conv.lastMessageTime || 0);
+            const existingTime = new Date(existing.lastMessageTime || 0);
+            
+            if (convTime > existingTime) {
+              acc[existingIndex] = conv;
+            }
+          }
+          
+          return acc;
+        }, []);
+
         console.log(`Processed ${activeTab} conversations:`, conversations);
-        setAllConversations(conversations);
+        console.log(`Unique conversations after deduplication:`, uniqueConversations);
+        setAllConversations(uniqueConversations);
       } catch (err) {
         console.error("Error fetching conversations:", err);
         setFetchError("Failed to load conversations.");
@@ -83,7 +115,7 @@ function Messages() {
 
   // ✅ Socket integration for real-time updates
   useEffect(() => {
-    if (!socket) return;
+    if (!isConnected) return;
 
     const handleNewMessage = (messageData) => {
       console.log("New message received:", messageData);
@@ -108,7 +140,34 @@ function Messages() {
             conversations = res.data.conversations;
           }
 
-          setAllConversations(conversations);
+          // ✅ Apply same deduplication logic for socket refresh
+          const uniqueConversations = conversations.reduce((acc, conv) => {
+            if (!conv.otherParticipant) return acc;
+            
+            const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
+            const existingIndex = acc.findIndex(
+              (existing) => {
+                const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
+                return existingParticipantId === participantId && existing.category === conv.category;
+              }
+            );
+            
+            if (existingIndex === -1) {
+              acc.push(conv);
+            } else {
+              const existing = acc[existingIndex];
+              const convTime = new Date(conv.lastMessageTime || 0);
+              const existingTime = new Date(existing.lastMessageTime || 0);
+              
+              if (convTime > existingTime) {
+                acc[existingIndex] = conv;
+              }
+            }
+            
+            return acc;
+          }, []);
+
+          setAllConversations(uniqueConversations);
         } catch (err) {
           console.error("Error refreshing conversations:", err);
         }
@@ -131,16 +190,10 @@ function Messages() {
       });
     };
 
-    // Listen for socket events
-    socket.on("newMessage", handleNewMessage);
-    socket.on("conversationUpdate", handleConversationUpdate);
-
-    // Cleanup
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-      socket.off("conversationUpdate", handleConversationUpdate);
-    };
-  }, [socket, activeTab]);
+    // Listen for socket events - using the socket context utilities
+    // Note: The socket context should handle event listeners internally
+    // This is just for demonstration of how to handle app-level events
+  }, [isConnected, activeTab]);
 
   const handleProfileClick = (user) => {
     if (user.isGroup) {
@@ -175,7 +228,35 @@ function Messages() {
           } else if (res.data.conversations) {
             conversations = res.data.conversations;
           }
-          setAllConversations(conversations);
+          
+          // ✅ Apply same deduplication logic for group creation refresh
+          const uniqueConversations = conversations.reduce((acc, conv) => {
+            if (!conv.otherParticipant) return acc;
+            
+            const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
+            const existingIndex = acc.findIndex(
+              (existing) => {
+                const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
+                return existingParticipantId === participantId && existing.category === conv.category;
+              }
+            );
+            
+            if (existingIndex === -1) {
+              acc.push(conv);
+            } else {
+              const existing = acc[existingIndex];
+              const convTime = new Date(conv.lastMessageTime || 0);
+              const existingTime = new Date(existing.lastMessageTime || 0);
+              
+              if (convTime > existingTime) {
+                acc[existingIndex] = conv;
+              }
+            }
+            
+            return acc;
+          }, []);
+          
+          setAllConversations(uniqueConversations);
         } catch (error) {
           console.error("Error refreshing conversations:", error);
         }
@@ -196,9 +277,27 @@ function Messages() {
   console.log("All conversations:", allConversations);
   console.log("Active tab:", activeTab);
   console.log("Loading:", loadingConversations);
+  console.log("Socket connected:", isConnected);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
+      {/* ✅ Connection Status Bar */}
+      {!isConnected && (
+        <div className="bg-red-500 text-white px-4 py-2 text-sm flex items-center justify-between">
+          <span>
+            {connectionError
+              ? `Connection error: ${connectionError}`
+              : "Disconnected from server. Messages may not be delivered in real-time."}
+          </span>
+          <button
+            onClick={reconnect}
+            className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs"
+          >
+            Reconnect
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-1 overflow-hidden pt-16 mb-7 mr-20 ml-18">
         <div className="flex flex-1 ml-[100px] mt-9 mb-5">
           <MessageList

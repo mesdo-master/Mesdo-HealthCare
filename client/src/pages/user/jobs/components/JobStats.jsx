@@ -83,7 +83,7 @@ const JobStats = ({ activeTab }) => {
               {tab.label}
             </div>
             <div className="text-sm text-gray-400 text-left font-normal">
-              {tab.count || 10023} Jobs
+              {tab.count || 0} Jobs
             </div>
           </div>
         </button>

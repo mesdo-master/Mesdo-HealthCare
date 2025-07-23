@@ -12,6 +12,7 @@ const {
   verifyEmail,
   resendVerification,
 } = require("../controllers/authControllers");
+const { getSuggestedUsers } = require("../controllers/user/userControllers");
 const router = express.Router();
 
 router.post("/signup", signup);
@@ -21,6 +22,7 @@ router.post("/verify-email", verifyEmail);
 router.post("/resend-verification", resendVerification);
 router.get("/current-user", protectRoute, getCurrentUser);
 router.get("/me", protectRoute, getCurrentUser); // Add this route to match frontend calls
+router.get("/getSuggestedUsers", protectRoute, getSuggestedUsers);
 router.post("/forget-password", forgetPassword);
 router.post("/reset-password", resetPasswordFunc);
 router.get("/google", googleAuth);

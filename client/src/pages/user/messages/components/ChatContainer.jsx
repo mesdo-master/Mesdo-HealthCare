@@ -4,7 +4,7 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "../MessageSkeleton";
 import axiosInstance from "../../../../lib/axio";
 import { useSelector } from "react-redux";
-import { useSocket } from "../../../../context/SocketProvider";
+import { useSocket, useOnlineUsers } from "../../../../context/SocketProvider";
 import { getMessageDateLabel } from "../../../../lib/utils";
 import { useNavigate } from "react-router-dom";
 
@@ -15,7 +15,11 @@ const ChatContainer = ({
   activeTab,
 }) => {
   const navigate = useNavigate();
-  const socket = useSocket();
+  // ✅ Use socket utilities from context
+  const { joinConversation, leaveConversation, on, off, isConnected } =
+    useSocket();
+  const onlineUsers = useOnlineUsers();
+
   const piimage =
     "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
 
@@ -107,18 +111,23 @@ const ChatContainer = ({
     }
   }, [selectedId, activeTab, navigate]);
 
-  // ✅ Socket integration for real-time messages
+  // ✅ Enhanced socket integration for real-time messages
   useEffect(() => {
     // ✅ Enhanced validation for socket operations
-    if (!socket || !selectedId || selectedId === "undefined") {
-      console.log("Socket or selectedId not available, skipping socket setup");
+    if (!isConnected || !selectedId || selectedId === "undefined") {
+      console.log(
+        "Socket not connected or selectedId not available, skipping socket setup"
+      );
       return;
     }
 
     console.log("Setting up socket for conversation:", selectedId);
 
-    // Join the conversation room
-    socket.emit("join-conversation", { conversationId: selectedId });
+    // ✅ Join the conversation room using socket utility
+    const joinResult = joinConversation(selectedId);
+    if (!joinResult) {
+      console.warn("Failed to join conversation room");
+    }
 
     const handleNewMessage = (newMessage) => {
       console.log("New message received in ChatContainer:", newMessage);
@@ -128,17 +137,35 @@ const ChatContainer = ({
         newMessage.conversationId || newMessage.conversation;
       if (messageConversationId === selectedId) {
         setMessages((prevMessages) => {
-          // Avoid duplicate messages
+          // ✅ Enhanced duplicate checking
           const messageExists = prevMessages.some(
-            (msg) => msg._id === newMessage.id || msg._id === newMessage._id
+            (msg) => {
+              // Check by _id
+              if (msg._id === (newMessage._id || newMessage.id)) return true;
+              
+              // Check by content and timestamp (for immediate vs socket messages)
+              if (msg.message === newMessage.message && 
+                  msg.conversationId === newMessage.conversationId &&
+                  Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt)) < 5000) {
+                return true;
+              }
+              
+              return false;
+            }
           );
 
           if (!messageExists) {
+            console.log("Adding new message to user chat:", newMessage);
             return [...prevMessages, newMessage];
           }
+          console.log("Duplicate message detected, skipping:", newMessage);
           return prevMessages;
         });
       }
+    };
+
+    const handleMessageSent = (data) => {
+      console.log("Message sent confirmation:", data);
     };
 
     const handleTyping = (typingData) => {
@@ -151,23 +178,31 @@ const ChatContainer = ({
       // Handle stopped typing indicators here if needed
     };
 
-    // Listen for socket events
-    socket.on("newMessage", handleNewMessage);
-    socket.on("typing", handleTyping);
-    socket.on("stopped-typing", handleStoppedTyping);
+    const handleConversationJoined = (data) => {
+      console.log("Successfully joined conversation:", data);
+    };
+
+    // ✅ Listen for socket events using socket utilities
+    on("newMessage", handleNewMessage);
+    on("message-sent", handleMessageSent);
+    on("typing", handleTyping);
+    on("stopped-typing", handleStoppedTyping);
+    on("conversation-joined", handleConversationJoined);
 
     // Cleanup
     return () => {
-      socket.off("newMessage", handleNewMessage);
-      socket.off("typing", handleTyping);
-      socket.off("stopped-typing", handleStoppedTyping);
+      off("newMessage", handleNewMessage);
+      off("message-sent", handleMessageSent);
+      off("typing", handleTyping);
+      off("stopped-typing", handleStoppedTyping);
+      off("conversation-joined", handleConversationJoined);
 
-      // Leave the conversation room
+      // ✅ Leave the conversation room using socket utility
       if (selectedId && selectedId !== "undefined") {
-        socket.emit("leave-conversation", { conversationId: selectedId });
+        leaveConversation(selectedId);
       }
     };
-  }, [socket, selectedId]);
+  }, [isConnected, selectedId, joinConversation, leaveConversation, on, off]);
 
   // ✅ Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -195,9 +230,28 @@ const ChatContainer = ({
       }, {})
     : {};
 
-  const getUserById = (id) => {
-    if (id === currentUser._id) return currentUser;
-    return otherUsers.find((user) => user._id === id) || {};
+  const getUserById = (senderInfo) => {
+    // ✅ Handle different sender structures
+    let senderId;
+    if (typeof senderInfo === 'string') {
+      senderId = senderInfo;
+    } else if (senderInfo?.user) {
+      senderId = senderInfo.user._id || senderInfo.user;
+    } else if (senderInfo?._id) {
+      senderId = senderInfo._id;
+    } else {
+      senderId = senderInfo;
+    }
+
+    if (senderId === currentUser._id) return currentUser;
+    return otherUsers.find((user) => user._id === senderId) || {};
+  };
+
+  // Check if user is online
+  const isUserOnline = (userId) => {
+    if (!userId) return false;
+    const user = onlineUsers.get(userId);
+    return user && user.status === 'online';
   };
 
   return (
@@ -210,79 +264,118 @@ const ChatContainer = ({
         conversation={conversation}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-gray-50">
         {isMessageLoading ? (
           <MessageSkeleton />
         ) : messages.length === 0 ? (
-          <div className="text-center text-gray-400 mt-10">
-            <p className="text-lg font-medium">No messages here yet.</p>
-            <p className="text-sm">{getRandomEmptyText()}</p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <div className="text-6xl mb-4">💬</div>
+            <p className="text-lg font-medium mb-2">No messages yet</p>
+            <p className="text-sm text-center max-w-md">
+              {getRandomEmptyText()}
+            </p>
           </div>
         ) : (
           Object.entries(groupedMessages).map(([dateLabel, msgs]) => (
-            <div key={dateLabel}>
+            <div key={dateLabel} className="space-y-1">
               <div className="flex justify-center my-6">
-                <span className="bg-gray-300 text-xs px-4 py-1 rounded-full text-gray-700 shadow-sm">
+                <span className="bg-white text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm border">
                   {dateLabel}
                 </span>
               </div>
-              {msgs.map((message) => {
-                const isCurrentUser = message.sender === currentUser._id;
+              {msgs.map((message, index) => {
+                // ✅ Enhanced sender comparison to handle different message structures
+                const isCurrentUser = 
+                  message.sender === currentUser._id ||
+                  message.sender?._id === currentUser._id ||
+                  message.sender?.user === currentUser._id ||
+                  message.sender?.user?._id === currentUser._id;
                 const senderUser = getUserById(message.sender);
+                
+                // Check if next message is from same sender for grouping
+                const nextMessage = msgs[index + 1];
+                const isNextMessageFromSameSender = nextMessage && (
+                  (nextMessage.sender === message.sender) ||
+                  (nextMessage.sender?._id === message.sender?._id) ||
+                  (nextMessage.sender?.user === message.sender?.user) ||
+                  (nextMessage.sender?.user?._id === message.sender?.user?._id)
+                );
 
                 return (
                   <div
                     key={message._id}
-                    className={`flex ${
+                    className={`flex mb-1 ${
                       isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
                       className={`flex items-end gap-2 ${
                         isCurrentUser ? "flex-row-reverse" : ""
-                      } max-w-[75%]`}
+                      } max-w-[80%] group`}
                     >
-                      <img
-                        src={senderUser?.profilePicture || piimage}
-                        alt="User avatar"
-                        className="w-8 h-8 rounded-full border"
-                      />
-                      <div className="text-left">
-                        {conversation?.category === "group" &&
-                          !isCurrentUser && (
-                            <p className="text-xs text-gray-500 mb-1 font-medium">
-                              {senderUser?.name}
-                            </p>
-                          )}
-                        {message.image && (
+                      {/* Avatar - only show for last message in group */}
+                      <div className={`w-8 h-8 ${!isNextMessageFromSameSender ? '' : 'invisible'}`}>
+                        <div className="relative">
                           <img
-                            src={message.image}
-                            alt="Attachment"
-                            className="sm:max-w-[200px] rounded-md mb-1"
+                            src={senderUser?.profilePicture || piimage}
+                            alt="User avatar"
+                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover"
                           />
+                          {/* Online status indicator */}
+                          {!isCurrentUser && isUserOnline(senderUser?._id) && (
+                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-white"></div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                        {/* Sender name for group chats */}
+                        {conversation?.category === "group" && !isCurrentUser && index === 0 && (
+                          <p className="text-xs text-gray-500 mb-1 font-medium px-2">
+                            {senderUser?.name}
+                          </p>
                         )}
+                        
+                        {/* Image attachment */}
+                        {message.image && (
+                          <div className="mb-2">
+                            <img
+                              src={message.image}
+                              alt="Attachment"
+                              className="max-w-[250px] rounded-lg shadow-md border"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Message bubble */}
                         {message.message && (
                           <div
-                            className={`px-4 py-2 rounded-lg text-sm whitespace-pre-line ${
+                            className={`px-4 py-2 text-sm whitespace-pre-line shadow-sm max-w-full break-words ${
                               isCurrentUser
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-900"
+                                ? "bg-blue-500 text-white rounded-[18px] rounded-br-[4px]"
+                                : "bg-white text-gray-900 rounded-[18px] rounded-bl-[4px] border"
                             }`}
                           >
                             {message.message}
                           </div>
                         )}
-                        <div className="text-xs text-gray-400 mt-1">
-                          {new Date(message.createdAt).toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: true,
-                              timeZone: "Asia/Kolkata",
-                            }
-                          )}
-                        </div>
+                        
+                        {/* Timestamp - only show for last message in group */}
+                        {!isNextMessageFromSameSender && (
+                          <div className={`text-xs text-gray-400 mt-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                            isCurrentUser ? 'text-right' : 'text-left'
+                          }`}>
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                                timeZone: "Asia/Kolkata",
+                              }
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -295,7 +388,7 @@ const ChatContainer = ({
       </div>
 
       <MessageInput
-        selectedUser={otherUsers[0]}
+        selectedUser={otherUsers[0] || conversation?.otherParticipant}
         setMessages={setMessages}
         selectedConveresationId={selectedId}
         toggleFetch={toggleFetch}

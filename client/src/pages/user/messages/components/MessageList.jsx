@@ -54,30 +54,30 @@ const MessageList = ({
   }, []);
 
   return (
-    <div className="w-[360px] bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+    <div className="w-[340px] bg-white/90 border-r border-gray-100 flex flex-col rounded-l-2xl shadow-lg h-full">
+      <div className="p-4 border-b border-gray-100">
         <h1 className="text-xl font-semibold mb-4">Messages</h1>
 
         <div className="flex items-center gap-2 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5" />
             <input
               type="text"
               placeholder={`Search ${activeTab.toLowerCase()}...`}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-100 border border-gray-200"
             />
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-1 mb-4">
+        <div className="bg-gray-50 rounded-xl p-1 mb-4">
           <div className="flex">
             {["Personal", "Groups", "Jobs"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeTab === tab
-                    ? "bg-white text-blue-500 shadow-sm"
+                    ? "bg-white text-blue-500 shadow"
                     : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                 }`}
               >
@@ -88,7 +88,7 @@ const MessageList = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Loading conversations...</div>

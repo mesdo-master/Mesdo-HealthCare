@@ -192,7 +192,7 @@ export default function Applicants() {
         </div>
 
         {/* APPLICANTS CONTENT */}
-        <div className="px-6 py-4 max-w-[1200px] w-full mx-auto">
+        <div className="px-6 py-4 max-w-[1200px] w-full mx-auto mr-[15vw] ">
           {/* Top row: Search + Sort */}
           <div className="flex items-center justify-between mb-4">
             {/* Left: Wide Search bar */}
@@ -366,6 +366,10 @@ export default function Applicants() {
                       setSelectedApplicant={setSelectedApplicant}
                       jobId={jobId}
                       onStatusUpdate={handleStatusUpdate}
+                      applicants={applicants}
+                      currentIndex={applicants.findIndex(
+                        (a) => a.id === selectedApplicant?.id
+                      )}
                     />
                   </motion.div>
                 )}

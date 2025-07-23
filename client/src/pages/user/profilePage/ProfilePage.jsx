@@ -18,6 +18,10 @@ const ProfilePage = () => {
   // Profile completion nudge state
   const [showProfileNudge, setShowProfileNudge] = useState(true);
 
+  // Suggested users state
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [suggestedUsersLoading, setSuggestedUsersLoading] = useState(true);
+
   // Additional state for qualification and experience management
   const [editingQualification, setEditingQualification] = useState(null);
   const [activeQualificationTab, setActiveQualificationTab] =
@@ -56,6 +60,30 @@ const ProfilePage = () => {
 
     fetchUserData();
   }, [userId]);
+
+  // Fetch suggested users
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      try {
+        setSuggestedUsersLoading(true);
+        const response = await axiosInstance.get("/getSuggestedUsers?limit=6");
+        
+        if (response.data.success) {
+          setSuggestedUsers(response.data.suggestedUsers);
+        }
+      } catch (err) {
+        console.error("Error fetching suggested users:", err);
+        // Keep the default empty array on error
+      } finally {
+        setSuggestedUsersLoading(false);
+      }
+    };
+
+    // Only fetch suggested users for own profile
+    if (isOwnProfile) {
+      fetchSuggestedUsers();
+    }
+  }, [isOwnProfile]);
 
   const openModal = (tab) => {
     setActiveModalTab(tab);
@@ -291,74 +319,63 @@ const ProfilePage = () => {
                   People you might know
                 </h3>
                 <div className="space-y-4">
-                  {[
-                    {
-                      name: "Alena Baptista",
-                      role: "Dental Surgeon",
-                      company: "Apollo Hospital",
-                      image:
-                        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-                    },
-                    {
-                      name: "Mira Curtis",
-                      role: "Dental Surgeon",
-                      company: "Apollo Hospital",
-                      image:
-                        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-                    },
-                    {
-                      name: "Ashlynn Rosser",
-                      role: "Dental Surgeon",
-                      company: "Apollo Hospital",
-                      image:
-                        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-                    },
-                    {
-                      name: "Alfonso Siphron",
-                      role: "Dental Surgeon",
-                      company: "Apollo Hospital",
-                      image:
-                        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-                    },
-                    {
-                      name: "Jakob Dias",
-                      role: "Dental Surgeon",
-                      company: "Apollo Hospital",
-                      image:
-                        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-                    },
-                    {
-                      name: "Chance Calzoni",
-                      role: "Dental Surgeon",
-                      company: "Apollo Hospital",
-                      image:
-                        "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=150&h=150&fit=crop&crop=face",
-                    },
-                  ].map((person, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={person.image}
-                          alt={person.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div className="flex-1">
-                          <h4 className="text-[14px] font-medium text-gray-900">
-                            {person.name}
-                          </h4>
-                          <p className="text-[12px] text-gray-500">
-                            {person.role} | {person.company.substring(0, 5)}...
-                          </p>
+                  {suggestedUsersLoading ? (
+                    // Loading skeleton
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="flex items-center justify-between animate-pulse">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 rounded-full bg-gray-200"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                            <div className="h-3 bg-gray-200 rounded w-32"></div>
+                          </div>
                         </div>
+                        <div className="h-8 bg-gray-200 rounded w-16"></div>
                       </div>
-                      <button className="text-[12px] text-blue-600 hover:text-blue-700 font-medium px-3 py-1 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
-                        + Follow
-                      </button>
+                    ))
+                  ) : suggestedUsers.length > 0 ? (
+                    suggestedUsers.map((person, index) => (
+                      <div
+                        key={person._id || index}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={person.image}
+                            alt={person.name}
+                            className="w-12 h-12 rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.src = `https://randomuser.me/api/portraits/${index % 2 === 0 ? 'men' : 'women'}/${(index % 50) + 1}.jpg`;
+                            }}
+                          />
+                          <div className="flex-1">
+                            <h4 className="text-[14px] font-medium text-gray-900">
+                              {person.name}
+                            </h4>
+                            <p className="text-[12px] text-gray-500">
+                              {person.role} | {person.company.length > 15 ? person.company.substring(0, 15) + '...' : person.company}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          className="text-[12px] bg-[#1890FF] text-white hover:bg-[#1570EF] font-medium px-3 py-1 rounded-lg transition-colors"
+                          onClick={() => {
+                            // TODO: Implement follow functionality
+                            console.log(`Following ${person.name}`);
+                          }}
+                        >
+                          + Follow
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    // Empty state
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 text-sm">
+                        No suggestions available at the moment.
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>

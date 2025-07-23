@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -14,32 +14,93 @@ export default function Sidebar({ className = "" }) {
   const { isAuthenticated, currentUser, businessProfile, mode, logout } =
     useAuth();
 
+  const [showSwitchLoader, setShowSwitchLoader] = useState(false);
+
   const handleLogout = async () => {
     await logout();
   };
 
   const handleModeToggle = async () => {
     try {
+      setShowSwitchLoader(true);
       const response = await axiosInstance.get("recuriter/checkRecuriter");
       console.log(response);
       await dispatch(modeToggle());
-      if (mode === "individual") {
-        navigate("/recruitment");
-      } else if (mode === "recruiter") {
-        navigate("/jobs");
-      }
+      setTimeout(() => {
+        setShowSwitchLoader(false);
+        if (mode === "individual") {
+          navigate("/recruitment");
+        } else if (mode === "recruiter") {
+          navigate("/jobs");
+        }
+      }, 1200); // 1.2s for smooth UX
     } catch (error) {
+      setShowSwitchLoader(false);
       console.log("Error on toggle", error);
     }
   };
 
   return (
     <>
+      {showSwitchLoader && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white transition-opacity duration-300 animate-fade-in">
+          <div className="flex flex-col items-center bg-white rounded-2xl shadow-2xl px-10 py-8">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 border-4 border-blue-100 border-t-[#1890FF] rounded-full animate-spin shadow-lg"></div>
+              {/* Animated checkmark after 0.8s */}
+              <span
+                id="switch-checkmark"
+                className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300"
+              >
+                <svg
+                  className="w-10 h-10 text-[#1890FF]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </span>
+            </div>
+            <div className="text-lg font-semibold text-[#1890FF] animate-pulse">
+              Switching mode...
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes fade-in {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+            .animate-fade-in {
+              animation: fade-in 0.4s;
+            }
+          `}</style>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+            setTimeout(function(){
+              var el = document.getElementById('switch-checkmark');
+              if(el) el.style.opacity = 1;
+            }, 800);
+          `,
+            }}
+          />
+        </div>
+      )}
       <div
         className={`fixed left-0 top-0 h-full w-[210px] bg-white z-40 ${className}`}
       ></div>
       <aside
-        className={`w-[18vw] ml-[70px] h-full bg-[#FFFFFF] fixed shadow-md flex flex-col transition-all duration-[300] z-50 pt-[12vh] ${className}`}
+        className={`fixed top-0 left-0 h-full w-[210px] md:w-[210px] lg:w-[18vw] ml-[70px] bg-[#FFFFFF] shadow-md flex flex-col pt-[12vh] z-50 ${className}`}
       >
         {/* Logo Section
         <div className="p-3 flex items-center">
@@ -67,7 +128,7 @@ export default function Sidebar({ className = "" }) {
             {/* Switch Card */}
             <div
               onClick={handleModeToggle}
-              className="cursor-pointer hover:bg-gray-100 mx-3 p-3 bg-[#F5F5F5] border rounded-lg shadow-sm flex items-center justify-between mb-5 border-[#FFFFFF]"
+              className="cursor-pointer hover:bg-gray-100 mx-3 p-3 bg-[#F5F5F5] rounded-lg shadow-sm flex items-center justify-between mb-5 border-none"
             >
               <div className="flex items-center space-x-3">
                 <img src={hospitalicon} alt="Switch Icon" className="h-8 w-8" />

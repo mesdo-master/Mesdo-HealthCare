@@ -10,7 +10,11 @@ import ChatHeader from "./ChatHeader";
 
 const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
   const navigate = useNavigate();
-  const socket = useSocket();
+
+  // ✅ Use socket utilities from context
+  const { joinConversation, leaveConversation, on, off, isConnected } =
+    useSocket();
+
   const piimage =
     "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
 
@@ -73,18 +77,23 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
     getMessages();
   }, [selectedId, businessProfile._id, navigate]);
 
-  // ✅ Socket integration for real-time messages
+  // ✅ Enhanced socket integration for real-time messages
   useEffect(() => {
     // ✅ Enhanced validation for socket operations
-    if (!socket || !selectedId || selectedId === "undefined") {
-      console.log("Socket or selectedId not available, skipping socket setup");
+    if (!isConnected || !selectedId || selectedId === "undefined") {
+      console.log(
+        "Socket not connected or selectedId not available, skipping socket setup"
+      );
       return;
     }
 
     console.log("Setting up socket for recruiter conversation:", selectedId);
 
-    // Join the conversation room
-    socket.emit("join-conversation", { conversationId: selectedId });
+    // ✅ Join the conversation room using socket utility
+    const joinResult = joinConversation(selectedId);
+    if (!joinResult) {
+      console.warn("Failed to join conversation room");
+    }
 
     const handleNewMessage = (newMessage) => {
       console.log(
@@ -97,10 +106,48 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
         newMessage.conversationId || newMessage.conversation;
       if (messageConversationId === selectedId) {
         setMessages((prevMessages) => {
-          // Avoid duplicate messages
+          // ✅ Enhanced duplicate checking with debugging
+          console.log("🔍 RECRUITER SOCKET: Checking duplicate for:", {
+            messageId: newMessage._id || newMessage.id,
+            messageText: newMessage.message,
+            conversationId: newMessage.conversationId,
+            currentMessagesCount: prevMessages.length
+          });
+          
           const messageExists = prevMessages.some(
-            (msg) => msg._id === newMessage.id || msg._id === newMessage._id
+            (msg, index) => {
+              // Check by _id (most reliable)
+              if (msg._id === (newMessage._id || newMessage.id)) {
+                console.log("🔍 SOCKET: Duplicate found by ID at index", index, ":", msg._id);
+                return true;
+              }
+              
+              // Special check for immediate messages
+              if (msg._isImmediate && 
+                  msg.message === newMessage.message &&
+                  Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt)) < 5000) {
+                console.log("🔍 SOCKET: Found matching immediate message, skipping socket add");
+                return true;
+              }
+              
+              // Check by content and timestamp (for immediate vs socket messages)
+              const timeDiff = Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt));
+              if (msg.message === newMessage.message && 
+                  (msg.conversationId === newMessage.conversationId ||
+                   msg.conversationId === selectedId) &&
+                  timeDiff < 10000) { // 10 second window for socket messages
+                console.log("🔍 SOCKET: Duplicate found by content/time at index", index, ":", {
+                  messageText: msg.message,
+                  timeDiff: timeDiff
+                });
+                return true;
+              }
+              
+              return false;
+            }
           );
+          
+          console.log("🔍 RECRUITER SOCKET: Duplicate exists?", messageExists);
 
           if (!messageExists) {
             return [...prevMessages, newMessage];
@@ -108,6 +155,10 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
           return prevMessages;
         });
       }
+    };
+
+    const handleMessageSent = (data) => {
+      console.log("Recruiter message sent confirmation:", data);
     };
 
     const handleTyping = (typingData) => {
@@ -120,23 +171,31 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
       // Handle stopped typing indicators here if needed
     };
 
-    // Listen for socket events
-    socket.on("newMessage", handleNewMessage);
-    socket.on("typing", handleTyping);
-    socket.on("stopped-typing", handleStoppedTyping);
+    const handleConversationJoined = (data) => {
+      console.log("Recruiter successfully joined conversation:", data);
+    };
+
+    // ✅ Listen for socket events using socket utilities
+    on("newMessage", handleNewMessage);
+    on("message-sent", handleMessageSent);
+    on("typing", handleTyping);
+    on("stopped-typing", handleStoppedTyping);
+    on("conversation-joined", handleConversationJoined);
 
     // Cleanup
     return () => {
-      socket.off("newMessage", handleNewMessage);
-      socket.off("typing", handleTyping);
-      socket.off("stopped-typing", handleStoppedTyping);
+      off("newMessage", handleNewMessage);
+      off("message-sent", handleMessageSent);
+      off("typing", handleTyping);
+      off("stopped-typing", handleStoppedTyping);
+      off("conversation-joined", handleConversationJoined);
 
-      // Leave the conversation room
+      // ✅ Leave the conversation room using socket utility
       if (selectedId && selectedId !== "undefined") {
-        socket.emit("leave-conversation", { conversationId: selectedId });
+        leaveConversation(selectedId);
       }
     };
-  }, [socket, selectedId]);
+  }, [isConnected, selectedId, joinConversation, leaveConversation, on, off]);
 
   // ✅ Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -170,6 +229,11 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
       }, {})
     : {};
 
+  const getUserById = (id) => {
+    if (id === businessProfile._id) return businessProfile;
+    return otherUsers.find((user) => user._id === id) || {};
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-white">
       <ChatHeader
@@ -180,7 +244,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
         participants={otherUsers}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-gray-50">
         {isMessageLoading ? (
           <MessageSkeleton />
         ) : messages.length === 0 ? (
@@ -193,58 +257,101 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
           </div>
         ) : (
           Object.entries(groupedMessages).map(([dateLabel, msgs]) => (
-            <div key={dateLabel}>
-              <div className="flex justify-center mb-4">
-                <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+            <div key={dateLabel} className="space-y-1">
+              <div className="flex justify-center my-6">
+                <span className="bg-white text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm border">
                   {dateLabel}
                 </span>
               </div>
-              {msgs.map((msg, index) => {
-                const isOwnMessage =
-                  msg.sender?.user?._id === businessProfile?._id ||
-                  msg.sender?.user === businessProfile?._id ||
-                  msg.sender === businessProfile?._id;
+              {msgs.map((message, index) => {
+                // ✅ Fixed sender comparison for recruiter messages
+                const isCurrentUser =
+                  message.sender === businessProfile._id ||
+                  message.sender?._id === businessProfile._id ||
+                  message.sender?.user === businessProfile._id ||
+                  message.sender?.user?._id === businessProfile._id;
+                const senderUser = getUserById(message.sender);
+                
+                // Check if next message is from same sender for grouping
+                const nextMessage = msgs[index + 1];
+                const isNextMessageFromSameSender = nextMessage && (
+                  (nextMessage.sender === message.sender) ||
+                  (nextMessage.sender?._id === message.sender?._id) ||
+                  (nextMessage.sender?.user === message.sender?.user) ||
+                  (nextMessage.sender?.user?._id === message.sender?.user?._id)
+                );
 
                 return (
                   <div
-                    key={msg._id || index}
-                    className={`flex mb-4 ${
-                      isOwnMessage ? "justify-end" : "justify-start"
+                    key={message._id}
+                    className={`flex mb-1 ${
+                      isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {!isOwnMessage && (
-                      <img
-                        src={
-                          msg.sender?.user?.profilePicture ||
-                          otherUsers[0]?.profilePicture ||
-                          piimage
-                        }
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full mr-2 flex-shrink-0"
-                      />
-                    )}
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        isOwnMessage
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 text-gray-800"
-                      }`}
+                      className={`flex items-end gap-2 ${
+                        isCurrentUser ? "flex-row-reverse" : ""
+                      } max-w-[80%] group`}
                     >
-                      <p className="text-sm">{msg.message || msg.text}</p>
-                      <p className="text-xs mt-1 opacity-70">
-                        {new Date(msg.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
+                      {/* Avatar - only show for last message in group */}
+                      <div className={`w-8 h-8 ${!isNextMessageFromSameSender ? '' : 'invisible'}`}>
+                        <img
+                          src={senderUser?.profilePicture || piimage}
+                          alt="User avatar"
+                          className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover"
+                        />
+                      </div>
+                      
+                      <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                        {/* Sender name for group chats */}
+                        {conversation?.isGroup && !isCurrentUser && index === 0 && (
+                          <p className="text-xs text-gray-500 mb-1 font-medium px-2">
+                            {senderUser?.name}
+                          </p>
+                        )}
+                        
+                        {/* Image attachment */}
+                        {message.image && (
+                          <div className="mb-2">
+                            <img
+                              src={message.image}
+                              alt="Attachment"
+                              className="max-w-[250px] rounded-lg shadow-md border"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Message bubble */}
+                        {message.message && (
+                          <div
+                            className={`px-4 py-2 text-sm whitespace-pre-line shadow-sm max-w-full break-words ${
+                              isCurrentUser
+                                ? "bg-blue-500 text-white rounded-[18px] rounded-br-[4px]"
+                                : "bg-white text-gray-900 rounded-[18px] rounded-bl-[4px] border"
+                            }`}
+                          >
+                            {message.message}
+                          </div>
+                        )}
+                        
+                        {/* Timestamp - only show for last message in group */}
+                        {!isNextMessageFromSameSender && (
+                          <div className={`text-xs text-gray-400 mt-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                            isCurrentUser ? 'text-right' : 'text-left'
+                          }`}>
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                                timeZone: "Asia/Kolkata",
+                              }
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {isOwnMessage && (
-                      <img
-                        src={businessProfile?.profilePicture || piimage}
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full ml-2 flex-shrink-0"
-                      />
-                    )}
                   </div>
                 );
               })}

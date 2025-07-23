@@ -27,9 +27,9 @@ const schoolIcon2 =
 const schoolIcon3 =
   "https://res.cloudinary.com/dy9voteoc/image/upload/v1744904312/School_3_egvf9b.png";
 // HEADER with three sections: Job Application, Resume, Message
-function TopBar({ setSelectedApplicant }) {
+function TopBar({ setSelectedApplicant, applicants = [], currentIndex = 0 }) {
   const navigate = useNavigate();
-
+  const total = applicants.length;
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white mt-[7vh]">
       {/* Left side: back/forward arrows + "1 out of 10" */}
@@ -37,13 +37,32 @@ function TopBar({ setSelectedApplicant }) {
         {/* Back Button - Navigates to Applicants Section */}
         <button
           className="p-1 text-gray-600 hover:text-gray-900"
-          onClick={() => navigate("/applicants/:jobTitle")} // Change to your applicants page route
+          onClick={() => navigate("/applicants/:jobTitle")}
         >
           <AiOutlineArrowLeft className="text-lg" />
         </button>
-        <span className="text-sm text-gray-500">1 out of 10</span>
-        <button className="p-1 text-gray-600 hover:text-gray-900">
-          <AiOutlineArrowRight className="text-lg" />
+        <button
+          className="p-1 text-gray-600 hover:text-gray-900"
+          onClick={() => {
+            if (currentIndex > 0)
+              setSelectedApplicant(applicants[currentIndex - 1]);
+          }}
+          disabled={currentIndex === 0}
+        >
+          <AiOutlineUp className="text-lg rotate-[-90deg]" />
+        </button>
+        <span className="text-sm text-gray-500">
+          {total > 0 ? `${currentIndex + 1} out of ${total}` : "-"}
+        </span>
+        <button
+          className="p-1 text-gray-600 hover:text-gray-900"
+          onClick={() => {
+            if (currentIndex < total - 1)
+              setSelectedApplicant(applicants[currentIndex + 1]);
+          }}
+          disabled={currentIndex === total - 1}
+        >
+          <AiOutlineDown className="text-lg rotate-[-90deg]" />
         </button>
       </div>
       {/* Right side: close icon */}
@@ -293,6 +312,8 @@ function ProfileHeader({
   setSelectedApplicant,
   jobId,
   onStatusUpdate,
+  applicants = [],
+  currentIndex = 0,
 }) {
   const [applicantStatus, setApplicantStatus] = useState(
     applicant.status || "Applied"
@@ -308,7 +329,11 @@ function ProfileHeader({
 
   return (
     <div>
-      <TopBar setSelectedApplicant={setSelectedApplicant} />
+      <TopBar
+        setSelectedApplicant={setSelectedApplicant}
+        applicants={applicants}
+        currentIndex={currentIndex}
+      />
       <ProfileHeaderWithTabs
         activeTab={activeTab}
         onTabClick={onTabClick}
@@ -924,6 +949,8 @@ export function ApplicantDetails({
   setSelectedApplicant,
   jobId,
   onStatusUpdate,
+  applicants = [],
+  currentIndex = 0,
 }) {
   const [activeTab, setActiveTab] = useState("jobApplication");
 
@@ -941,6 +968,8 @@ export function ApplicantDetails({
           setSelectedApplicant={setSelectedApplicant}
           jobId={jobId}
           onStatusUpdate={onStatusUpdate}
+          applicants={applicants}
+          currentIndex={currentIndex}
         />
       </div>
     </div>

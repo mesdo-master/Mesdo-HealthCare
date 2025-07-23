@@ -32,8 +32,101 @@ import MessageInput from "./MessageInput";
 import { useSocket } from "../../../../context/SocketProvider";
 import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Confetti from "react-confetti";
 
 const BLUE = "#1890FF";
+
+// Organization Jobs Component
+const OrganizationJobs = ({
+  organizationId,
+  calculateMatchPercentage,
+  currentUser,
+}) => {
+  const [orgJobs, setOrgJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrganizationJobs = async () => {
+      if (!organizationId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // Get all jobs and filter by organization on client side
+        const response = await axiosInstance.get(`/userSide/`);
+        const allJobs = response.data || [];
+        // Filter jobs by organization
+        const filteredJobs = allJobs.filter(
+          (job) => job.organization === organizationId
+        );
+        setOrgJobs(filteredJobs);
+      } catch (error) {
+        console.error("Error fetching organization jobs:", error);
+        setOrgJobs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrganizationJobs();
+  }, [organizationId]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2 mb-1"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (orgJobs.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500 text-sm">
+          No job listings available at the moment.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {orgJobs.slice(0, 5).map((orgJob, idx) => (
+        <motion.div
+          key={orgJob._id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.1 }}
+          whileHover={{ scale: 1.02 }}
+          className="w-full"
+        >
+          <JobCard
+            job={{
+              ...orgJob,
+              matchPercentage: calculateMatchPercentage
+                ? calculateMatchPercentage(orgJob, currentUser)
+                : 0,
+            }}
+            fullWidth
+          />
+        </motion.div>
+      ))}
+      {orgJobs.length > 5 && (
+        <button className="w-full text-center text-sm text-blue-600 hover:underline mt-4">
+          View All {orgJobs.length} Jobs
+        </button>
+      )}
+    </div>
+  );
+};
 
 // Animation variants
 const containerVariants = {
@@ -235,6 +328,7 @@ const JobDetails = ({ onClose }) => {
   const dispatch = useDispatch();
 
   const [similarJobs, setSimilarJobs] = useState([]);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const {
     handleCloseDetails,
@@ -408,6 +502,8 @@ const JobDetails = ({ onClose }) => {
       });
       setHasApplied(true);
       setShowApplyModal(false);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2000);
     } catch (error) {
       console.error("Error applying for job:", error);
     }
@@ -598,6 +694,68 @@ const JobDetails = ({ onClose }) => {
       style={{ minHeight: "100vh" }}
       layout
     >
+      {/* Confetti animation on success */}
+      {showConfetti && (
+        <>
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            numberOfPieces={600}
+            gravity={0.35}
+            wind={0.01}
+            recycle={false}
+            colors={[
+              "#10b981",
+              "#3b82f6",
+              "#f59e42",
+              "#f43f5e",
+              "#6366f1",
+              "#fbbf24",
+              "#22d3ee",
+              "#a21caf",
+            ]}
+            initialVelocityY={20}
+            initialVelocityX={10}
+            tweenDuration={800}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: -40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -40 }}
+            transition={{ duration: 0.5 }}
+            className="fixed top-24 left-1/2 z-[100] -translate-x-1/2 bg-white border border-emerald-200 shadow-lg rounded-xl px-8 py-5 flex items-center gap-3"
+            style={{ minWidth: 320 }}
+          >
+            <svg
+              className="w-8 h-8 text-emerald-500"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="#d1fae5"
+              />
+              <path
+                d="M7 13l3 3 7-7"
+                stroke="#10b981"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+            <span className="text-lg font-semibold text-emerald-700">
+              Successfully Applied!
+            </span>
+          </motion.div>
+        </>
+      )}
       {/* Top Bar */}
       <motion.div
         variants={itemVariants}
@@ -615,7 +773,7 @@ const JobDetails = ({ onClose }) => {
               width="18"
               height="18"
               fill="none"
-              stroke="#BDBDBD"
+              stroke="#4B5563"
               strokeWidth="2"
               viewBox="0 0 24 24"
             >
@@ -632,7 +790,7 @@ const JobDetails = ({ onClose }) => {
               width="18"
               height="18"
               fill="none"
-              stroke="#BDBDBD"
+              stroke="#4B5563"
               strokeWidth="2"
               viewBox="0 0 24 24"
             >
@@ -937,19 +1095,9 @@ const JobDetails = ({ onClose }) => {
                 >
                   <Section title="About">
                     <p className="text-sm text-gray-700 leading-relaxed">
-                      Lorem ipsum dolor sit amet consectetur. Duis rutrum eu
-                      vitae sed consequat at elit sit. Aenean tellus hac eu
-                      accumsan non. Sagittis etiam odio viverra in sit. Lobortis
-                      ac et platea sed.
-                    </p>
-                    <p className="text-sm text-gray-700 leading-relaxed mt-4">
-                      Leo interdum cum augue tellus vitae. Lacus neque sodales
-                      duis tortor pharetra et. Nibh molestie in sed id faucibus
-                      amet. Pellentesque aenean consectetur proin faucibus purus
-                      blandit. Rutrum nullam lacinia bibendum sed varius. Mauris
-                      quis sit ultrices diam. Commodo etiam rhoncus cras
-                      imperdiet consectetur ac. In scelerisque amet eget cras
-                      et.
+                      {organizationData?.overview ||
+                        organizationData?.description ||
+                        "No organization description available."}
                     </p>
                   </Section>
                 </motion.div>
@@ -961,17 +1109,17 @@ const JobDetails = ({ onClose }) => {
                 >
                   <Section title="Specialties">
                     <div className="flex flex-wrap gap-2">
-                      {[
-                        "Hospital",
-                        "Clinic",
-                        "Health Insurance",
-                        "Pharmacy",
-                        "Apollo Lifeline",
-                        "Apollo Lifeline",
-                        "Apollo Lifeline",
-                        "Apollo Lifeline",
-                        "Loren Ipsum",
-                      ].map((specialty, idx) => (
+                      {(organizationData?.specialties &&
+                      organizationData.specialties.length > 0
+                        ? organizationData.specialties
+                        : [
+                            "Hospital",
+                            "Clinic",
+                            "Health Insurance",
+                            "Pharmacy",
+                            "Medical Services",
+                          ]
+                      ).map((specialty, idx) => (
                         <motion.span
                           key={`${specialty}-${idx}`}
                           className="px-4 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
@@ -992,11 +1140,11 @@ const JobDetails = ({ onClose }) => {
                   variants={itemVariants}
                 >
                   <Section title="Jobs">
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 text-sm">
-                        No job listings available at the moment.
-                      </p>
-                    </div>
+                    <OrganizationJobs
+                      organizationId={job?.organization}
+                      calculateMatchPercentage={calculateMatchPercentage}
+                      currentUser={currentUser}
+                    />
                   </Section>
                 </motion.div>
 
@@ -1005,56 +1153,84 @@ const JobDetails = ({ onClose }) => {
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
                   variants={itemVariants}
                 >
-                  <Section title="People at Apollo">
+                  <Section
+                    title={`People at ${
+                      organizationData?.name || "Organization"
+                    }`}
+                  >
                     <div className="space-y-4">
-                      {[
-                        {
-                          name: "Alena Baptista",
-                          role: "Dental Surgeon | Apollo Hospitals",
-                          image:
-                            "https://randomuser.me/api/portraits/men/1.jpg",
-                        },
-                        {
-                          name: "Mira Curtis",
-                          role: "Dental Surgeon | Apollo Hospitals",
-                          image:
-                            "https://randomuser.me/api/portraits/women/2.jpg",
-                        },
-                        {
-                          name: "Mira Curtis",
-                          role: "Dental Surgeon | Apollo Hospitals",
-                          image:
-                            "https://randomuser.me/api/portraits/women/2.jpg",
-                        },
-                        {
-                          name: "Mira Curtis",
-                          role: "Dental Surgeon | Apollo Hospitals",
-                          image:
-                            "https://randomuser.me/api/portraits/women/2.jpg",
-                        },
-                      ].map((person, idx) => (
-                        <motion.div
-                          key={idx}
-                          className="flex items-center gap-3"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                        >
-                          <img
-                            src={person.image}
-                            alt={person.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {person.name}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              {person.role}
-                            </p>
-                          </div>
-                        </motion.div>
-                      ))}
+                      {(organizationData?.employees &&
+                      organizationData.employees.length > 0
+                        ? organizationData.employees
+                        : [
+                            {
+                              name: "John Doe",
+                              role: `Medical Professional | ${
+                                organizationData?.name || "Organization"
+                              }`,
+                              image:
+                                "https://randomuser.me/api/portraits/men/1.jpg",
+                            },
+                            {
+                              name: "Jane Smith",
+                              role: `Healthcare Specialist | ${
+                                organizationData?.name || "Organization"
+                              }`,
+                              image:
+                                "https://randomuser.me/api/portraits/women/2.jpg",
+                            },
+                            {
+                              name: "Dr. Michael Johnson",
+                              role: `Senior Doctor | ${
+                                organizationData?.name || "Organization"
+                              }`,
+                              image:
+                                "https://randomuser.me/api/portraits/men/3.jpg",
+                            },
+                            {
+                              name: "Sarah Wilson",
+                              role: `Nurse Manager | ${
+                                organizationData?.name || "Organization"
+                              }`,
+                              image:
+                                "https://randomuser.me/api/portraits/women/4.jpg",
+                            },
+                          ]
+                      )
+                        .slice(0, 4)
+                        .map((person, idx) => (
+                          <motion.div
+                            key={idx}
+                            className="flex items-center gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                          >
+                            <img
+                              src={
+                                person.image ||
+                                person.profileImage ||
+                                `https://randomuser.me/api/portraits/${
+                                  idx % 2 === 0 ? "men" : "women"
+                                }/${idx + 1}.jpg`
+                              }
+                              alt={person.name}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-900">
+                                {person.name}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                {person.role ||
+                                  person.position ||
+                                  `${person.designation || "Professional"} | ${
+                                    organizationData?.name || "Organization"
+                                  }`}
+                              </p>
+                            </div>
+                          </motion.div>
+                        ))}
                     </div>
                   </Section>
                 </motion.div>
@@ -1071,17 +1247,49 @@ const JobDetails = ({ onClose }) => {
                     <div className="space-y-3 text-sm">
                       <InfoItem
                         label="Website"
-                        value="www.apollo.com"
+                        value={
+                          organizationData?.website || "www.organization.com"
+                        }
                         isLink={true}
                       />
-                      <InfoItem label="Org Size" value="1000-5000" />
-                      <InfoItem label="Type" value="Public" />
-                      <InfoItem label="Founded" value="1999" />
+                      <InfoItem
+                        label="Org Size"
+                        value={
+                          organizationData?.orgSize ||
+                          organizationData?.employeeCount ||
+                          "Not specified"
+                        }
+                      />
+                      <InfoItem
+                        label="Type"
+                        value={
+                          organizationData?.type ||
+                          organizationData?.organizationType ||
+                          "Private"
+                        }
+                      />
+                      <InfoItem
+                        label="Founded"
+                        value={
+                          organizationData?.founded ||
+                          organizationData?.establishedYear ||
+                          "Not specified"
+                        }
+                      />
                       <InfoItem
                         label="Industry"
-                        value="Hospital & Healthcare"
+                        value={
+                          organizationData?.industry || "Hospital & Healthcare"
+                        }
                       />
-                      <InfoItem label="Socials" value="Hospital & Healthcare" />
+                      <InfoItem
+                        label="Location"
+                        value={
+                          organizationData?.location ||
+                          organizationData?.address ||
+                          "Not specified"
+                        }
+                      />
                     </div>
                   </Section>
                 </motion.div>
@@ -1103,42 +1311,59 @@ const JobDetails = ({ onClose }) => {
                   className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
                   variants={itemVariants}
                 >
-                  <Section title="Address (10)">
+                  <Section
+                    title={`Address${
+                      organizationData?.branches?.length
+                        ? ` (${organizationData.branches.length})`
+                        : ""
+                    }`}
+                  >
                     <div className="space-y-4 text-sm text-gray-700">
-                      <div>
-                        <h3 className="font-medium">Main Branch</h3>
-                        <div className="flex mt-2">
-                          <MapPin className="text-gray-500 mt-0.5 w-4 h-4" />
-                          <p className="ml-2">
-                            Apollo Hospitals Hyderabad Hyderabad, Telangana
-                            500033, IN
-                          </p>
+                      {organizationData?.branches?.length > 0 ? (
+                        organizationData.branches
+                          .slice(0, 3)
+                          .map((branch, idx) => (
+                            <div key={idx}>
+                              <h3 className="font-medium">
+                                {branch.name || `Branch ${idx + 1}`}
+                              </h3>
+                              <div className="flex mt-2">
+                                <MapPin className="text-gray-500 mt-0.5 w-4 h-4" />
+                                <p className="ml-2">
+                                  {branch.address || branch.location}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                      ) : organizationData?.address ? (
+                        <div>
+                          <h3 className="font-medium">Main Office</h3>
+                          <div className="flex mt-2">
+                            <MapPin className="text-gray-500 mt-0.5 w-4 h-4" />
+                            <p className="ml-2">{organizationData.address}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Other Branch</h3>
-                        <div className="flex mt-2">
-                          <MapPin className="text-gray-500 mt-0.5 w-4 h-4" />
-                          <p className="ml-2">
-                            Apollo Hospitals Hyderabad Hyderabad, Telangana
-                            500033, IN
-                          </p>
+                      ) : (
+                        <div>
+                          <h3 className="font-medium">Main Branch</h3>
+                          <div className="flex mt-2">
+                            <MapPin className="text-gray-500 mt-0.5 w-4 h-4" />
+                            <p className="ml-2">
+                              {organizationData?.name || "Organization"} Office
+                              - Address not specified
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex mt-2">
-                          <MapPin className="text-gray-500 mt-0.5 w-4 h-4" />
-                          <p className="ml-2">
-                            Apollo Hospitals Hyderabad Hyderabad, Telangana
-                            500033, IN
-                          </p>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                    <a
-                      className="text-blue-500 hover:underline flex items-center text-sm mt-4"
-                      href="/"
-                    >
-                      See All <ChevronRight className="w-4 h-4 ml-1" />
-                    </a>
+                    {organizationData?.branches?.length > 3 && (
+                      <a
+                        className="text-blue-500 hover:underline flex items-center text-sm mt-4"
+                        href="/"
+                      >
+                        See All <ChevronRight className="w-4 h-4 ml-1" />
+                      </a>
+                    )}
                   </Section>
                 </motion.div>
               </div>

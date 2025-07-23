@@ -11,7 +11,7 @@ import MessageInput from "./components/MessageInput";
 export default function MessagesView({ applicant }) {
   const [isMessageLoading, setIsMessageLoading] = useState(false);
   const [conversation, setConversation] = useState([]);
-  const [otherUser, setOtherUser] = useState('');
+  const [otherUser, setOtherUser] = useState("");
   const [messages, setMessages] = useState([]);
   const { currentUser, businessProfile } = useSelector((state) => state.auth);
   const [conversationId, setConversationId] = useState();
@@ -22,13 +22,17 @@ export default function MessagesView({ applicant }) {
   useEffect(() => {
     const initaiteMessages = async () => {
       try {
-        const res = await axiosInstance.post("/recuriter/initiate", { jobId, orgId: businessProfile._id, receiverId: applicant._id });
+        const res = await axiosInstance.post("/recuriter/initiate", {
+          jobId,
+          orgId: businessProfile._id,
+          receiverId: applicant._id,
+        });
         // console.log(res)
         setConversationId(res.data.conversationId);
       } catch (error) {
         console.error("Error initiating chat:", error);
       }
-    }
+    };
     initaiteMessages();
   }, []);
 
@@ -38,17 +42,19 @@ export default function MessagesView({ applicant }) {
     const getMessages = async () => {
       setIsMessageLoading(true);
       try {
-        const response = await axiosInstance.get(`/recuriter/getMessages/${conversationId}`, {
-          params: { orgId: businessProfile._id }
-        });
+        const response = await axiosInstance.get(
+          `/recuriter/getMessages/${conversationId}`,
+          {
+            params: { orgId: businessProfile._id },
+          }
+        );
 
-        console.log(response.data)
+        console.log(response.data);
         const { messages, otherUser } = response.data;
         setMessages(messages);
         setOtherUser(otherUser);
       } catch (error) {
         console.error("Error fetching messages:", error);
-
       } finally {
         setIsMessageLoading(false);
       }
@@ -57,19 +63,17 @@ export default function MessagesView({ applicant }) {
     getMessages();
   }, [conversationId]);
 
-
-
   useEffect(() => {
     if (!socket || !otherUser || !currentUser) return;
 
     const handleNewMessage = (newMessage) => {
       // Check if the sender is either the current user or the otherUser
-      console.log("new message",newMessage)
+      console.log("new message", newMessage);
       if (
         (newMessage.sender === otherUser &&
-        newMessage.receiver === businessProfile._id) ||
-       ( newMessage.receiver === otherUser &&
-        newMessage.sender === businessProfile._id)
+          newMessage.receiver === businessProfile._id) ||
+        (newMessage.receiver === otherUser &&
+          newMessage.sender === businessProfile._id)
       ) {
         setMessages((prev) => [...prev, newMessage]);
       }
@@ -82,19 +86,17 @@ export default function MessagesView({ applicant }) {
     };
   }, [socket, currentUser, otherUser]);
 
-
   const emptyMessagesText = [
     "No messages yet. Looks like a clean slate 🧼",
     "Still waiting for the first word... 🐣",
     "Nobody's home... yet! 👻",
     "Start the conversation before it becomes a staring contest 👀",
-    "This space is emptier than your fridge at midnight 🍽️"
+    "This space is emptier than your fridge at midnight 🍽️",
   ];
 
   // Mock similar jobs data (you might want to fetch this from API)
   const piimage =
     "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
-
 
   const getRandomEmptyText = () =>
     emptyMessagesText[Math.floor(Math.random() * emptyMessagesText.length)];
@@ -105,7 +107,6 @@ export default function MessagesView({ applicant }) {
     acc[label].push(msg);
     return acc;
   }, {});
-
 
   const messageEndRef = useRef(null);
   useEffect(() => {
@@ -134,24 +135,38 @@ export default function MessagesView({ applicant }) {
                   </span>
                 </div>
                 {msgs.map((message) => {
-                  const isCurrentUser = message.sender === businessProfile._id;
+                  // ✅ Fixed sender comparison - check if sender is the current business profile
+                  const isCurrentUser =
+                    message.sender === businessProfile._id ||
+                    message.sender?._id === businessProfile._id ||
+                    message.sender?.user === businessProfile._id ||
+                    message.sender?.user?._id === businessProfile._id;
                   const senderUser = message.sender;
 
                   return (
                     <div
                       key={message._id}
-                      className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+                      className={`flex ${
+                        isCurrentUser ? "justify-end" : "justify-start"
+                      }`}
                     >
-                      <div className={`flex items-end gap-2 ${isCurrentUser ? "flex-row-reverse" : ""} max-w-[75%]`}>
+                      <div
+                        className={`flex items-end gap-2 ${
+                          isCurrentUser ? "flex-row-reverse" : ""
+                        } max-w-[75%]`}
+                      >
                         {/* <img
                           src={senderUser?.profilePicture || piimage}
                           alt="User avatar"
                           className="w-8 h-8 rounded-full border"
                         /> */}
                         <div className="text-left">
-                          {conversation?.category === "group" && !isCurrentUser && (
-                            <p className="text-xs text-gray-500 mb-1 font-medium">{senderUser?.name}</p>
-                          )}
+                          {conversation?.category === "group" &&
+                            !isCurrentUser && (
+                              <p className="text-xs text-gray-500 mb-1 font-medium">
+                                {senderUser?.name}
+                              </p>
+                            )}
                           {message.image && (
                             <img
                               src={message.image}
@@ -161,21 +176,25 @@ export default function MessagesView({ applicant }) {
                           )}
                           {message.message && (
                             <div
-                              className={`px-4 py-2 rounded-lg text-sm whitespace-pre-line ${isCurrentUser
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-gray-900"
-                                }`}
+                              className={`px-4 py-2 rounded-lg text-sm whitespace-pre-line ${
+                                isCurrentUser
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-gray-200 text-gray-900"
+                              }`}
                             >
                               {message.message}
                             </div>
                           )}
                           <div className="text-xs text-gray-400 mt-1">
-                            {new Date(message.createdAt).toLocaleTimeString("en-US", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: true,
-                              timeZone: "Asia/Kolkata",
-                            })}
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                                timeZone: "Asia/Kolkata",
+                              }
+                            )}
                           </div>
                         </div>
                       </div>
@@ -194,7 +213,7 @@ export default function MessagesView({ applicant }) {
           selectedConveresationId={conversationId}
           selectedConveresation={conversation}
           orgData={businessProfile}
-        // toggleFetch={toggleFetch}
+          // toggleFetch={toggleFetch}
         />
       </div>
     </div>
@@ -205,10 +224,11 @@ export default function MessagesView({ applicant }) {
 function MessageBubble({ text, position = "left" }) {
   return (
     <div
-      className={`max-w-[350px] p-4 text-gray-700 text-sm rounded-2xl ${position === "left"
-        ? "bg-gray-100 rounded-tr-lg rounded-bl-lg rounded-br-lg"
-        : "bg-blue-100 rounded-tl-lg rounded-bl-lg rounded-br-lg"
-        }`}
+      className={`max-w-[350px] p-4 text-gray-700 text-sm rounded-2xl ${
+        position === "left"
+          ? "bg-gray-100 rounded-tr-lg rounded-bl-lg rounded-br-lg"
+          : "bg-blue-100 rounded-tl-lg rounded-bl-lg rounded-br-lg"
+      }`}
       style={{
         fontFamily: "Inter, sans-serif",
         fontSize: "14px",

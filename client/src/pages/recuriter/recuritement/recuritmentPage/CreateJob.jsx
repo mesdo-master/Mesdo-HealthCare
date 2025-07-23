@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronLeftIcon } from "@heroicons/react/24/solid";
 import axiosInstance from "../../../../lib/axio";
 import { Check } from "lucide-react";
+import Confetti from "react-confetti";
+import { motion, AnimatePresence } from "framer-motion";
 
 // A small helper component for label-value rows in the review step
 function ReviewRow({ label, value, children }) {
@@ -57,6 +59,8 @@ export default function CreateJob() {
   });
   const [showBackModal, setShowBackModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Prefill logic for edit
   useEffect(() => {
@@ -239,10 +243,15 @@ export default function CreateJob() {
         });
       }
       if (response && (response.status === 200 || response.status === 201)) {
-        alert(
-          isEditMode ? "Job Updated Successfully" : "Job Created Successfully"
+        setSuccessMessage(
+          isEditMode ? "Job Updated Successfully!" : "Job Created Successfully!"
         );
-        navigate("/recruitment");
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          navigate("/recruitment");
+        }, 2500);
+        return; // Ensure no further code runs
       } else {
         alert("Unexpected response from the server. Please try again later.");
       }
@@ -269,6 +278,79 @@ export default function CreateJob() {
 
   return (
     <div className="bg-gray-100 min-h-screen flex justify-center items-center mt-[-20px] mr-[2px] ml-[-230px]">
+      {/* Success Overlay */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black bg-opacity-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Confetti
+              width={window.innerWidth}
+              height={window.innerHeight}
+              numberOfPieces={500}
+              gravity={0.3}
+              wind={0.01}
+              recycle={false}
+              colors={[
+                "#10b981",
+                "#3b82f6",
+                "#f59e42",
+                "#f43f5e",
+                "#6366f1",
+                "#fbbf24",
+                "#22d3ee",
+                "#a21caf",
+              ]}
+              initialVelocityY={18}
+              initialVelocityX={8}
+              tweenDuration={900}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 40 }}
+              transition={{ duration: 0.4, type: "spring" }}
+              className="bg-white border border-emerald-200 shadow-2xl rounded-2xl px-12 py-10 flex flex-col items-center gap-4"
+              style={{ minWidth: 340 }}
+            >
+              <svg
+                className="w-16 h-16 text-emerald-500 mb-2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="#d1fae5"
+                />
+                <path
+                  d="M7 13l3 3 7-7"
+                  stroke="#10b981"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+              <span className="text-2xl font-bold text-emerald-700 text-center">
+                {successMessage}
+              </span>
+              <span className="text-gray-500 text-center">
+                Redirecting to Recruitment Dashboard...
+              </span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="w-[80%] py-[10vh] pt-[15vh]">
         <div
           className="max-w-4.6xl mx-auto bg-white shadow-md rounded-xl p-6 border border-[#DDE4EE] overflow-hidden "

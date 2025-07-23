@@ -13,7 +13,6 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Ensure email exists
         if (!profile.emails || profile.emails.length === 0) {
           console.error("No email found in Google profile:", profile);
           return done(new Error("Email not available from Google"), null);

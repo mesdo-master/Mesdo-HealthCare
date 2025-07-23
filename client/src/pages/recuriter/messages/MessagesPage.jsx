@@ -8,7 +8,9 @@ import { useSocket } from "../../../context/SocketProvider";
 
 function MessagesRecuriter() {
   const { conversationId } = useParams();
-  const socket = useSocket();
+  // ✅ Get socket connection status
+  const { isConnected, connectionError, reconnect } = useSocket();
+
   console.log(conversationId);
   const [selectedConversation, setSelectedConversation] =
     useState(conversationId);
@@ -63,8 +65,38 @@ function MessagesRecuriter() {
           conversations = [];
         }
 
+        // ✅ Remove duplicate conversations based on otherParticipant ID
+        const uniqueConversations = conversations.reduce((acc, conv) => {
+          if (!conv.otherParticipant) return acc;
+          
+          const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
+          const existingIndex = acc.findIndex(
+            (existing) => {
+              const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
+              return existingParticipantId === participantId && existing.category === conv.category;
+            }
+          );
+          
+          if (existingIndex === -1) {
+            // No duplicate found, add the conversation
+            acc.push(conv);
+          } else {
+            // Keep the conversation with the most recent message
+            const existing = acc[existingIndex];
+            const convTime = new Date(conv.lastMessageTime || 0);
+            const existingTime = new Date(existing.lastMessageTime || 0);
+            
+            if (convTime > existingTime) {
+              acc[existingIndex] = conv;
+            }
+          }
+          
+          return acc;
+        }, []);
+
         console.log("Processed recruiter conversations:", conversations);
-        setAllConversations(conversations);
+        console.log("Unique conversations after deduplication:", uniqueConversations);
+        setAllConversations(uniqueConversations);
       } catch (err) {
         console.error("Error fetching recruiter conversations:", err);
         setFetchError("Failed to load conversations.");
@@ -79,7 +111,7 @@ function MessagesRecuriter() {
 
   // ✅ Socket integration for real-time updates
   useEffect(() => {
-    if (!socket) return;
+    if (!isConnected) return;
 
     const handleNewMessage = (messageData) => {
       console.log("New message received:", messageData);
@@ -96,7 +128,35 @@ function MessagesRecuriter() {
           } else if (res.data.conversations) {
             conversations = res.data.conversations;
           }
-          setAllConversations(conversations);
+          
+          // ✅ Apply same deduplication logic
+          const uniqueConversations = conversations.reduce((acc, conv) => {
+            if (!conv.otherParticipant) return acc;
+            
+            const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
+            const existingIndex = acc.findIndex(
+              (existing) => {
+                const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
+                return existingParticipantId === participantId && existing.category === conv.category;
+              }
+            );
+            
+            if (existingIndex === -1) {
+              acc.push(conv);
+            } else {
+              const existing = acc[existingIndex];
+              const convTime = new Date(conv.lastMessageTime || 0);
+              const existingTime = new Date(existing.lastMessageTime || 0);
+              
+              if (convTime > existingTime) {
+                acc[existingIndex] = conv;
+              }
+            }
+            
+            return acc;
+          }, []);
+          
+          setAllConversations(uniqueConversations);
         } catch (err) {
           console.error("Error refreshing conversations:", err);
         }
@@ -119,16 +179,8 @@ function MessagesRecuriter() {
       });
     };
 
-    // Listen for socket events
-    socket.on("newMessage", handleNewMessage);
-    socket.on("conversationUpdate", handleConversationUpdate);
-
-    // Cleanup
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-      socket.off("conversationUpdate", handleConversationUpdate);
-    };
-  }, [socket]);
+    // Listen for socket events - handled by socket context
+  }, [isConnected]);
 
   const handleProfileClick = (user) => {
     if (user.isGroup) {
@@ -170,39 +222,71 @@ function MessagesRecuriter() {
   console.log("All conversations:", allConversations);
   console.log("Active tab:", activeTab);
   console.log("Loading:", loadingConversations);
+  console.log("Recruiter socket connected:", isConnected);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 ml-[9px]">
-      <div className="flex flex-1 overflow-hidden pt-16 mb-7 mr-20 ml-18">
-        <div className="flex flex-1 ml-[100px] mt-9 mb-5">
-          <MessageList
-            users={allConversations}
-            selectedId={selectedConversation}
-            setSelectedId={setSelectedConversation}
-            setSelectedUser={setSelectedUser}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            onCreateGroup={() => {
-              setShowGroupModal(true);
-              setGroupName("");
-              setGroupDescription("");
-            }}
-            loading={loadingConversations}
-            error={fetchError}
-          />
-
-          {!selectedConversation ? (
-            <NoChatSelected />
-          ) : (
-            <ChatContainer
-              selectedId={selectedConversation}
-              conversation={selectedConversationObj}
-              setSelectedId={setSelectedConversation}
-              toggleFetch={toggleFetch}
-            />
-          )}
+      {/* ✅ Connection Status Bar */}
+      {!isConnected && (
+        <div className="bg-red-500 text-white px-4 py-2 text-sm flex items-center justify-between">
+          <span>
+            {connectionError
+              ? `Connection error: ${connectionError}`
+              : "Disconnected from server. Messages may not be delivered in real-time."}
+          </span>
+          <button
+            onClick={reconnect}
+            className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs"
+          >
+            Reconnect
+          </button>
         </div>
-      </div>
+      )}
+
+      {loadingConversations ? (
+        <div className="flex-1 flex items-center justify-center bg-white">
+          <div className="flex flex-col items-center bg-white rounded-xl shadow-lg px-8 py-10">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-[#1890FF] rounded-full animate-spin mb-6"></div>
+            <div className="text-lg font-semibold text-[#1890FF]">
+              Loading your messages...
+            </div>
+            <div className="text-sm text-gray-400 mt-2">
+              Please wait while we fetch your conversations.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-1 overflow-hidden pt-16 mb-7 mr-20 ml-18">
+          <div className="flex flex-1 ml-[100px] mt-9 mb-5">
+            <MessageList
+              users={allConversations}
+              selectedId={selectedConversation}
+              setSelectedId={setSelectedConversation}
+              setSelectedUser={setSelectedUser}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onCreateGroup={() => {
+                setShowGroupModal(true);
+                setGroupName("");
+                setGroupDescription("");
+              }}
+              loading={loadingConversations}
+              error={fetchError}
+            />
+
+            {!selectedConversation ? (
+              <NoChatSelected />
+            ) : (
+              <ChatContainer
+                selectedId={selectedConversation}
+                conversation={selectedConversationObj}
+                setSelectedId={setSelectedConversation}
+                toggleFetch={toggleFetch}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

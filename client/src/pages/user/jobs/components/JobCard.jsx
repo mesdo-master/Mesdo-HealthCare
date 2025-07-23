@@ -194,17 +194,13 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
       >
         {/* Logo */}
         <div
-          className={`flex ${
-            small
-              ? "flex-row items-center mb-4"
-              : "flex-col items-center justify-center"
-          } ${small ? "w-auto h-auto" : "w-24 h-24"} ${small ? "" : "mr-6"}`}
+          className={`flex items-center justify-center w-24 h-24 mr-6 flex-shrink-0${
+            small ? " mb-4 w-12 h-12 mr-3" : ""
+          }`}
         >
           <img
             alt="Company Logo"
-            className={`${
-              small ? "w-12 h-12 mr-3" : "w-[135px] h-[128px]"
-            } object-contain rounded-lg border border-gray-200 p-1 bg-white`}
+            className="w-24 h-24 object-contain rounded-lg border border-gray-200 p-1 bg-white"
             src={
               job.hospitalLogo ||
               "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg?semt=ais_hybrid&w=740"
@@ -232,7 +228,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             <div className="flex-1 min-w-0">
               {/* Top Row: Status and Actions */}
               <div className="flex items-center justify-between">
-                <span className="bg-[#F3EFFF] text-[#A259FF] text-xs font-medium px-3 py-1 rounded-md inline-block mb-1">
+                <span className="bg-[#F3EFFF] text-[#A259FF] text-xs font-medium ml-[-10px] px-3 py-1 rounded-md inline-block mb-1">
                   Recently active
                 </span>
                 <div className="flex items-center gap-3 text-gray-400 text-sm mr-[-110px]">
@@ -316,7 +312,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                 {job.location}
               </p>
               {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-1">
+              <div className="flex flex-wrap gap-2 mb-1 ml-[-10px]">
                 {tags.map((tag, index) => (
                   <div
                     key={index}

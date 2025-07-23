@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   Bell,
@@ -347,6 +348,7 @@ const TabsSection = ({
   handleDeleteExperience,
 }) => {
   const tabs = ["Overview", "Jobs", "People", "Connection"];
+  const navigate = useNavigate(); // <-- Move useNavigate here
 
   const [aboutData, setAboutData] = useState("");
 
@@ -519,7 +521,7 @@ const TabsSection = ({
                     </button>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 ml-[-10px]">
                   {userSkills.length > 0 ? (
                     userSkills.map((skill, index) => (
                       <span
@@ -540,32 +542,95 @@ const TabsSection = ({
               {/* Jobs Section */}
               <div className="bg-white rounded-md shadow-sm p-6 mt-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-medium text-gray-900">Jobs</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 font-sans tracking-wide">
+                    Recent Jobs
+                  </h2>
                   {isOwnProfile && (
                     <button
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
-                      onClick={() => {
-                        setActiveModalTab("Jobs");
-                        setIsEditing(true);
-                      }}
+                      className="text-blue-600 hover:underline text-sm font-medium"
+                      onClick={() => setActiveTab("Jobs")}
                     >
-                      <Pencil className="w-5 h-5 text-gray-700" />
+                      View all jobs
                     </button>
                   )}
                 </div>
-                {
-                  <WorkExperienceSection
-                    experiences={experiences}
-                    onEdit={(exp) => {
-                      setEditingExperience(exp);
-                      setActiveModalTab("Add Job");
-                    }}
-                    onAddNew={() => {
-                      setEditingExperience(null);
-                      setActiveModalTab("Add Job");
-                    }}
-                  />
-                }
+                {experiences.length === 0 ? (
+                  <p className="text-gray-400 text-center py-8 text-base font-sans">
+                    No jobs posted yet.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-4 ml-[-20px]">
+                    {experiences.slice(0, 2).map((job) => (
+                      <div
+                        key={job._id}
+                        className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md hover:bg-blue-50 transition-all duration-200 flex flex-col gap-3 font-sans cursor-pointer"
+                        style={{ boxShadow: "0 2px 12px 0 rgba(0,0,0,0.03)" }}
+                        onClick={() => navigate(`/jobs/${job._id}`)}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-1">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-1 tracking-wide">
+                              {job.jobTitle}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-2 text-gray-500 text-sm mb-1 font-normal">
+                              <span className="font-medium text-blue-700">
+                                {job.HospitalName}
+                              </span>
+                              <span className="mx-1 text-gray-300">|</span>
+                              <span className="text-gray-500">
+                                {job.location}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-xs font-medium">
+                            <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                              {job.employmentType}
+                            </span>
+                            <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                              {job.jobCategory}
+                            </span>
+                            {job.salaryRangeFrom && job.salaryRangeTo && (
+                              <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">
+                                Salary: {job.salaryRangeFrom} -{" "}
+                                {job.salaryRangeTo}
+                              </span>
+                            )}
+                            {job.openings && (
+                              <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                                Openings: {job.openings}
+                              </span>
+                            )}
+                            {job.endDate && (
+                              <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                                End:{" "}
+                                {new Date(job.endDate).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-gray-600 text-sm line-clamp-2 mb-1 font-normal">
+                          <span
+                            dangerouslySetInnerHTML={{
+                              __html:
+                                job.jobDescription || job.description || "",
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {job.skills &&
+                            job.skills.map((skill, idx) => (
+                              <span
+                                key={idx}
+                                className="bg-gray-50 text-gray-600 px-3 py-1 rounded-full text-xs font-medium border border-gray-100"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* People at Apollo Section */}
@@ -630,7 +695,7 @@ const TabsSection = ({
                           </p>
                         </div>
                       </div>
-                      <button className="text-[12px] text-blue-600 hover:text-blue-700 font-medium px-3 py-1 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+                      <button className="text-[12px] bg-[#1890FF] text-white font-medium px-4 py-1 rounded-lg shadow hover:bg-blue-700 transition-colors">
                         + Follow
                       </button>
                     </div>
@@ -640,13 +705,85 @@ const TabsSection = ({
             </div>
           )}
           {activeTab === "Jobs" && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-medium text-gray-900 mb-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-xl font-mb text-gray-900 mb-6 font-sans tracking-wide">
                 Available Jobs
               </h2>
-              <p className="text-gray-500 text-center py-8">
-                No jobs posted yet.
-              </p>
+              {experiences.length === 0 ? (
+                <p className="text-gray-400 text-center py-10 text-base font-sans">
+                  No jobs posted yet.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-4 ml-[-20px]">
+                  {experiences.map((job) => (
+                    <div
+                      key={job._id}
+                      className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md hover:bg-blue-50 transition-all duration-200 flex flex-col gap-3 font-sans cursor-pointer"
+                      style={{ boxShadow: "0 2px 12px 0 rgba(0,0,0,0.03)" }}
+                      onClick={() => navigate(`/jobs/${job._id}`)}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-1">
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-800 mb-1 tracking-wide">
+                            {job.jobTitle}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 text-gray-500 text-sm mb-1 font-normal">
+                            <span className="font-medium text-blue-700">
+                              {job.HospitalName}
+                            </span>
+                            <span className="mx-1 text-gray-300">|</span>
+                            <span className="text-gray-500">
+                              {job.location}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-xs font-medium">
+                          <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                            {job.employmentType}
+                          </span>
+                          <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                            {job.jobCategory}
+                          </span>
+                          {job.salaryRangeFrom && job.salaryRangeTo && (
+                            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">
+                              Salary: {job.salaryRangeFrom} -{" "}
+                              {job.salaryRangeTo}
+                            </span>
+                          )}
+                          {job.openings && (
+                            <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                              Openings: {job.openings}
+                            </span>
+                          )}
+                          {job.endDate && (
+                            <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                              End: {new Date(job.endDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-gray-600 text-sm line-clamp-2 mb-1 font-normal">
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: job.jobDescription || job.description || "",
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {job.skills &&
+                          job.skills.map((skill, idx) => (
+                            <span
+                              key={idx}
+                              className="bg-gray-50 text-gray-600 px-3 py-1 rounded-full text-xs font-medium border border-gray-100"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {activeTab === "People" && (
@@ -846,95 +983,56 @@ const TabsSection = ({
                           <h4 className="text-lg font-medium text-gray-900">
                             Job Openings
                           </h4>
-                          <button
-                            className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                            onClick={() => {
-                              setEditingExperience(null);
-                              setActiveModalTab("Add Job");
-                            }}
-                          >
-                            <Plus size={16} />
-                            Add New Job
-                          </button>
+                          {/* No add job button in org profile modal */}
                         </div>
                         <div className="space-y-4">
-                          {experiences.map((exp) => (
-                            <div
-                              key={exp.id}
-                              className="bg-gray-50 p-6 rounded-lg border border-gray-200"
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex gap-4">
-                                  <div className="bg-blue-100 p-2 rounded-lg">
-                                    <Briefcase className="w-5 h-5 text-blue-600" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <h3 className="font-medium text-gray-900 mb-1">
-                                      {exp.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                      {exp.institution}
-                                    </p>
-                                    <p className="text-sm text-gray-500 mb-1">
-                                      {exp.type}
-                                    </p>
-                                    <p className="text-sm text-gray-500 mb-2">
-                                      {exp.startDate} -{" "}
-                                      {exp.currentlyWorking
-                                        ? "Present"
-                                        : exp.endDate}
-                                    </p>
-                                    <p className="text-sm text-gray-600 mb-2">
-                                      {exp.location}
-                                    </p>
-                                    <div
-                                      className="text-sm text-gray-600 mb-3"
-                                      dangerouslySetInnerHTML={{
-                                        __html: exp.description,
-                                      }}
-                                    />
-                                    <div className="flex gap-2">
-                                      {exp.tags.map((tag, index) => (
-                                        <span
-                                          key={index}
-                                          className="text-xs bg-white text-gray-600 px-2 py-1 rounded-full border"
-                                        >
-                                          {tag}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex space-x-2">
-                                  <button
-                                    onClick={() => {
-                                      setEditingExperience(exp);
-                                      setActiveModalTab("Add Job");
-                                    }}
-                                    className="text-gray-500 hover:text-gray-700 p-2 hover:bg-white rounded-lg transition-colors"
-                                  >
-                                    <Pencil className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteExperience(exp.id)
-                                    }
-                                    className="text-red-500 hover:text-red-700 p-2 hover:bg-white rounded-lg transition-colors"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          {experiences.length === 0 && (
+                          {experiences.length === 0 ? (
                             <div className="text-center py-12 text-gray-500">
                               <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                               <p>No job openings posted yet</p>
-                              <p className="text-sm">
-                                Add your first job opening to get started
-                              </p>
                             </div>
+                          ) : (
+                            experiences.map((job) => (
+                              <div
+                                key={job._id}
+                                className="border p-4 rounded-lg"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h3 className="font-semibold text-lg text-gray-800">
+                                      {job.jobTitle}
+                                    </h3>
+                                    <p className="text-gray-600 text-sm mb-1">
+                                      {job.location}
+                                    </p>
+                                    <div className="text-gray-500 text-xs mb-2">
+                                      {job.employmentType} | {job.jobCategory}
+                                    </div>
+                                    <div
+                                      className="text-gray-700 text-sm"
+                                      dangerouslySetInnerHTML={{
+                                        __html:
+                                          job.jobDescription ||
+                                          job.description ||
+                                          "",
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 mt-2 text-xs text-gray-500">
+                                  <span>Openings: {job.openings}</span>
+                                  {job.salaryRangeFrom && job.salaryRangeTo && (
+                                    <span>
+                                      Salary: {job.salaryRangeFrom} -{" "}
+                                      {job.salaryRangeTo}
+                                    </span>
+                                  )}
+                                  {job.endDate && (
+                                    <span>End Date: {job.endDate}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))
                           )}
                         </div>
                       </div>
@@ -1006,14 +1104,25 @@ const OrganizationProfile = () => {
   const [activeTab, setActiveTab] = useState("Overview");
   const [isEditing, setIsEditing] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("");
-
-  // Profile completion nudge state
   const [showProfileNudge, setShowProfileNudge] = useState(true);
-
   const { businessProfile } = useSelector((state) => state.auth);
   const [orgData, setOrgData] = useState();
   const dispatch = useDispatch();
   const { orgname } = useParams();
+  const [editData, setEditData] = useState({ description: "" });
+  const [userSkills, setUserSkills] = useState([]);
+  const [experiences, setExperiences] = useState([]);
+  const [editingExperience, setEditingExperience] = useState(null);
+  const [moreInfo, setMoreInfo] = useState({
+    website: "",
+    organizationSize: "",
+    type: "",
+    founded: "",
+    industry: "",
+    socials: "",
+  });
+  const [addresses, setAddresses] = useState([]);
+  const [orgJobs, setOrgJobs] = useState([]); // <-- New state for real jobs
 
   // Fetch organization data first
   useEffect(() => {
@@ -1033,26 +1142,24 @@ const OrganizationProfile = () => {
     }
   }, [orgname, dispatch]);
 
+  // Fetch jobs for this organization
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const res = await axiosInstance.get("/jobs");
+        // Optionally filter by org if needed: res.data.jobs.filter(j => j.organization === orgData?._id)
+        setOrgJobs(res.data.jobs || []);
+      } catch (err) {
+        setOrgJobs([]);
+        console.error("Failed to fetch jobs", err);
+      }
+    };
+    if (orgData?._id) fetchJobs();
+  }, [orgData?._id]);
+
   // Determine userData after fetching
   const isOwnProfile = businessProfile?._id === orgData?._id;
   const userData = isOwnProfile ? businessProfile : orgData;
-
-  const SIDEBAR_WIDTH = "200px";
-
-  const [editData, setEditData] = useState({ description: "" });
-  const [userSkills, setUserSkills] = useState([]);
-  const [experiences, setExperiences] = useState([]);
-  const [editingExperience, setEditingExperience] = useState(null);
-
-  const [moreInfo, setMoreInfo] = useState({
-    website: "",
-    organizationSize: "",
-    type: "",
-    founded: "",
-    industry: "",
-    socials: "",
-  });
-  const [addresses, setAddresses] = useState([]);
 
   // Initialize skills based on industry and set up about data
   useEffect(() => {
@@ -1134,6 +1241,25 @@ const OrganizationProfile = () => {
       setAddresses(addressList);
     }
   }, [userData]);
+
+  // Loader while orgData is being fetched
+  if (!orgData) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full min-h-screen bg-gray-100">
+        <div className="flex flex-col items-center bg-white rounded-xl shadow-lg px-8 py-10">
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#1890FF] rounded-full animate-spin mb-6"></div>
+          <div className="text-lg font-semibold text-[#1890FF]">
+            Loading organization profile...
+          </div>
+          <div className="text-sm text-gray-400 mt-2">
+            Please wait while we fetch the organization data.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const SIDEBAR_WIDTH = "200px";
 
   const handleSaveMoreInfo = async (updatedInfo) => {
     try {
@@ -1258,8 +1384,8 @@ const OrganizationProfile = () => {
                 handleSave={handleSave}
                 userSkills={userSkills}
                 setUserSkills={setUserSkills}
-                experiences={experiences}
-                setExperiences={setExperiences}
+                experiences={orgJobs} // <-- Pass real jobs here
+                setExperiences={setExperiences} // (not used for jobs now)
                 editingExperience={editingExperience}
                 setEditingExperience={setEditingExperience}
                 handleSaveExperience={handleSaveExperience}
@@ -1466,95 +1592,56 @@ const OrganizationProfile = () => {
                           <h4 className="text-lg font-medium text-gray-900">
                             Job Openings
                           </h4>
-                          <button
-                            className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                            onClick={() => {
-                              setEditingExperience(null);
-                              setActiveModalTab("Add Job");
-                            }}
-                          >
-                            <Plus size={16} />
-                            Add New Job
-                          </button>
+                          {/* No add job button in org profile modal */}
                         </div>
                         <div className="space-y-4">
-                          {experiences.map((exp) => (
-                            <div
-                              key={exp.id}
-                              className="bg-gray-50 p-6 rounded-lg border border-gray-200"
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex gap-4">
-                                  <div className="bg-blue-100 p-2 rounded-lg">
-                                    <Briefcase className="w-5 h-5 text-blue-600" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <h3 className="font-medium text-gray-900 mb-1">
-                                      {exp.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                      {exp.institution}
-                                    </p>
-                                    <p className="text-sm text-gray-500 mb-1">
-                                      {exp.type}
-                                    </p>
-                                    <p className="text-sm text-gray-500 mb-2">
-                                      {exp.startDate} -{" "}
-                                      {exp.currentlyWorking
-                                        ? "Present"
-                                        : exp.endDate}
-                                    </p>
-                                    <p className="text-sm text-gray-600 mb-2">
-                                      {exp.location}
-                                    </p>
-                                    <div
-                                      className="text-sm text-gray-600 mb-3"
-                                      dangerouslySetInnerHTML={{
-                                        __html: exp.description,
-                                      }}
-                                    />
-                                    <div className="flex gap-2">
-                                      {exp.tags.map((tag, index) => (
-                                        <span
-                                          key={index}
-                                          className="text-xs bg-white text-gray-600 px-2 py-1 rounded-full border"
-                                        >
-                                          {tag}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex space-x-2">
-                                  <button
-                                    onClick={() => {
-                                      setEditingExperience(exp);
-                                      setActiveModalTab("Add Job");
-                                    }}
-                                    className="text-gray-500 hover:text-gray-700 p-2 hover:bg-white rounded-lg transition-colors"
-                                  >
-                                    <Pencil className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteExperience(exp.id)
-                                    }
-                                    className="text-red-500 hover:text-red-700 p-2 hover:bg-white rounded-lg transition-colors"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          {experiences.length === 0 && (
+                          {experiences.length === 0 ? (
                             <div className="text-center py-12 text-gray-500">
                               <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                               <p>No job openings posted yet</p>
-                              <p className="text-sm">
-                                Add your first job opening to get started
-                              </p>
                             </div>
+                          ) : (
+                            experiences.map((job) => (
+                              <div
+                                key={job._id}
+                                className="border p-4 rounded-lg"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h3 className="font-semibold text-lg text-gray-800">
+                                      {job.jobTitle}
+                                    </h3>
+                                    <p className="text-gray-600 text-sm mb-1">
+                                      {job.location}
+                                    </p>
+                                    <div className="text-gray-500 text-xs mb-2">
+                                      {job.employmentType} | {job.jobCategory}
+                                    </div>
+                                    <div
+                                      className="text-gray-700 text-sm"
+                                      dangerouslySetInnerHTML={{
+                                        __html:
+                                          job.jobDescription ||
+                                          job.description ||
+                                          "",
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 mt-2 text-xs text-gray-500">
+                                  <span>Openings: {job.openings}</span>
+                                  {job.salaryRangeFrom && job.salaryRangeTo && (
+                                    <span>
+                                      Salary: {job.salaryRangeFrom} -{" "}
+                                      {job.salaryRangeTo}
+                                    </span>
+                                  )}
+                                  {job.endDate && (
+                                    <span>End Date: {job.endDate}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))
                           )}
                         </div>
                       </div>

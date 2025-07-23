@@ -28,7 +28,8 @@ const getChatHistory = async (req, res) => {
     }
 
     // Check if user is participant
-    const isParticipant = conversation.isParticipant(userId, "User");
+    const userType = req.user.role === 'recruiter' ? 'BusinessProfile' : 'User';
+    const isParticipant = conversation.isParticipant(userId, userType);
     if (!isParticipant) {
       return res.status(403).json({
         success: false,
@@ -176,22 +177,53 @@ const initiateChat = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
+    console.log("📨 sendMessage called with body:", req.body);
+    console.log("📨 User:", req.user);
+
     const { receiverId, text, conversationId } = req.body;
-    const senderId = req.user._id;
+    const senderId = req.user?._id;
+    const senderUserType = req.user?.role === 'recruiter' ? 'BusinessProfile' : 'User';
+
+    if (!senderId) {
+      return res.status(401).json({ error: 'User not authenticated.', success: false });
+    }
+
+    console.log("📨 Processing message:", {
+      senderId,
+      receiverId,
+      conversationId,
+      textLength: text?.length,
+    });
 
     if (!text && !req.file) {
-      return res.status(400).json({ error: "Message is empty." });
+      console.log("❌ Message validation failed: empty message");
+      return res.status(400).json({
+        error: "Message is empty.",
+        success: false,
+      });
     }
 
     let conversation;
 
     // 1. Validate conversationId
     if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
+      console.log("🔍 Finding conversation by ID:", conversationId);
       conversation = await Conversation.findById(conversationId);
+      console.log("🔍 Found conversation:", conversation ? "Yes" : "No");
     }
 
     // 2. If not found and receiverId provided, find/create personal conversation
     if (!conversation && receiverId) {
+      console.log("🔍 Finding/creating conversation for receiver:", receiverId);
+
+      if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+        console.log("❌ Invalid receiverId:", receiverId);
+        return res.status(400).json({
+          error: "Invalid receiver ID.",
+          success: false,
+        });
+      }
+
       conversation = await Conversation.findOne({
         $and: [
           {
@@ -215,7 +247,24 @@ const sendMessage = async (req, res) => {
         status: "active",
       });
 
+      console.log(
+        "🔍 Found existing conversation:",
+        conversation ? "Yes" : "No"
+      );
+
       if (!conversation) {
+        console.log("🆕 Creating new conversation");
+
+        // Verify receiver exists
+        const receiverExists = await User.findById(receiverId);
+        if (!receiverExists) {
+          console.log("❌ Receiver not found:", receiverId);
+          return res.status(404).json({
+            error: "Receiver not found.",
+            success: false,
+          });
+        }
+
         // Create new conversation
         const participants = [
           {
@@ -243,31 +292,47 @@ const sendMessage = async (req, res) => {
           },
           status: "active",
         });
+
+        console.log("✅ New conversation created:", conversation._id);
       }
     }
 
     if (!conversation) {
-      return res.status(404).json({ error: "Conversation not found." });
+      console.log("❌ No conversation found or created");
+      return res.status(404).json({
+        error: "Conversation not found.",
+        success: false,
+      });
     }
 
+    console.log("📨 Creating message in conversation:", conversation._id);
+
     // 3. Create the message with new model structure
-    const newMessage = await Message.create({
+    const messageData = {
       conversationId: conversation._id,
       sender: {
         user: senderId,
-        userType: "User",
+        userType: senderUserType,
       },
-      receiver: receiverId
-        ? {
-            user: receiverId,
-            userType: "User",
-          }
-        : undefined,
       message: text,
       messageType: "text",
       category: conversation.category,
       status: "sent",
-    });
+    };
+
+    // Add receiver if specified
+    if (receiverId) {
+      const receiver = await User.findById(receiverId);
+      messageData.receiver = {
+        user: receiverId,
+        userType: receiver.role === 'recruiter' ? 'BusinessProfile' : 'User',
+      };
+    }
+
+    console.log("📨 Message data:", messageData);
+
+    const newMessage = await Message.create(messageData);
+    console.log("✅ Message created:", newMessage._id);
 
     // Populate the message for response
     const populatedMessage = await Message.findById(newMessage._id)
@@ -275,21 +340,31 @@ const sendMessage = async (req, res) => {
       .populate("receiver.user", "name username profilePicture")
       .lean();
 
+    console.log("✅ Message populated");
+
     // 4. Update conversation metadata with new method
-    await conversation.updateLastMessage(text, senderId, "User");
+    console.log("📨 Updating conversation last message");
+    await conversation.updateLastMessage(text, senderId, senderUserType);
+    console.log("✅ Conversation updated");
 
     // 5. Emit to conversation room using new socket structure
+    console.log("📨 Broadcasting to conversation room");
     broadcastToConversation(conversation._id, "newMessage", {
       id: populatedMessage._id,
+      _id: populatedMessage._id,
       conversationId: conversation._id,
-      sender: populatedMessage.sender,
-      receiver: populatedMessage.receiver,
+      sender: populatedMessage.sender.user._id,
+      senderData: populatedMessage.sender.user,
+      receiver: populatedMessage.receiver?.user?._id,
       message: populatedMessage.message,
       messageType: populatedMessage.messageType,
       category: populatedMessage.category,
       status: populatedMessage.status,
       createdAt: populatedMessage.createdAt,
     });
+    console.log("✅ Message broadcasted");
+
+    console.log("✅ Message send completed successfully");
 
     res.status(201).json({
       success: true,
@@ -298,6 +373,8 @@ const sendMessage = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Message send error:", err);
+    console.error("❌ Error stack:", err.stack);
+
     res.status(500).json({
       error: "Failed to send message.",
       details: err.message,

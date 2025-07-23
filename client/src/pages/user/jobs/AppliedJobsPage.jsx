@@ -1,15 +1,39 @@
 import { BsFillBookmarkCheckFill, BsThreeDotsVertical } from "react-icons/bs";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FaRegBookmark,
-  FaClock,
-  FaMapMarkerAlt,
-  FaBuilding,
-} from "react-icons/fa";
 import { ArrowLeft, CheckCircle, Clock, MapPin, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../lib/axio";
+
+// Animation variants
+const containerVariants = {
+  initial: {
+    opacity: 0,
+  },
+  animate: {
+    opacity: 1,
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1],
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  initial: {
+    opacity: 0,
+    y: 20,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
 
 const AppliedJob = ({ inUserProfile }) => {
   const navigate = useNavigate();
@@ -115,14 +139,14 @@ const AppliedJob = ({ inUserProfile }) => {
   if (loading) {
     return (
       <div
-        className={`h-screen bg-gray-50 ${
+        className={`${
           !inUserProfile && " ml-[5vw] pt-[10vh]"
-        }`}
+        } h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30`}
       >
         <div className="flex justify-center items-center h-64">
           <div className="relative">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <div className="absolute inset-0 rounded-full border-2 border-blue-100"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-400"></div>
+            <div className="absolute inset-0 rounded-full border-2 border-emerald-100"></div>
           </div>
         </div>
       </div>
@@ -130,86 +154,100 @@ const AppliedJob = ({ inUserProfile }) => {
   }
 
   return (
-    <div
-      className={`min-h-screen bg-gray-50 ${
+    <motion.div
+      className={`${
         !inUserProfile && " ml-[5vw] pt-[10vh]"
-      }`}
+      } min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30`}
+      variants={containerVariants}
+      initial="initial"
+      animate="animate"
     >
-      {/* Header */}
+      {/* Top Bar */}
       {!inUserProfile && (
-        <div className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="max-w-6xl mx-auto px-6 pt-8 pb-6">
-            <div className="flex items-center gap-4 mb-6">
-              <button
+        <motion.div
+          className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shadow-sm"
+          variants={itemVariants}
+        >
+          <div className="px-8 pt-6 pb-4 flex flex-col md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start md:items-center gap-4">
+              <motion.button
                 onClick={() => navigate(-1)}
-                className="w-12 h-12 flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm"
+                className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200/60 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-200 shadow-sm"
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <ArrowLeft size={20} className="text-gray-600" />
-              </button>
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">
+                <ArrowLeft size={18} className="text-slate-600" />
+              </motion.button>
+
+              <div className="flex flex-col justify-center">
+                <div className="flex items-center gap-3 mb-1">
+                  <h2 className="text-2xl font-semibold text-slate-800">
                     Applied Jobs
-                  </h1>
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                    {appliedJobs.length} Total
+                  </h2>
+                  <span className="bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 text-sm font-medium px-3 py-1.5 rounded-full border border-emerald-200/60 shadow-sm">
+                    {appliedJobs.length} Applied
                   </span>
                 </div>
-                <p className="text-gray-600">
+                <span className="text-sm text-slate-500 font-sm">
                   Track your job applications and their current status
-                </p>
+                </span>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6">
+      <motion.div className="max-w-7xl mx-auto p-6" variants={itemVariants}>
         {/* Header Controls */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-gray-600">
-              Showing{" "}
-              <span className="font-semibold text-gray-900">
-                {appliedJobs.length}
-              </span>{" "}
-              results
-            </p>
-            {appliedJobs.length > 0 && (
-              <div className="h-4 w-px bg-gray-300"></div>
-            )}
-          </div>
+        <motion.div
+          className="flex justify-between items-center mb-8"
+          variants={itemVariants}
+        >
+          <p className="text-sm text-slate-600 font-medium">
+            Showing {appliedJobs.length} applied jobs
+          </p>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 font-medium">Sort by:</span>
-            <select className="text-sm bg-white border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm">
+            <span className="text-sm text-slate-600 font-medium">Sort by:</span>
+            <select className="text-sm bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-300 cursor-pointer transition-all">
               <option>Recently Applied</option>
               <option>Job Title</option>
               <option>Company Name</option>
               <option>Status</option>
             </select>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Jobs List */}
-        <div className="space-y-6">
-          {appliedJobs.map((application, index) => {
-            const job = application.job || application;
-            const applicationStatus = application.status || "Applied";
-            const appliedAt = application.appliedAt || job.createdAt;
-            const currentStatusIndex = getStatusIndex(applicationStatus);
+        {/* Jobs List using AnimatePresence for smooth transitions */}
+        <AnimatePresence mode="popLayout">
+          <div className="space-y-4">
+            {appliedJobs.map((application, index) => {
+              const job = application.job || application;
+              const applicationStatus = application.status || "Applied";
+              const appliedAt = application.appliedAt || job.createdAt;
+              const currentStatusIndex = getStatusIndex(applicationStatus);
 
-            return (
-              <div
-                key={job._id}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden"
-              >
+              return (
+                <motion.div
+                  key={job._id}
+                  variants={itemVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit={{
+                    opacity: 0,
+                    scale: 0.95,
+                    y: -20,
+                    transition: { duration: 0.3 },
+                  }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200/60 hover:shadow-lg hover:bg-white/90 transition-all duration-300 overflow-hidden"
+                >
                 {/* Job Header */}
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex gap-4 flex-1">
                       {/* Company Logo */}
-                      <div className="w-16 h-16 rounded-xl border border-gray-200 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden flex-shrink-0">
+                      <div className="w-16 h-16 rounded-xl border border-slate-200/60 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-blue-50 overflow-hidden flex-shrink-0 shadow-sm">
                         <img
                           src={
                             job.hospitalLogo ||
@@ -227,47 +265,47 @@ const AppliedJob = ({ inUserProfile }) => {
                       {/* Job Details */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold text-gray-900 truncate">
+                          <h3 className="text-xl font-semibold text-slate-800 truncate">
                             {job.jobTitle}
                           </h3>
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
                               applicationStatus
-                            )} bg-current bg-opacity-10 flex-shrink-0`}
+                            )} bg-current bg-opacity-10 flex-shrink-0 shadow-sm`}
                           >
                             {applicationStatus}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-6 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-6 text-sm text-slate-600 mb-3">
                           <div className="flex items-center gap-2">
-                            <Building className="w-4 h-4 text-gray-400" />
+                            <Building className="w-4 h-4 text-slate-400" />
                             <span className="font-medium">
                               {job.HospitalName}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-gray-400" />
+                            <MapPin className="w-4 h-4 text-slate-400" />
                             <span>{job.location}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-gray-400" />
+                            <Clock className="w-4 h-4 text-slate-400" />
                             <span>Applied {formatRelativeTime(appliedAt)}</span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 flex-wrap">
                           {job.employmentType && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-sm">
                               {job.employmentType}
                             </span>
                           )}
                           {job.experience && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-purple-50/80 text-purple-700 border border-purple-200/60 shadow-sm">
                               {job.experience}+ years
                             </span>
                           )}
-                          <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                          <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-emerald-50/80 text-emerald-700 border border-emerald-200/60 shadow-sm">
                             {formatSalary(
                               job.salaryRangeFrom,
                               job.salaryRangeTo
@@ -279,7 +317,7 @@ const AppliedJob = ({ inUserProfile }) => {
                   </div>
 
                   {/* Status Progress Tracker */}
-                  <div className="pt-6 border-t border-gray-100">
+                  <div className="pt-6 border-t border-slate-200/60">
                     <div className="flex items-center justify-between relative">
                       {statusStages.map((stage, index) => (
                         <div
@@ -287,10 +325,10 @@ const AppliedJob = ({ inUserProfile }) => {
                           className="flex flex-col items-center relative z-10"
                         >
                           <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 shadow-sm ${
                               index <= currentStatusIndex
-                                ? "bg-blue-500 text-white shadow-lg"
-                                : "bg-gray-200 text-gray-500"
+                                ? "bg-emerald-500 text-white shadow-emerald-200"
+                                : "bg-slate-200 text-slate-500"
                             }`}
                           >
                             {index + 1}
@@ -299,8 +337,8 @@ const AppliedJob = ({ inUserProfile }) => {
                             <div
                               className={`text-xs font-medium ${
                                 index <= currentStatusIndex
-                                  ? "text-blue-600"
-                                  : "text-gray-500"
+                                  ? "text-emerald-600"
+                                  : "text-slate-500"
                               }`}
                             >
                               {stage}
@@ -310,9 +348,9 @@ const AppliedJob = ({ inUserProfile }) => {
                       ))}
 
                       {/* Progress Line */}
-                      <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-0">
+                      <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 -z-0">
                         <div
-                          className="h-full bg-blue-500 transition-all duration-500 ease-out"
+                          className="h-full bg-emerald-500 transition-all duration-500 ease-out"
                           style={{
                             width: `${
                               (currentStatusIndex / (statusStages.length - 1)) *
@@ -324,34 +362,37 @@ const AppliedJob = ({ inUserProfile }) => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+          </div>
+        </AnimatePresence>
 
         {/* Empty State */}
         {appliedJobs.length === 0 && (
-          <div className="text-center py-20">
-            <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center">
-              <BsFillBookmarkCheckFill className="text-blue-500 text-4xl" />
+          <motion.div className="text-center py-16" variants={itemVariants}>
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-emerald-50 rounded-full flex items-center justify-center shadow-sm">
+              <BsFillBookmarkCheckFill className="text-slate-400 text-2xl" />
             </div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+            <h3 className="text-xl font-semibold text-slate-800 mb-2">
               No Applied Jobs Yet
             </h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            <p className="text-slate-600 mb-6">
               You haven't applied to any jobs yet. Start exploring opportunities
               and take the next step in your career journey.
             </p>
-            <button
+            <motion.button
               onClick={() => navigate("/jobs")}
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm"
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
             >
               Browse Jobs
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

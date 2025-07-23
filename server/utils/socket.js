@@ -331,8 +331,18 @@ io.on("connection", (socket) => {
         attachments = [],
         replyTo,
         receiverId,
-        receiverType,
+        receiverType = "User",
       } = data;
+
+      console.log("📨 Processing socket message:", {
+        conversationId,
+        senderId: socket.user._id,
+        senderType: socket.userType,
+        receiverId,
+        receiverType,
+        messageType,
+        category,
+      });
 
       // Verify conversation exists and user is participant
       const conversation = await Conversation.findById(conversationId);
@@ -356,7 +366,7 @@ io.on("connection", (socket) => {
         );
       }
 
-      // Create message
+      // ✅ Create message using the static method
       const newMessage = await Message.createMessage({
         conversationId,
         senderId: socket.user._id,
@@ -384,15 +394,21 @@ io.on("connection", (socket) => {
         .populate("receiver.user", "username name profilePicture")
         .populate("replyTo");
 
-      // Broadcast to conversation participants
-      broadcastToConversation(conversationId, "newMessage", {
+      console.log("📨 Message created successfully:", populatedMessage._id);
+
+      // ✅ Broadcast to conversation participants
+      const messageData = {
         id: populatedMessage._id,
+        _id: populatedMessage._id,
         conversationId,
-        sender: {
-          user: populatedMessage.sender.user,
-          userType: populatedMessage.sender.userType,
+        sender: populatedMessage.sender.user._id,
+        senderData: {
+          _id: populatedMessage.sender.user._id,
+          username: populatedMessage.sender.user.username,
+          name: populatedMessage.sender.user.name,
+          profilePicture: populatedMessage.sender.user.profilePicture,
         },
-        receiver: populatedMessage.receiver,
+        receiver: populatedMessage.receiver?.user?._id,
         message: populatedMessage.message,
         messageType: populatedMessage.messageType,
         category: populatedMessage.category,
@@ -403,7 +419,9 @@ io.on("connection", (socket) => {
         createdAt: populatedMessage.createdAt,
         reactions: populatedMessage.reactions,
         readBy: populatedMessage.readBy,
-      });
+      };
+
+      broadcastToConversation(conversationId, "newMessage", messageData);
 
       // Send notifications to offline participants
       for (const participant of conversation.participants) {
@@ -431,17 +449,19 @@ io.on("connection", (socket) => {
         }
       }
 
-      // Emit success to sender
+      // ✅ Emit success to sender
       socket.emit("message-sent", {
         messageId: populatedMessage._id,
         status: "delivered",
         timestamp: new Date(),
+        conversationId,
       });
 
       console.log(
         `📨 Message sent in conversation ${conversationId} by ${socket.user.username}`
       );
     } catch (error) {
+      console.error("❌ Error in send-message handler:", error);
       handleSocketError(socket, error, "send-message");
     }
   });

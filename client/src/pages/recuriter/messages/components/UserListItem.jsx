@@ -1,5 +1,4 @@
-
-const UserListItem = ({ user, selectedUser, onClick }) => {
+const UserListItem = ({ user, selectedId, onClick }) => {
   const formatLastMessageTime = (timestamp) => {
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return "";
@@ -33,24 +32,35 @@ const UserListItem = ({ user, selectedUser, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className={`flex items-center py-3 px-4 cursor-pointer hover:bg-gray-50 ${selectedUser?.id === user.id ? "bg-gray-50" : ""
-        }`}
+      className={`flex items-center py-3 px-4 cursor-pointer hover:bg-gray-50 ${
+        selectedId === (user._id || user.id) ? "bg-blue-50 border-r-2 border-blue-500" : ""
+      }`}
     >
       <div className="relative">
         <img
-          src={user.otherParticipant.profilePicture}
-          alt={user.otherParticipant.name}
+          src={
+            user.otherParticipant?.profilePicture ||
+            "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+          }
+          alt={user.otherParticipant?.name || "User"}
           className="w-12 h-12 rounded-full object-cover"
         />
       </div>
       <div className="ml-3 flex-1">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">{user.otherParticipant.name}</h3>
-          <span className="text-sm text-gray-500">{formatLastMessageTime(user.lastMessageTime)}</span>
+          <h3 className="font-semibold">
+            {user.otherParticipant?.name || "Unknown User"}
+          </h3>
+          <span className="text-sm text-gray-500">
+            {formatLastMessageTime(user.lastMessageTime)}
+          </span>
         </div>
-        <p className="text-gray-500 text-sm truncate">{user.lastMessage}</p>
+        <p className="text-gray-500 text-sm truncate">
+          {user.lastMessage || "No messages yet"}
+        </p>
       </div>
     </div>
   );
 };
+
 export default UserListItem;

@@ -218,7 +218,12 @@ const sendMessage = async (req, res) => {
   try {
     const { receiverId, text, conversationId } = req.body;
     // console.log("receiverId -----------------> ",receiverId)
-    const senderId = req.user.id;
+    const senderId = req.user?._id;
+    const senderUserType = req.user?.role === 'recruiter' ? 'BusinessProfile' : 'User';
+
+    if (!senderId) {
+      return res.status(401).json({ error: 'User not authenticated.' });
+    }
 
     if (!text && !req.file) {
       return res.status(400).json({ error: "Message is empty." });
@@ -250,12 +255,19 @@ const sendMessage = async (req, res) => {
       return res.status(404).json({ error: "Conversation not found." });
     }
 
+    const receiver = await User.findById(receiverId) || await Business.findById(receiverId);
+    if (!receiver) {
+      return res.status(404).json({ error: "Receiver not found." });
+    }
+    const receiverUserType = receiver.businessName ? 'BusinessProfile' : 'User';
+
     // 3. Create the message
     const newMessage = await Message.create({
-      sender: senderId,
-      receiver: receiverId || null, // null for group
+      sender: { user: senderId, userType: senderUserType },
+      receiver: { user: receiverId, userType: receiverUserType },
       message: text,
       conversationId: conversation._id,
+      category: 'Recruitment',
     });
 
     const populatedMessage = await Message.findById(newMessage._id).lean();

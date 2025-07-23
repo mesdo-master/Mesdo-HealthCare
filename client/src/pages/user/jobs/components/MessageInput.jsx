@@ -31,8 +31,23 @@ const MessageInput = ({ selectedUser, setMessages, selectedConveresationId, togg
       receiverId : selectedUser
     };
 
-    const res = await axiosInstance.post('/jobs/sendMessage', messageData);
+    const res = await axiosInstance.post('/chats/sendMessage', messageData);
     console.log(res)
+    
+    // ✅ Immediately add the sent message to local state for instant feedback
+    if (res.data && setMessages) {
+      setMessages((prevMessages) => {
+        // Avoid duplicate messages
+        const messageExists = prevMessages.some(
+          (msg) => msg._id === res.data._id
+        );
+        if (!messageExists) {
+          return [...prevMessages, res.data];
+        }
+        return prevMessages;
+      });
+    }
+    
     setInputMessage("");
     setSelectedFile(null);
   };

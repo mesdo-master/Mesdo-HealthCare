@@ -46,6 +46,20 @@ const JobPage = () => {
     fetchJobs();
   }, []);
 
+  useEffect(() => {
+    if (jobId) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden"; // This disables scroll on <html>
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [jobId]);
+
   const handleJobSelect = useCallback(
     (id) => {
       navigate(`/jobs/${id}`);
@@ -120,34 +134,43 @@ const JobPage = () => {
       {/* JobDetails slide-in (not blurred, rendered in portal) */}
       {jobId &&
         ReactDOM.createPortal(
-          <AnimatePresence mode="wait" onExitComplete={handleExitComplete}>
-            {!isClosing && (
-              <motion.div
-                className="fixed inset-y-0 right-0 w-4/5 max-w-6xl bg-white z-[200] shadow-2xl overflow-hidden h-full"
-                initial={{ x: "100%", opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: "100%", opacity: 0 }}
-                transition={{
-                  type: "tween",
-                  duration: 0.6,
-                  ease: [0.25, 0.46, 0.45, 0.94], // Ultra-smooth cubic bezier
-                }}
-                style={{
-                  willChange: "transform, opacity",
-                  backfaceVisibility: "hidden",
-                  transform: "translateZ(0)",
-                }}
-              >
-                <Outlet
-                  context={{
-                    handleCloseDetails: requestClose,
-                    jobs: filteredJobs != null ? filteredJobs : jobs,
-                    jobId,
+          <>
+            <AnimatePresence>
+              <>
+                {!isClosing && (
+                  <div className="fixed inset-0 z-[199] bg-black/30 backdrop-blur-sm shadow-2xl transition-all duration-300" />
+                )}
+              </>
+            </AnimatePresence>
+            <AnimatePresence mode="wait" onExitComplete={handleExitComplete}>
+              {!isClosing && (
+                <motion.div
+                  className="fixed inset-y-0 right-0 w-4/5 max-w-6xl bg-white z-[200] shadow-2xl overflow-hidden h-full"
+                  initial={{ x: "100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "100%", opacity: 0 }}
+                  transition={{
+                    type: "tween",
+                    duration: 0.6,
+                    ease: [0.25, 0.46, 0.45, 0.94], // Ultra-smooth cubic bezier
                   }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>,
+                  style={{
+                    willChange: "transform, opacity",
+                    backfaceVisibility: "hidden",
+                    transform: "translateZ(0)",
+                  }}
+                >
+                  <Outlet
+                    context={{
+                      handleCloseDetails: requestClose,
+                      jobs: filteredJobs != null ? filteredJobs : jobs,
+                      jobId,
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>,
           document.body
         )}
 
