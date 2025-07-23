@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const LandingPage = () => {
   const handleGoogleLogin = () => {
     // Redirect to backend Google auth route
-   window.location.href = "https://mesdo-lbvk.onrender.com/auth/google";
+   window.location.href = "https://mesdo-healthcare-3.onrender.com/auth/google";
   };
 
   return (

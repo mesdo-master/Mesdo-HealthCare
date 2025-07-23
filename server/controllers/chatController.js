@@ -28,7 +28,7 @@ const getChatHistory = async (req, res) => {
     }
 
     // Check if user is participant
-    const userType = req.user.role === 'recruiter' ? 'BusinessProfile' : 'User';
+    const userType = (req.user?.role === 'recruiter') ? 'BusinessProfile' : 'User';
     const isParticipant = conversation.isParticipant(userId, userType);
     if (!isParticipant) {
       return res.status(403).json({
@@ -181,12 +181,26 @@ const sendMessage = async (req, res) => {
     console.log("📨 User:", req.user);
 
     const { receiverId, text, conversationId } = req.body;
-    const senderId = req.user?._id;
-    const senderUserType = req.user?.role === 'recruiter' ? 'BusinessProfile' : 'User';
-
-    if (!senderId) {
-      return res.status(401).json({ error: 'User not authenticated.', success: false });
+    
+    // Enhanced user validation
+    if (!req.user || !req.user._id) {
+      console.error("❌ User authentication failed:", req.user);
+      return res.status(401).json({ 
+        error: 'User not authenticated.', 
+        success: false 
+      });
     }
+
+    const senderId = req.user._id;
+    const senderUserType = (req.user?.role === 'recruiter') ? 'BusinessProfile' : 'User';
+
+    console.log("📨 Authenticated user details:", {
+      senderId,
+      senderUserType,
+      userRole: req.user?.role || 'no-role',
+      hasUser: !!req.user,
+      userObject: req.user ? 'present' : 'missing'
+    });
 
     console.log("📨 Processing message:", {
       senderId,
@@ -224,76 +238,97 @@ const sendMessage = async (req, res) => {
         });
       }
 
-      conversation = await Conversation.findOne({
-        $and: [
-          {
-            participants: {
-              $elemMatch: {
-                user: senderId,
-                userType: "User",
+      try {
+        // Try to find conversation with both User types first
+        conversation = await Conversation.findOne({
+          $and: [
+            {
+              participants: {
+                $elemMatch: {
+                  user: senderId,
+                  userType: "User",
+                },
               },
             },
-          },
-          {
-            participants: {
-              $elemMatch: {
-                user: receiverId,
-                userType: "User",
+            {
+              participants: {
+                $elemMatch: {
+                  user: receiverId,
+                  userType: { $in: ["User", "BusinessProfile"] },
+                },
               },
             },
-          },
-        ],
-        category: "Personal",
-        status: "active",
-      });
-
-      console.log(
-        "🔍 Found existing conversation:",
-        conversation ? "Yes" : "No"
-      );
-
-      if (!conversation) {
-        console.log("🆕 Creating new conversation");
-
-        // Verify receiver exists
-        const receiverExists = await User.findById(receiverId);
-        if (!receiverExists) {
-          console.log("❌ Receiver not found:", receiverId);
-          return res.status(404).json({
-            error: "Receiver not found.",
-            success: false,
-          });
-        }
-
-        // Create new conversation
-        const participants = [
-          {
-            user: senderId,
-            userType: "User",
-            role: "owner",
-            joinedAt: new Date(),
-          },
-          {
-            user: receiverId,
-            userType: "User",
-            role: "member",
-            joinedAt: new Date(),
-          },
-        ];
-
-        conversation = await Conversation.create({
-          participants: participants,
-          category: "Personal",
-          isGroup: false,
-          isPrivate: true,
-          createdBy: {
-            user: senderId,
-            userType: "User",
-          },
+          ],
+          category: { $in: ["Personal", "Recruitment"] },
           status: "active",
         });
 
-        console.log("✅ New conversation created:", conversation._id);
+        console.log(
+          "🔍 Found existing conversation:",
+          conversation ? "Yes" : "No"
+        );
+
+        if (!conversation) {
+          console.log("🆕 Creating new conversation");
+
+          // Verify receiver exists (try both User and BusinessProfile)
+          let receiverExists = await User.findById(receiverId);
+          let receiverUserType = "User";
+
+          if (!receiverExists) {
+            receiverExists = await Business.findById(receiverId);
+            receiverUserType = "BusinessProfile";
+          }
+
+          if (!receiverExists) {
+            console.log("❌ Receiver not found in either collection:", receiverId);
+            return res.status(404).json({
+              error: "Receiver not found.",
+              success: false,
+            });
+          }
+
+          console.log("✅ Receiver found in", receiverUserType, "collection");
+
+          // Create new conversation with appropriate user types
+          const participants = [
+            {
+              user: senderId,
+              userType: "User",
+              role: "owner",
+              joinedAt: new Date(),
+            },
+            {
+              user: receiverId,
+              userType: receiverUserType,
+              role: "member",
+              joinedAt: new Date(),
+            },
+          ];
+
+          const conversationCategory = receiverUserType === "BusinessProfile" ? "Recruitment" : "Personal";
+
+          conversation = await Conversation.create({
+            participants: participants,
+            category: conversationCategory,
+            isGroup: false,
+            isPrivate: true,
+            createdBy: {
+              user: senderId,
+              userType: "User",
+            },
+            status: "active",
+          });
+
+          console.log("✅ New conversation created:", conversation._id, "Category:", conversationCategory);
+        }
+      } catch (conversationError) {
+        console.error("❌ Error during conversation lookup/creation:", conversationError);
+        return res.status(500).json({
+          error: "Failed to find or create conversation.",
+          details: conversationError.message,
+          success: false,
+        });
       }
     }
 
@@ -322,11 +357,63 @@ const sendMessage = async (req, res) => {
 
     // Add receiver if specified
     if (receiverId) {
-      const receiver = await User.findById(receiverId);
-      messageData.receiver = {
-        user: receiverId,
-        userType: receiver.role === 'recruiter' ? 'BusinessProfile' : 'User',
-      };
+      console.log("🔍 Looking up receiver:", receiverId);
+      
+      // Validate receiverId format
+      if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+        console.error("❌ Invalid receiverId format:", receiverId);
+        return res.status(400).json({
+          error: "Invalid receiver ID format.",
+          success: false,
+        });
+      }
+
+      try {
+        // First try to find in User collection
+        console.log("🔍 Attempting User.findById with:", receiverId);
+        const receiver = await User.findById(receiverId);
+        console.log("🔍 User lookup result:", receiver ? "Found" : "Not found");
+        
+        if (receiver && typeof receiver === 'object' && receiver._id) {
+          console.log("✅ Found receiver in User collection:", {
+            id: receiver._id,
+            role: receiver.role || 'no-role',
+            username: receiver.username || 'no-username',
+            hasRole: 'role' in receiver,
+            receiverType: typeof receiver,
+            receiverKeys: Object.keys(receiver)
+          });
+          
+          // Safely check role with fallback
+          const receiverRole = receiver.role || 'user'; // Default to 'user' if role is missing
+          messageData.receiver = {
+            user: receiverId,
+            userType: (receiverRole === 'recruiter') ? 'BusinessProfile' : 'User',
+          };
+        } else {
+          // Try to find receiver in BusinessProfile if not found in User
+          console.log("🔍 Trying BusinessProfile collection...");
+          const businessReceiver = await Business.findById(receiverId);
+          console.log("🔍 BusinessProfile lookup result:", businessReceiver ? "Found" : "Not found");
+          
+          if (businessReceiver && typeof businessReceiver === 'object' && businessReceiver._id) {
+            console.log("✅ Found receiver in BusinessProfile collection:", businessReceiver._id);
+            messageData.receiver = {
+              user: receiverId,
+              userType: 'BusinessProfile',
+            };
+          } else {
+            console.warn(`⚠️ Receiver not found in either User or BusinessProfile: ${receiverId}`);
+            // Don't add receiver if not found, but continue with message creation
+            // This allows messages to be sent even if receiver lookup fails
+          }
+        }
+      } catch (receiverError) {
+        console.error("❌ Error during receiver lookup:", receiverError);
+        console.error("❌ Receiver lookup error stack:", receiverError.stack);
+        // Continue without receiver rather than failing the entire message
+        console.warn("⚠️ Continuing message send without receiver due to lookup error");
+      }
     }
 
     console.log("📨 Message data:", messageData);
@@ -374,6 +461,16 @@ const sendMessage = async (req, res) => {
   } catch (err) {
     console.error("❌ Message send error:", err);
     console.error("❌ Error stack:", err.stack);
+    console.error("❌ Error name:", err.name);
+    console.error("❌ Full error object:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+
+    // Log additional context for debugging
+    console.error("❌ Request context:", {
+      body: req.body,
+      userId: req.user?._id,
+      userRole: req.user?.role,
+      hasUser: !!req.user
+    });
 
     res.status(500).json({
       error: "Failed to send message.",

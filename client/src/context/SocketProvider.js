@@ -97,7 +97,7 @@ export const SocketProvider = ({ children }) => {
 
     const newSocket = io(
       process.env.REACT_APP_SOCKET_URL ||
-        "https://mesdo-healthcare-1.onrender.com",
+        "https://mesdo-healthcare-3.onrender.com",
       {
         auth: {
           token: token,
