@@ -226,11 +226,26 @@ const sendMessage = async (req, res) => {
       });
     }
 
+    // ✅ FIXED: Determine correct sender ID for recruiters
+    let senderId = req.user._id;
+    let senderType = 'User';
+    
+    if (req.user.role === 'recruiter') {
+      const businessProfile = await BusinessProfile.findOne({ userId: req.user._id });
+      if (businessProfile) {
+        senderId = businessProfile._id;
+        senderType = 'BusinessProfile';
+        console.log("✅ SOCKET CONTROLLER: Using business profile ID:", senderId);
+      } else {
+        console.warn("⚠️ SOCKET CONTROLLER: No business profile found, using user ID");
+      }
+    }
+
     // Create message
     const newMessage = await Message.createMessage({
       conversationId,
-      senderId: req.user._id,
-      senderType: req.user.role === 'recruiter' ? 'BusinessProfile' : 'User',
+      senderId,
+      senderType,
       message,
       messageType,
       category,
@@ -238,7 +253,7 @@ const sendMessage = async (req, res) => {
     });
 
     // Update conversation
-    await conversation.updateLastMessage(message, req.user._id, req.user.role === 'recruiter' ? 'BusinessProfile' : 'User');
+    await conversation.updateLastMessage(message, senderId, senderType);
 
     // Populate message for response
     const populatedMessage = await Message.findById(newMessage._id)

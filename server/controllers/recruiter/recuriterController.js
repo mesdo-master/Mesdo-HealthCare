@@ -238,9 +238,46 @@ const initiateChatRecuriter = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { receiverId, text, conversationId } = req.body;
-    const senderId = req.user._id;
-    const senderUserType = req.user.role === 'recruiter' ? 'BusinessProfile' : 'User';
+    console.log("🎯 RECRUITER CONTROLLER: sendMessage called with:", req.body);
+    const { receiverId, text, conversationId, senderId } = req.body;
+    
+    // ✅ FIXED: Use the senderId from client if provided (business profile ID), otherwise fallback
+    let actualSenderId;
+    let senderUserType;
+    
+    console.log("🎯 RECRUITER DEBUG: senderId from client:", senderId);
+    console.log("🎯 RECRUITER DEBUG: senderId type:", typeof senderId);
+    console.log("🎯 RECRUITER DEBUG: senderId isValid:", senderId ? mongoose.Types.ObjectId.isValid(senderId) : 'no senderId');
+    console.log("🎯 RECRUITER DEBUG: req.user._id:", req.user._id);
+    console.log("🎯 RECRUITER DEBUG: req.user.role:", req.user.role);
+    
+    if (senderId && mongoose.Types.ObjectId.isValid(senderId)) {
+      // Client provided a valid senderId (should be business profile ID for recruiters)
+      actualSenderId = senderId;
+      senderUserType = 'BusinessProfile'; // Assume it's a business profile if explicitly provided
+      console.log("✅ RECRUITER: Using senderId from client:", actualSenderId);
+      console.log("✅ RECRUITER: Set senderUserType to:", senderUserType);
+    } else if (req.user.role === 'recruiter') {
+      // Fallback: Find the business profile for this user
+      const Business = require("../../models/recruiter/BusinessProfile");
+      console.log("🎯 RECRUITER DEBUG: Fallback - Looking for business profile with userId:", req.user._id);
+      
+      const businessProfile = await Business.findOne({ userId: req.user._id });
+      console.log("🎯 RECRUITER DEBUG: Business profile lookup result:", businessProfile ? "Found" : "Not found");
+      
+      if (businessProfile) {
+        actualSenderId = businessProfile._id; // ✅ Use business profile ID
+        senderUserType = 'BusinessProfile';
+        console.log("✅ RECRUITER: Using business profile ID from lookup:", actualSenderId);
+      } else {
+        actualSenderId = req.user._id; // Final fallback to user ID
+        senderUserType = 'User';
+        console.warn("⚠️ RECRUITER: No business profile found, using user ID");
+      }
+    } else {
+      actualSenderId = req.user._id;
+      senderUserType = 'User';
+    }
 
     if (!text && !req.file) {
       return res.status(400).json({ error: "Message is empty." });
@@ -258,10 +295,16 @@ const sendMessage = async (req, res) => {
     }
 
     // 3. Create the message with new model structure
+    console.log("🎯 RECRUITER MESSAGE CREATION: Creating message with:", {
+      actualSenderId,
+      senderUserType,
+      messageText: text
+    });
+    
     const newMessage = await Message.create({
       conversationId: conversation._id,
       sender: {
-        user: senderId,
+        user: actualSenderId,
         userType: senderUserType,
       },
       receiver: receiverId
@@ -275,6 +318,12 @@ const sendMessage = async (req, res) => {
       category: "Recruitment",
       status: "sent",
     });
+    
+    console.log("🎯 RECRUITER MESSAGE CREATED: Message structure:", {
+      messageId: newMessage._id,
+      senderUserId: newMessage.sender.user,
+      senderUserType: newMessage.sender.userType
+    });
 
     // Populate the message for response
     const populatedMessage = await Message.findById(newMessage._id)
@@ -282,26 +331,78 @@ const sendMessage = async (req, res) => {
       .populate("receiver.user", "name username profilePicture")
       .lean();
 
+    console.log("🎯 RECRUITER API: Message created with structure:", {
+      originalSenderId: actualSenderId,
+      senderUserType: senderUserType,
+      messageId: populatedMessage._id,
+      messageSender: populatedMessage.sender,
+      senderUser: populatedMessage.sender?.user,
+      businessProfileUsed: actualSenderId
+    });
+
     // 4. Update conversation metadata with new method
-    await conversation.updateLastMessage(text, senderId, "BusinessProfile");
+    await conversation.updateLastMessage(text, actualSenderId, "BusinessProfile");
 
     // 5. Emit to conversation room using new socket structure
     const { broadcastToConversation } = require("../../utils/socket");
-    broadcastToConversation(conversation._id, "newMessage", {
+    const socketMessageData = {
       id: populatedMessage._id,
+      _id: populatedMessage._id,
       conversationId: conversation._id,
-      sender: populatedMessage.sender,
-      receiver: populatedMessage.receiver,
+      // ✅ CRITICAL FIX: Match the exact same structure as API response
+      sender: {
+        ...populatedMessage.sender, // Keep the full nested structure with populated user data
+        userType: senderUserType // Override userType to ensure it's BusinessProfile for recruiters
+      },
+      senderId: actualSenderId, // ✅ Also provide direct access like API response
+      senderData: populatedMessage.sender.user, // User data for display
+      senderType: senderUserType, // ✅ Also match API response structure
+      receiver: populatedMessage.receiver?.user?._id,
       message: populatedMessage.message,
       messageType: populatedMessage.messageType,
       category: populatedMessage.category,
       status: populatedMessage.status,
       createdAt: populatedMessage.createdAt,
+    };
+
+    console.log("🎯 RECRUITER SOCKET: Broadcasting message with:", {
+      senderId: socketMessageData.sender,
+      businessProfileId: actualSenderId,
+      messageId: socketMessageData._id
     });
+
+    broadcastToConversation(conversation._id, "newMessage", socketMessageData);
+
+    // ✅ FIXED: Ensure the response includes the correct sender structure for alignment
+    const responseMessage = {
+      ...populatedMessage,
+      // ✅ CRITICAL: Keep the original sender structure but ensure userType is correct
+      sender: {
+        ...populatedMessage.sender,
+        userType: senderUserType // ✅ Override userType to ensure it's BusinessProfile for recruiters
+      },
+      // Also provide direct access for client-side comparison
+      senderId: actualSenderId, // ✅ Direct sender ID for easy comparison
+      senderData: populatedMessage.sender.user, // ✅ Populated user data for display  
+      senderType: senderUserType
+    };
+
+    console.log("=".repeat(80));
+    console.log("🎯 RECRUITER API: FINAL RESPONSE STRUCTURE");
+    console.log("=".repeat(80));
+    console.log("📤 actualSenderId:", actualSenderId);
+    console.log("📤 actualSenderId type:", typeof actualSenderId);
+    console.log("📤 senderUserType:", senderUserType);
+    console.log("📤 Response message sender:", responseMessage.sender);
+    console.log("📤 Response message senderId:", responseMessage.senderId);
+    console.log("📤 Response message senderType:", responseMessage.senderType);
+    console.log("📤 FULL RESPONSE MESSAGE:");
+    console.log(JSON.stringify(responseMessage, null, 2));
+    console.log("=".repeat(80));
 
     res.status(201).json({
       success: true,
-      message: populatedMessage,
+      message: responseMessage,
       conversationId: conversation._id,
     });
   } catch (err) {
@@ -335,9 +436,27 @@ const getMessages = async (req, res) => {
     }
 
     // Find the other participant (not the current org)
+    console.log('🔍 RECRUITER SERVER DEBUG: Finding other participant:', {
+      orgId: orgId,
+      orgIdType: typeof orgId,
+      participants: conversation.participants.map(p => ({
+        userId: p.user._id,
+        userType: p.userType,
+        userName: p.user.name
+      }))
+    });
+    
     const otherParticipant = conversation.participants.find(
-      (participant) => participant.user._id.toString() !== orgId
+      (participant) => participant.user._id.toString() !== orgId.toString()
     );
+    
+    console.log('🎯 RECRUITER SERVER DEBUG: Other participant found:', {
+      otherParticipant: otherParticipant ? {
+        userId: otherParticipant.user._id,
+        userName: otherParticipant.user.name,
+        userType: otherParticipant.userType
+      } : null
+    });
 
     if (!otherParticipant) {
       return res.status(400).json({
@@ -346,11 +465,46 @@ const getMessages = async (req, res) => {
       });
     }
 
+    // ✅ CRITICAL FIX: Normalize message structure to match API response exactly
+    const normalizedMessages = messages.map(msg => {
+      // Extract the actual sender ID from the sender structure
+      let actualSenderId;
+      if (msg.sender?.user?._id) {
+        actualSenderId = msg.sender.user._id;
+      } else if (msg.sender?.user) {
+        actualSenderId = msg.sender.user;
+      } else {
+        actualSenderId = msg.sender;
+      }
+
+      return {
+        ...msg.toObject(),
+        // ✅ CRITICAL FIX: Keep the exact same structure as sendMessage API response
+        sender: {
+          ...msg.sender, // Keep the full nested structure with populated user data
+          userType: msg.sender?.userType // Ensure userType is preserved
+        },
+        senderId: actualSenderId, // ✅ Also provide direct access
+        senderData: msg.sender?.user, // Keep populated data for display
+        senderType: msg.sender?.userType
+      };
+    });
+
+    console.log("🎯 RECRUITER getMessages: Normalized message structure sample:", {
+      originalSample: messages[0]?.sender,
+      normalizedSample: normalizedMessages[0]?.sender,
+      normalizedSampleType: typeof normalizedMessages[0]?.sender,
+      messageCount: normalizedMessages.length,
+      orgId: orgId,
+      orgIdType: typeof orgId,
+      firstNormalizedMessage: normalizedMessages[0]
+    });
+
     return res.status(200).json({
       success: true,
       message: "Chat history fetched successfully",
       otherUser: otherParticipant.user,
-      messages,
+      messages: normalizedMessages, // ✅ Use normalized messages
       conversation: {
         id: conversation._id,
         category: conversation.category,
@@ -441,6 +595,88 @@ const getAllConversations = async (req, res) => {
   }
 };
 
+const clearMessages = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { orgId } = req.query;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Conversation not found" 
+      });
+    }
+
+    const isParticipant = conversation.participants.some(
+      (participant) => participant.user.toString() === orgId && participant.userType === "BusinessProfile"
+    );
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: you are not a member of this conversation",
+      });
+    }
+
+    await Message.deleteMany({ conversationId });
+    await conversation.updateLastMessage("", null, null);
+
+    res.status(200).json({
+      success: true,
+      message: "Messages cleared successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error clearing messages:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to clear messages",
+      error: error.message,
+    });
+  }
+};
+
+const deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { orgId } = req.query;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Conversation not found" 
+      });
+    }
+
+    const isParticipant = conversation.participants.some(
+      (participant) => participant.user.toString() === orgId && participant.userType === "BusinessProfile"
+    );
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: you are not a member of this conversation",
+      });
+    }
+
+    await Message.deleteMany({ conversationId });
+    await Conversation.findByIdAndDelete(conversationId);
+
+    res.status(200).json({
+      success: true,
+      message: "Conversation deleted successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error deleting conversation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete conversation",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllConversations,
   sendMessage,
@@ -451,4 +687,6 @@ module.exports = {
   updateProfile,
   initiateChatRecuriter,
   getMessages,
+  clearMessages,
+  deleteConversation,
 };

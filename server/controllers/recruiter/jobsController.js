@@ -216,12 +216,34 @@ const jobGetMessages = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
+    console.log("🎯 JOBS CONTROLLER: sendMessage called with:", req.body);
+    console.log("🎯 JOBS CONTROLLER: req.user:", req.user);
     const { receiverId, text, conversationId } = req.body;
-    // console.log("receiverId -----------------> ",receiverId)
-    const senderId = req.user?._id;
-    const senderUserType = req.user?.role === 'recruiter' ? 'BusinessProfile' : 'User';
+    
+    // ✅ FIXED: Determine correct sender ID for recruiters
+    let actualSenderId = req.user._id;
+    let senderUserType = 'User';
+    
+    if (req.user.role === 'recruiter') {
+      const Business = require("../../models/recruiter/BusinessProfile");
+      const businessProfile = await Business.findOne({ userId: req.user._id });
+      if (businessProfile) {
+        actualSenderId = businessProfile._id;
+        senderUserType = 'BusinessProfile';
+        console.log("✅ JOBS CONTROLLER: Using business profile ID:", actualSenderId);
+      } else {
+        console.warn("⚠️ JOBS CONTROLLER: No business profile found, using user ID");
+      }
+    }
+    
+    console.log("🎯 JOBS CONTROLLER: Final sender info:", {
+      userRole: req.user?.role,
+      actualSenderId,
+      senderUserType,
+      userIdFromToken: req.user?._id
+    });
 
-    if (!senderId) {
+    if (!actualSenderId) {
       return res.status(401).json({ error: 'User not authenticated.' });
     }
 
@@ -263,7 +285,7 @@ const sendMessage = async (req, res) => {
 
     // 3. Create the message
     const newMessage = await Message.create({
-      sender: { user: senderId, userType: senderUserType },
+      sender: { user: actualSenderId, userType: senderUserType },
       receiver: { user: receiverId, userType: receiverUserType },
       message: text,
       conversationId: conversation._id,
@@ -272,9 +294,10 @@ const sendMessage = async (req, res) => {
 
     const populatedMessage = await Message.findById(newMessage._id).lean();
 
-    // 4. Update conversation metadata
+    // 4. Update conversation metadata  
     conversation.lastMessage = populatedMessage.message;
     conversation.lastMessageTime = Date.now();
+    conversation.lastMessageSender = actualSenderId; // Use actualSenderId
     await conversation.save();
 
     // 5. Emit to all participants

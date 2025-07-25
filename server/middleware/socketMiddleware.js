@@ -31,12 +31,25 @@ const authenticateSocket = async (socket, next) => {
       return next(new Error("User not verified"));
     }
 
+    // Get user type and ID from query parameters
+    const queryUserType = socket.handshake.query.userType || "User";
+    const queryUserId = socket.handshake.query.userId;
+    
+    console.log(`🔐 Socket auth query params:`, {
+      userType: queryUserType,
+      userId: queryUserId,
+      actualUserId: user._id.toString()
+    });
+
     // Attach user info to socket
     socket.user = user;
-    socket.userType = "User";
+    socket.userType = queryUserType;
     socket.authenticated = true;
+    
+    // Store the query userId for validation
+    socket.queryUserId = queryUserId;
 
-    console.log(`🔐 Socket authenticated: ${user.username} (${user._id})`);
+    console.log(`🔐 Socket authenticated: ${user.username} (${user._id}) as ${queryUserType}`);
     next();
   } catch (error) {
     console.error("❌ Socket authentication error:", error.message);

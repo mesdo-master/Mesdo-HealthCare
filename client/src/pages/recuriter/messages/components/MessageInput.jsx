@@ -11,6 +11,8 @@ const MessageInput = ({
   selectedConveresationId,
   toggleFetch,
   selectedConveresation,
+  replyingTo,
+  setReplyingTo,
 }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -21,7 +23,7 @@ const MessageInput = ({
 
   // ✅ Use socket utilities from context
   const { sendMessage: socketSendMessage, isConnected } = useSocket();
-  const { businessProfile } = useSelector((state) => state.auth);
+  const { businessProfile, currentUser } = useSelector((state) => state.auth);
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -50,12 +52,25 @@ const MessageInput = ({
   };
 
   const handleSend = async () => {
-    if (!inputMessage.trim() && !selectedFile) return;
-    if (isLoading) return;
+    console.log("🚀 RECRUITER: handleSend called", {
+      inputMessage: inputMessage.trim(),
+      hasSelectedFile: !!selectedFile,
+      isLoading,
+      conversationId: selectedConveresationId
+    });
+    
+    if (!inputMessage.trim() && !selectedFile) {
+      console.log("❌ RECRUITER: No message or file to send");
+      return;
+    }
+    if (isLoading) {
+      console.log("❌ RECRUITER: Already loading, skipping");
+      return;
+    }
 
     // ✅ Enhanced validation
     if (!selectedConveresationId || selectedConveresationId === "undefined") {
-      console.error("Cannot send message: Invalid conversation ID");
+      console.error("❌ RECRUITER: Cannot send message: Invalid conversation ID");
       return;
     }
 
@@ -72,25 +87,59 @@ const MessageInput = ({
         conversationId: selectedConveresationId,
         text: messageText,
         receiverId: selectedUser?._id || selectedUser?.id || selectedUser,
-        senderId: businessProfile._id,
+        senderId: businessProfile._id, // This will be used in backend as actualSenderId
+        replyTo: replyingTo?._id || null, // Add reply reference
       };
 
-      console.log("Sending recruiter message:", messageData);
+      console.group("📤 RECRUITER INPUT: Sending message");
+      console.log("💼 Business Profile:", businessProfile);
+      console.log("👤 Current User:", currentUser);
+      console.log("📦 Message Data:", messageData);
+      console.log("🎯 Sender ID being sent:", messageData.senderId);
+      console.log("🎯 Business Profile ID:", businessProfile._id);
+      console.log("📨 Conversation ID:", selectedConveresationId);
+      console.log("📥 Receiver ID:", selectedUser?._id || selectedUser?.id || selectedUser);
+      console.groupEnd();
 
+      console.log("📡 RECRUITER: Making API call to /recuriter/sendMessage");
       const res = await axiosInstance.post(
         "/recuriter/sendMessage",
         messageData
       );
-      console.log("Recruiter message sent:", res.data);
+      console.log("=".repeat(80));
+      console.log("📡 RECRUITER API RESPONSE RECEIVED");
+      console.log("=".repeat(80));
+      console.log("📥 Full API response:", res.data);
+      console.log("📥 Message from response:", res.data?.message);
+      if (res.data?.message) {
+        console.log("📥 Message ID:", res.data.message._id);
+        console.log("📥 Message text:", res.data.message.message);
+        console.log("📥 Message sender:", res.data.message.sender);
+        console.log("📥 Message senderId:", res.data.message.senderId);
+        console.log("📥 Message senderType:", res.data.message.senderType);
+        console.log("📥 FULL MESSAGE STRUCTURE:");
+        console.log(JSON.stringify(res.data.message, null, 2));
+      }
+      console.log("=".repeat(80));
 
       // ✅ Add sent message immediately for instant feedback
       if (res.data?.message && setMessages) {
         const messageToAdd = res.data.message;
-        console.log("✅ RECRUITER: Adding sent message immediately:", {
-          messageId: messageToAdd._id,
-          messageText: messageToAdd.message,
-          conversationId: messageToAdd.conversationId
+        console.group("✅ RECRUITER: Adding sent message immediately");
+        console.log("📝 Message ID:", messageToAdd._id);
+        console.log("💬 Message text:", messageToAdd.message);
+        console.log("🗣️ Sender structure:", messageToAdd.sender);
+        console.log("🗣️ Sender type:", typeof messageToAdd.sender);
+        console.log("👤 Sender.user:", messageToAdd.sender?.user);
+        console.log("🏢 Expected business ID:", businessProfile._id);
+        console.log("🏢 Business ID type:", typeof businessProfile._id);
+        console.log("🔄 String comparison:", {
+          senderStr: String(messageToAdd.sender),
+          businessStr: String(businessProfile._id),
+          matches: String(messageToAdd.sender) === String(businessProfile._id)
         });
+        console.log("📦 Full message:", messageToAdd);
+        console.groupEnd();
         setMessages((prevMessages) => {
           // Enhanced duplicate checking for immediate message addition
           const messageExists = prevMessages.some(
@@ -113,6 +162,14 @@ const MessageInput = ({
           
           if (!messageExists) {
             console.log("✅ RECRUITER: Adding new message immediately");
+            console.log("✅ RECRUITER: Pre-addition message check:", {
+              messageId: messageToAdd._id,
+              sender: messageToAdd.sender,
+              senderType: typeof messageToAdd.sender,
+              businessId: businessProfile._id,
+              businessIdType: typeof businessProfile._id,
+              shouldAlignRight: String(messageToAdd.sender) === String(businessProfile._id)
+            });
             // Add a temporary flag to identify immediate messages
             const messageWithFlag = { ...messageToAdd, _isImmediate: true };
             return [...prevMessages, messageWithFlag];
@@ -131,6 +188,7 @@ const MessageInput = ({
       // Clear input immediately for better UX
       setInputMessage("");
       setSelectedFile(null);
+      setReplyingTo(null); // Clear reply
 
       // ✅ Socket emission is handled by server, no need for client-side emission
       console.log("✅ CLIENT: Recruiter message sent, server will handle socket broadcasting");
@@ -148,7 +206,9 @@ const MessageInput = ({
   };
 
   const handleKeyDown = (e) => {
+    console.log("⌨️ RECRUITER: Key pressed:", e.key, "Shift:", e.shiftKey);
     if (e.key === "Enter" && !e.shiftKey) {
+      console.log("🚀 RECRUITER: Enter pressed, calling handleSend");
       e.preventDefault();
       handleSend();
     }
@@ -184,6 +244,26 @@ const MessageInput = ({
 
   return (
     <div className="relative border-t bg-white p-4">
+      {/* Reply Preview */}
+      {replyingTo && (
+        <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-medium text-blue-600">Replying to:</span>
+            </div>
+            <p className="text-sm text-gray-700 truncate max-w-xs">
+              {replyingTo.message}
+            </p>
+          </div>
+          <button
+            onClick={() => setReplyingTo(null)}
+            className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* File Preview */}
       {selectedFile && (
         <div className="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-between">

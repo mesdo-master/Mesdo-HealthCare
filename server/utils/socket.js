@@ -24,11 +24,33 @@ const {
 // Socket.IO server with enhanced configuration
 const io = new Server(server, {
   cors: {
-    origin: [
-      "https://mesdo.vercel.app",
-      "https://mesdo-health-care-u5s9.vercel.app",
-      "http://localhost:3000",
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        "https://mesdo.vercel.app",
+        "https://mesdo-health-care-u5s9.vercel.app",
+        "http://localhost:3000",
+      ];
+      
+      // Check exact matches
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Check for Vercel deployment pattern
+      if (origin.match(/^https:\/\/mesdo-health-care-.*\.vercel\.app$/)) {
+        return callback(null, true);
+      }
+      
+      // Check for other mesdo vercel deployments
+      if (origin.match(/^https:\/\/.*mesdo.*\.vercel\.app$/)) {
+        return callback(null, true);
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -96,7 +118,13 @@ const joinConversationRoom = (socket, conversationId) => {
   conversationRooms.get(conversationId).add(socket.id);
 
   console.log(
-    `💬 Socket ${socket.id} joined conversation: ${conversationRoom}`
+    `💬 Socket ${socket.id} joined conversation: ${conversationRoom}`,
+    {
+      userId: socket.userId,
+      userType: socket.userType,
+      conversationId: conversationId,
+      roomMemberCount: conversationRooms.get(conversationId).size
+    }
   );
 };
 
@@ -122,12 +150,24 @@ const broadcastToConversation = async (
   excludeSocketId = null
 ) => {
   const conversationRoom = getConversationRoom(conversationId);
+  
+  console.log("🎯 SOCKET BROADCAST: Broadcasting to conversation", {
+    conversationId,
+    event,
+    conversationRoom,
+    hasData: !!data,
+    dataKeys: data ? Object.keys(data) : [],
+    senderInfo: data?.sender,
+    excludeSocketId: excludeSocketId || 'none'
+  });
 
   if (excludeSocketId) {
     io.to(conversationRoom).except(excludeSocketId).emit(event, data);
   } else {
     io.to(conversationRoom).emit(event, data);
   }
+  
+  console.log("✅ SOCKET BROADCAST: Message broadcasted to room:", conversationRoom);
 };
 
 // Broadcast to user's personal room
@@ -170,12 +210,17 @@ const sendNotificationToUser = async (userId, notificationData) => {
 // Main socket connection handler
 io.on("connection", (socket) => {
   console.log(`🔌 New socket connection: ${socket.id}`);
-  console.log(`👤 User: ${socket.user.username} (${socket.user._id})`);
+  console.log(`👤 User: ${socket.user.username} (${socket.user._id}) as ${socket.userType}`);
+  console.log(`👤 Query UserId: ${socket.queryUserId}`);
+
+  // Use the query user ID for room management if available
+  const effectiveUserId = socket.queryUserId || socket.user._id;
 
   // Store active user with enhanced tracking
-  activeUsers.set(socket.user._id.toString(), {
+  activeUsers.set(effectiveUserId.toString(), {
     socketId: socket.id,
-    userId: socket.user._id,
+    userId: effectiveUserId,
+    originalUserId: socket.user._id,
     username: socket.user.username,
     userType: socket.userType,
     connectedAt: new Date(),
@@ -187,12 +232,12 @@ io.on("connection", (socket) => {
     },
   });
 
-  // Join user's personal room
-  joinUserRoom(socket, socket.user._id);
+  // Join user's personal room using effective user ID
+  joinUserRoom(socket, effectiveUserId);
 
   // Emit user online status
   socket.broadcast.emit("userOnline", {
-    userId: socket.user._id,
+    userId: effectiveUserId,
     username: socket.user.username,
     userType: socket.userType,
     status: "online",
@@ -221,8 +266,9 @@ io.on("connection", (socket) => {
         );
       }
 
+      const effectiveUserId = socket.queryUserId || socket.user._id;
       const isParticipant = conversation.isParticipant(
-        socket.user._id,
+        effectiveUserId,
         socket.userType
       );
       if (!isParticipant) {
@@ -239,7 +285,7 @@ io.on("connection", (socket) => {
       // Update user's last seen in conversation
       const participant = conversation.participants.find(
         (p) =>
-          p.user.toString() === socket.user._id.toString() &&
+          p.user.toString() === effectiveUserId.toString() &&
           p.userType === socket.userType
       );
       if (participant) {
@@ -259,7 +305,7 @@ io.on("connection", (socket) => {
         conversationId,
         "user-joined-conversation",
         {
-          userId: socket.user._id,
+          userId: effectiveUserId,
           username: socket.user.username,
           userType: socket.userType,
           conversationId,
@@ -295,11 +341,12 @@ io.on("connection", (socket) => {
       });
 
       // Notify other participants
+      const effectiveUserId = socket.queryUserId || socket.user._id;
       broadcastToConversation(
         conversationId,
         "user-left-conversation",
         {
-          userId: socket.user._id,
+          userId: effectiveUserId,
           username: socket.user.username,
           userType: socket.userType,
           conversationId,
@@ -334,7 +381,7 @@ io.on("connection", (socket) => {
         receiverType = "User",
       } = data;
 
-      console.log("📨 Processing socket message:", {
+      console.log("🎯 SOCKET: Processing socket message:", {
         conversationId,
         senderId: socket.user._id,
         senderType: socket.userType,
@@ -342,6 +389,7 @@ io.on("connection", (socket) => {
         receiverType,
         messageType,
         category,
+        socketUserData: socket.user
       });
 
       // Verify conversation exists and user is participant
@@ -354,8 +402,9 @@ io.on("connection", (socket) => {
         );
       }
 
+      const effectiveUserId = socket.queryUserId || socket.user._id;
       const isParticipant = conversation.isParticipant(
-        socket.user._id,
+        effectiveUserId,
         socket.userType
       );
       if (!isParticipant) {
@@ -366,11 +415,23 @@ io.on("connection", (socket) => {
         );
       }
 
+      // ✅ Use the socket's query parameters for sender ID and type
+      const actualSenderId = socket.queryUserId || socket.user._id;
+      const actualSenderType = socket.userType;
+      
+      console.log("🎯 SOCKET: Using socket query params for sender:", {
+        originalUserId: socket.user._id,
+        queryUserId: socket.queryUserId,
+        actualSenderId,
+        actualSenderType,
+        userRole: socket.user.role
+      });
+
       // ✅ Create message using the static method
       const newMessage = await Message.createMessage({
         conversationId,
-        senderId: socket.user._id,
-        senderType: socket.userType,
+        senderId: actualSenderId,
+        senderType: actualSenderType,
         receiverId,
         receiverType,
         message,
@@ -384,8 +445,8 @@ io.on("connection", (socket) => {
       // Update conversation
       await conversation.updateLastMessage(
         message,
-        socket.user._id,
-        socket.userType
+        actualSenderId,
+        actualSenderType
       );
 
       // Populate message for response
@@ -558,11 +619,12 @@ io.on("connection", (socket) => {
         );
       }
 
+      const effectiveUserId = socket.queryUserId || socket.user._id;
       broadcastToConversation(
         conversationId,
         "user-typing",
         {
-          userId: socket.user._id,
+          userId: effectiveUserId,
           username: socket.user.username,
           userType: socket.userType,
           isTyping: true,
@@ -587,11 +649,12 @@ io.on("connection", (socket) => {
         );
       }
 
+      const effectiveUserId = socket.queryUserId || socket.user._id;
       broadcastToConversation(
         conversationId,
         "user-typing",
         {
-          userId: socket.user._id,
+          userId: effectiveUserId,
           username: socket.user.username,
           userType: socket.userType,
           isTyping: false,
@@ -634,20 +697,22 @@ io.on("connection", (socket) => {
   socket.on("disconnect", (reason) => {
     console.log(`🔌 Socket disconnected: ${socket.id}, reason: ${reason}`);
 
+    const effectiveUserId = socket.queryUserId || socket.user._id;
+
     // Update user status
-    const user = activeUsers.get(socket.user._id.toString());
+    const user = activeUsers.get(effectiveUserId.toString());
     if (user) {
       user.status = "offline";
       user.lastSeen = new Date();
 
       // Keep user in activeUsers for a short time for reconnection
       setTimeout(() => {
-        activeUsers.delete(socket.user._id.toString());
+        activeUsers.delete(effectiveUserId.toString());
       }, 30000); // 30 seconds
     }
 
     // Leave user room
-    leaveUserRoom(socket, socket.user._id);
+    leaveUserRoom(socket, effectiveUserId);
 
     // Leave all conversation rooms
     const userConversations = Array.from(conversationRooms.keys()).filter(
@@ -663,14 +728,14 @@ io.on("connection", (socket) => {
 
     // Broadcast user offline status
     socket.broadcast.emit("userOffline", {
-      userId: socket.user._id,
+      userId: effectiveUserId,
       username: socket.user.username,
       userType: socket.userType,
       status: "offline",
       lastSeen: new Date(),
     });
 
-    console.log(`👤 User ${socket.user.username} disconnected`);
+    console.log(`👤 User ${socket.user.username} (${effectiveUserId}) disconnected`);
   });
 
   // Handle errors

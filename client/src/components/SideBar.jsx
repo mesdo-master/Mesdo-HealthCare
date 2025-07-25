@@ -1,12 +1,24 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { modeToggle } from "../store/features/authSlice";
 import { useAuth } from "../hooks/useAuth";
 import hospitalicon from "../assets/hospitalicon.png";
 import axiosInstance from "../lib/axio";
 import SettingsIcon from "../assets/Settings.png";
+import {
+  Briefcase,
+  MessageCircle,
+  User,
+  Settings,
+  HelpCircle,
+  Users,
+  Building,
+  Search,
+  BarChart,
+  Power,
+} from "lucide-react";
 
 export default function Sidebar({ className = "" }) {
   const dispatch = useDispatch();
@@ -15,9 +27,28 @@ export default function Sidebar({ className = "" }) {
     useAuth();
 
   const [showSwitchLoader, setShowSwitchLoader] = useState(false);
+  const [navigating, setNavigating] = useState(false);
+  const [targetRoute, setTargetRoute] = useState("");
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleNavigation = (route, routeName) => {
+    if (route) {
+      setNavigating(true);
+      setTargetRoute(routeName);
+
+      // Add a small delay for smooth UX
+      setTimeout(() => {
+        navigate(route);
+        setTimeout(() => {
+          setNavigating(false);
+          setTargetRoute("");
+        }, 300); // Quick fade out after navigation
+      }, 500); // 0.5s loading animation
+    }
   };
 
   const handleModeToggle = async () => {
@@ -42,33 +73,19 @@ export default function Sidebar({ className = "" }) {
 
   return (
     <>
-      {showSwitchLoader && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white transition-opacity duration-300 animate-fade-in">
-          <div className="flex flex-col items-center bg-white rounded-2xl shadow-2xl px-10 py-8">
-            <div className="relative mb-6">
-              <div className="w-16 h-16 border-4 border-blue-100 border-t-[#1890FF] rounded-full animate-spin shadow-lg"></div>
-              {/* Animated checkmark after 0.8s */}
-              <span
-                id="switch-checkmark"
-                className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300"
-              >
-                <svg
-                  className="w-10 h-10 text-[#1890FF]"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </span>
+      {(showSwitchLoader || navigating) && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
+          aria-busy="true"
+          aria-live="polite"
+          style={{ pointerEvents: "none" }}
+        >
+          <div className="flex flex-col items-center bg-white rounded-2xl shadow-2xl px-10 py-8 animate-fade-in">
+            <div className="mb-6">
+              <div className="w-14 h-14 border-4 border-blue-100 border-t-[#1890FF] rounded-full animate-spin"></div>
             </div>
             <div className="text-lg font-semibold text-[#1890FF] animate-pulse">
-              Switching mode...
+              Just a moment...
             </div>
           </div>
           <style jsx>{`
@@ -84,16 +101,6 @@ export default function Sidebar({ className = "" }) {
               animation: fade-in 0.4s;
             }
           `}</style>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-            setTimeout(function(){
-              var el = document.getElementById('switch-checkmark');
-              if(el) el.style.opacity = 1;
-            }, 800);
-          `,
-            }}
-          />
         </div>
       )}
       <div
@@ -101,6 +108,11 @@ export default function Sidebar({ className = "" }) {
       ></div>
       <aside
         className={`fixed top-0 left-0 h-full w-[210px] md:w-[210px] lg:w-[18vw] ml-[70px] bg-[#FFFFFF] shadow-md flex flex-col pt-[12vh] z-50 ${className}`}
+        style={
+          showSwitchLoader || navigating
+            ? { pointerEvents: "none", opacity: 0.7 }
+            : {}
+        }
       >
         {/* Logo Section
         <div className="p-3 flex items-center">
@@ -170,11 +182,7 @@ export default function Sidebar({ className = "" }) {
                       /> */}
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
-                          />
+                          <Users color="#7F7F7F" strokeWidth={1.8} size={22} />
                         }
                         navTo={"/recruitment"}
                         text="Recruitment"
@@ -192,10 +200,10 @@ export default function Sidebar({ className = "" }) {
                       /> */}
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <MessageCircle
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         navTo={"/organization/messages"}
@@ -203,10 +211,10 @@ export default function Sidebar({ className = "" }) {
                       />
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <Building
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Profile"
@@ -222,20 +230,16 @@ export default function Sidebar({ className = "" }) {
                     <ul className="space-y-2">
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
-                          />
+                          <Search color="#7F7F7F" strokeWidth={1.8} size={22} />
                         }
                         text="Candidate Search"
                       />
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <BarChart
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Analytics"
@@ -250,24 +254,28 @@ export default function Sidebar({ className = "" }) {
                     <ul className="space-y-2">
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <HelpCircle
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Help Center"
                       />
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <Settings
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Settings"
-                        // navTo={`/organization/${businessProfile?._id}`}
+                        navTo={
+                          mode === "recruiter"
+                            ? "/recuriter/settings"
+                            : "/settings"
+                        }
                       />
                     </ul>
                   </div>
@@ -283,36 +291,38 @@ export default function Sidebar({ className = "" }) {
                       {/* <NavItem icon={<Home size={18} />} text="Home" navTo={'/'} /> */}
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <Briefcase
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Jobs"
                         navTo={"/jobs"}
+                        onNavigate={handleNavigation}
+                        isActive={location.pathname.startsWith("/jobs")}
                       />
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <MessageCircle
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Message"
                         navTo={"/messages"}
+                        onNavigate={handleNavigation}
+                        isActive={location.pathname.startsWith("/messages")}
                       />
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
-                          />
+                          <User color="#7F7F7F" strokeWidth={1.8} size={22} />
                         }
                         text="Profile"
                         navTo={`/profile/${currentUser?.username}`}
+                        onNavigate={handleNavigation}
+                        isActive={location.pathname.startsWith("/profile")}
                       />
                     </ul>
                   </div>
@@ -325,37 +335,44 @@ export default function Sidebar({ className = "" }) {
 
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <Settings
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Settings"
                         navTo={"/settings"}
+                        onNavigate={handleNavigation}
+                        isActive={location.pathname.startsWith("/settings")}
                       />
                       <NavItem
                         icon={
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <HelpCircle
+                            color="#7F7F7F"
+                            strokeWidth={1.8}
+                            size={22}
                           />
                         }
                         text="Help Center"
+                        onNavigate={handleNavigation}
+                        isActive={location.pathname.startsWith("/help")}
                       />
 
                       <li>
                         <button
                           onClick={handleLogout}
-                          className="flex items-center space-x-2 px-3 py-2 w-full rounded-md text-sm text-[#767F8C] hover:bg-gray-100 hover:text-gray-900 transition-all"
+                          className="flex items-center space-x-2 px-3 py-2 w-full rounded-md text-sm text-[#7F7F7F] transition-all hover:bg-gray-100 group"
                         >
-                          <img
-                            src={SettingsIcon}
-                            alt="Settings"
-                            className="w-5 h-5"
+                          <Power
+                            color="currentColor"
+                            className="transition-colors group-hover:text-[#1890FF]"
+                            strokeWidth={1.8}
+                            size={22}
                           />
-                          <span>Logout</span>
+                          <span className="transition-colors group-hover:text-[#1890FF]">
+                            Logout
+                          </span>
                         </button>
                       </li>
                     </ul>
@@ -375,15 +392,29 @@ Sidebar.propTypes = {
 };
 
 /* Reusable NavItem Component */
-const NavItem = ({ navTo, icon, text }) => {
+const NavItem = ({ navTo, icon, text, onNavigate, isActive }) => {
+  const handleClick = (e) => {
+    if (onNavigate && navTo) {
+      e.preventDefault();
+      onNavigate(navTo, text);
+    }
+  };
+
   return (
     <li>
       <Link
-        to={navTo}
-        className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm text-[#767F8C] hover:bg-gray-100 hover:text-[#767F8C] transition-all"
+        to={navTo || "#"}
+        onClick={handleClick}
+        className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm text-[#7F7F7F] transition-all hover:bg-gray-100 group"
+        style={{ position: "relative", overflow: "hidden" }}
       >
-        {icon}
-        <span>{text}</span>
+        {React.cloneElement(icon, {
+          className: "transition-colors group-hover:text-[#1890FF]",
+          color: "currentColor",
+        })}
+        <span className="transition-colors group-hover:text-[#1890FF]">
+          {text}
+        </span>
       </Link>
     </li>
   );
@@ -392,4 +423,6 @@ const NavItem = ({ navTo, icon, text }) => {
 NavItem.propTypes = {
   icon: PropTypes.node.isRequired,
   text: PropTypes.string.isRequired,
+  navTo: PropTypes.string,
+  onNavigate: PropTypes.func,
 };

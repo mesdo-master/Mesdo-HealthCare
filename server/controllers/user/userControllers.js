@@ -43,6 +43,48 @@ const getProfileInfo = async (req, res) => {
   }
 };
 
+const getUserProfileById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('🔍 getUserProfileById - CALLED with userId:', userId);
+    console.log('🔍 getUserProfileById - Request from user:', req.user?._id);
+    console.log('🔍 getUserProfileById - Full params:', req.params);
+
+    // Check if userId is provided
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required.",
+      });
+    }
+
+    // Fetch the user profile from the database
+    const foundUser = await User.findById(userId);
+    console.log('✅ getUserProfileById - found user:', foundUser ? foundUser.name : 'Not found');
+
+    // Check if user is found
+    if (!foundUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // Return the user profile information
+    return res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully.",
+      user: foundUser,
+    });
+  } catch (error) {
+    console.error("Error in getUserProfileById:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error, please try again later.",
+    });
+  }
+};
+
 const updateUserInfo = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -440,6 +482,7 @@ module.exports = {
   getSuggestedUsers,
   handleUploads,
   getProfileInfo,
+  getUserProfileById,
   updateUserInfo,
   updateProfilePic,
   updateCoverPic,

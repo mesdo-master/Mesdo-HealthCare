@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import axiosInstance from "../../../lib/axio";
 import ProfileHeader from "./components/ProfileHeader";
 import OverviewTab from "./components/OverviewTab";
@@ -7,7 +8,17 @@ import EditModal from "./components/EditModal";
 import ProfileCompletionNudge from "../../../components/ProfileCompletionNudge";
 
 const ProfilePage = () => {
-  const { userId } = useParams();
+  const params = useParams();
+  const { userId } = params;
+  const { currentUser } = useSelector((state) => state.auth);
+  
+  console.log('🎯 PROFILE PAGE INIT:', {
+    allParams: params,
+    extractedUserId: userId,
+    currentUserId: currentUser?._id,
+    windowLocation: window.location.pathname,
+    routeNowUsesUserId: 'Route should now extract userId correctly'
+  });
   const [userData, setUserData] = useState(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -35,20 +46,97 @@ const ProfilePage = () => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        setUserData(null); // Clear previous user data
+        console.log('🔄 FORCE REFRESH: userId changed to:', userId);
+        console.log('🔄 FORCE REFRESH: userId type:', typeof userId);
+        console.log('🔄 FORCE REFRESH: userId truthy?', !!userId);
+        console.log('🔄 FORCE REFRESH: userId length:', userId?.length);
         let response;
+        let isOwn = false; // Initialize ownership flag
 
-        if (userId) {
-          // TODO: Fix this endpoint for getting user by ID
-          setError("Getting user by ID not implemented yet");
-          return;
+        if (userId && userId.trim()) {
+          // Check if this is own profile - compare both ID and username
+          const isOwnById = String(userId) === String(currentUser?._id);
+          const isOwnByUsername = String(userId) === String(currentUser?.username);
+          isOwn = isOwnById || isOwnByUsername;
+          setIsOwnProfile(isOwn);
+          
+          console.log('🔍=== PROFILE PAGE FETCH START ===');
+          console.log('🔍 Fetching profile for userId:', userId);
+          console.log('🔍 Current user ID:', currentUser?._id);
+          console.log('🔍 Current user username:', currentUser?.username);
+          console.log('🔍 Ownership checks:', {
+            userIdString: String(userId),
+            currentUserIdString: String(currentUser?._id),
+            currentUserUsername: String(currentUser?.username),
+            isOwnById,
+            isOwnByUsername,
+            finalIsOwn: isOwn
+          });
+          console.log('🔍 Is own profile:', isOwn);
+          console.log('🔍 Profile ownership set to:', isOwn);
+          
+          if (isOwn) {
+            // If viewing own profile, always use /me endpoint (reliable)
+            console.log('✅ Viewing own profile - using /me endpoint');
+            try {
+              response = await axiosInstance.get("/me");
+              console.log('✅ Successfully fetched own profile via /me');
+            } catch (ownProfileError) {
+              console.error('❌ Failed to fetch own profile:', ownProfileError);
+              setError('Failed to load your profile. Please try again.');
+              setLoading(false);
+              return;
+            }
+          } else {
+            // If viewing another user's profile, try the new endpoint
+            console.log('🔍 Viewing another user\'s profile - trying /users/profile endpoint');
+            try {
+              response = await axiosInstance.get(`/users/profile/${userId}`);
+              console.log('✅ Successfully fetched other user profile');
+            } catch (apiError) {
+              console.error('❌ Backend endpoint not available for fetching user by ID');
+              
+              // Set proper error instead of falling back
+              setError('This profile is currently unavailable. The feature is being deployed to production.');
+              setLoading(false);
+              return; // Exit early - don't show own profile
+            }
+          }
+          
+          console.log('🔍=== PROFILE PAGE FETCH END ===');
         } else {
+          // No userId provided - this should only happen when visiting /profile (without ID)
+          console.log('🔍 No userId provided - fetching own profile via /me endpoint');
+          console.log('🔍 This should only happen for route /profile (without ID)');
           response = await axiosInstance.get("/me");
+          isOwn = true;
           setIsOwnProfile(true);
+          console.log('🔍 Own profile response:', response.data);
         }
 
         if (response.data.success) {
+          console.log('✅ Setting user data:', response.data.user?.name, response.data.user?._id);
           setUserData(response.data.user);
+          
+          console.log('🔒 PROFILE OWNERSHIP FINAL:', {
+            urlUserId: userId,
+            currentUserId: currentUser?._id,
+            responseUserId: response.data.user?._id,
+            isOwnProfile: isOwn,
+            showEditButtons: isOwn,
+            showFollowButtons: !isOwn,
+            userDataSet: !!response.data.user,
+            profilePageState: {
+              loading: false,
+              error: null,
+              userData: !!response.data.user,
+              isOwnProfile: isOwn
+            }
+          });
         } else {
+          console.error('❌ Response not successful:', response.data);
           setError(response.data.message || "Failed to fetch user data");
         }
       } catch (err) {
@@ -59,7 +147,7 @@ const ProfilePage = () => {
     };
 
     fetchUserData();
-  }, [userId]);
+  }, [userId, currentUser?._id]); // Also re-fetch when current user changes
 
   // Fetch suggested users
   useEffect(() => {
@@ -67,8 +155,9 @@ const ProfilePage = () => {
       try {
         setSuggestedUsersLoading(true);
         const response = await axiosInstance.get("/getSuggestedUsers?limit=6");
-        
+
         if (response.data.success) {
+          console.log('📋 Suggested users data:', response.data.suggestedUsers);
           setSuggestedUsers(response.data.suggestedUsers);
         }
       } catch (err) {
@@ -130,8 +219,60 @@ const ProfilePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">{error}</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            {/* Icon */}
+            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <svg 
+                className="w-8 h-8 text-blue-600" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+                />
+              </svg>
+            </div>
+            
+            {/* Title */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              Profile Unavailable
+            </h2>
+            
+            {/* Message */}
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              {error}
+            </p>
+            
+            {/* Actions */}
+            <div className="space-y-3">
+              <button 
+                onClick={() => window.history.back()}
+                className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Go Back
+              </button>
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="w-full bg-gray-100 text-gray-700 py-2.5 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                Go to Home
+              </button>
+            </div>
+            
+            {/* Footer note */}
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
+                We're working to make this feature available soon.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -322,7 +463,10 @@ const ProfilePage = () => {
                   {suggestedUsersLoading ? (
                     // Loading skeleton
                     Array.from({ length: 4 }).map((_, index) => (
-                      <div key={index} className="flex items-center justify-between animate-pulse">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between animate-pulse"
+                      >
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 rounded-full bg-gray-200"></div>
                           <div className="flex-1">
@@ -339,25 +483,34 @@ const ProfilePage = () => {
                         key={person._id || index}
                         className="flex items-center justify-between"
                       >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
                           <img
-                            src={person.image}
+                            src={(() => {
+                              const imageSrc = person.profilePicture || person.image || "/default-avatar.png";
+                              console.log(`🖼️ Image for ${person.name}:`, {
+                                profilePicture: person.profilePicture,
+                                image: person.image,
+                                finalSrc: imageSrc
+                              });
+                              return imageSrc;
+                            })()}
                             alt={person.name}
                             className="w-12 h-12 rounded-full object-cover"
                             onError={(e) => {
-                              e.target.src = `https://randomuser.me/api/portraits/${index % 2 === 0 ? 'men' : 'women'}/${(index % 50) + 1}.jpg`;
+                              console.log(`❌ Image failed to load for ${person.name}, using default`);
+                              e.target.src = "/default-avatar.png";
                             }}
                           />
-                          <div className="flex-1">
-                            <h4 className="text-[14px] font-medium text-gray-900">
+                          <div className="flex-1 min-w-0 max-w-[180px]">
+                            <h4 className="text-[14px] font-medium text-gray-900 truncate">
                               {person.name}
                             </h4>
-                            <p className="text-[12px] text-gray-500">
-                              {person.role} | {person.company.length > 15 ? person.company.substring(0, 15) + '...' : person.company}
+                            <p className="text-[12px] text-gray-500 truncate">
+                              {person.role} | {person.company}
                             </p>
                           </div>
                         </div>
-                        <button 
+                        <button
                           className="text-[12px] bg-[#1890FF] text-white hover:bg-[#1570EF] font-medium px-3 py-1 rounded-lg transition-colors"
                           onClick={() => {
                             // TODO: Implement follow functionality

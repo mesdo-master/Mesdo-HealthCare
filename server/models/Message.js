@@ -349,7 +349,33 @@ messageSchema.statics.findUnreadMessages = function (
     .sort({ createdAt: -1 });
 };
 
+// Add pre-save middleware to debug ALL message creation
+messageSchema.pre('save', function(next) {
+  console.log("🎯 MESSAGE PRE-SAVE: Message being saved:", {
+    messageId: this._id,
+    conversationId: this.conversationId,
+    senderUserId: this.sender?.user,
+    senderUserType: this.sender?.userType,
+    messageText: this.message?.substring(0, 30),
+    stack: new Error().stack.split('\n').slice(1, 4).join('\n')
+  });
+  next();
+});
+
+// Override the create method to debug direct Message.create() calls
+messageSchema.statics.create = function(...args) {
+  console.log("🎯 MESSAGE CREATE: Direct Message.create() called with:", args[0]);
+  return mongoose.Model.prototype.constructor.create.apply(this, args);
+};
+
 messageSchema.statics.createMessage = function (data) {
+  console.log("🎯 MESSAGE MODEL: createMessage called with data:", {
+    senderId: data.senderId,
+    senderType: data.senderType,
+    conversationId: data.conversationId,
+    message: data.message?.substring(0, 30)
+  });
+  
   const message = new this({
     conversationId: data.conversationId,
     sender: {

@@ -17,6 +17,26 @@ import { setCurrentUser } from "../../../../store/features/authSlice";
 const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.auth);
+  
+  // Simple logic: trust the isOwnProfile prop from parent
+  const showEditButtons = isOwnProfile;
+  
+  // Show Follow/Connect buttons only when viewing someone else's profile
+  const showFollowButtons = !isOwnProfile;
+  
+  console.log('🔒 PROFILE BUTTON LOGIC:', {
+    isOwnProfile,
+    showEditButtons,
+    showFollowButtons,
+    userDataId: userData?._id,
+    currentUserId: currentUser?._id,
+    userDataName: userData?.name,
+    currentUserName: currentUser?.name,
+    idsMatch: String(userData?._id) === String(currentUser?._id),
+    'URL should show edit buttons?': isOwnProfile,
+    'Actual showing edit buttons?': showEditButtons
+  });
+  
 
   const [profileImage, setProfileImage] = useState(
     userData?.profilePicture || "/default-avatar.png"
@@ -67,7 +87,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       setProfileImage(imageUrl);
 
       // Update Redux store if this is the current user's profile
-      if (isOwnProfile && currentUser) {
+      if (showEditButtons && currentUser) {
         const updatedUser = {
           ...currentUser,
           profilePicture: imageUrl,
@@ -109,7 +129,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       setBannerImage(imageUrl);
 
       // Update Redux store if this is the current user's profile
-      if (isOwnProfile && currentUser) {
+      if (showEditButtons && currentUser) {
         const updatedUser = {
           ...currentUser,
           Banner: imageUrl,
@@ -244,7 +264,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
           alt="Profile Banner"
           className="w-full h-full object-cover"
         />
-        {isOwnProfile && (
+        {showEditButtons && (
           <button
             onClick={() => bannerImageInputRef.current?.click()}
             className="absolute top-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer flex items-center justify-center hover:bg-gray-50 transition-colors"
@@ -267,7 +287,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
                 className="w-[140px] h-[140px] rounded-full border-4 border-white object-cover bg-white"
                 onError={() => setProfileImage("/default-avatar.png")}
               />
-              {isOwnProfile && (
+              {showEditButtons && (
                 <button
                   onClick={() => profileImageInputRef.current?.click()}
                   className="absolute bottom-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer flex items-center justify-center hover:bg-gray-50 transition-colors"
@@ -291,7 +311,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
-            {isOwnProfile && (
+            {showEditButtons && (
               <button
                 className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
                 onClick={() => openModal("Basic Information")}
@@ -303,7 +323,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
               <MoreHorizontal className="w-5 h-5 text-gray-600" />
             </button>
 
-            {!isOwnProfile && (
+            {showFollowButtons && (
               <>
                 <button
                   onClick={isFollowing ? handleFollow : handleFollow}

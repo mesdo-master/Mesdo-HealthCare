@@ -114,7 +114,7 @@ const MessageList = ({
 
         <div className="bg-gray-50 rounded-lg p-1 mb-4">
           <div className="flex">
-            {["Recruitment", "Groups"].map((tab) => (
+            {["Personal", "Recruitment"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -263,7 +263,7 @@ const MessageList = ({
               ))
             )}
           </div>
-        ) : activeTab === "Groups" && filteredConversations.length === 0 ? (
+        ) : activeTab === "Personal" && filteredConversations.length === 0 ? (
           <div className="w-full min-h-0 flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
             <div className="backdrop-blur-md bg-white/70 border border-blue-100 rounded-2xl shadow-xl max-w-sm w-full mx-auto flex flex-col items-center py-8 px-4 sm:px-8 space-y-6">
               <div className="flex justify-center mb-1 animate-bounce-slow">
@@ -272,18 +272,11 @@ const MessageList = ({
                 </div>
               </div>
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 tracking-tight drop-shadow-sm">
-                No groups yet
+                No conversations yet
               </h2>
               <p className="text-sm sm:text-base text-gray-500 font-normal leading-relaxed text-center">
-                No groups yet
+                Conversations will appear here when you start chatting.
               </p>
-              <button
-                onClick={() => setShowCreateGroupModal(true)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                aria-label="Create new group"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
             </div>
             <style jsx>{`
               @keyframes bounce-slow {

@@ -78,17 +78,23 @@ const MessageInput = ({
       console.log("Job message sent:", res.data);
 
       // ✅ Immediately add the sent message to local state for instant feedback
-      if (res.data && setMessages) {
+      if (res.data?.message && setMessages) {
+        const messageToAdd = res.data.message;
+        console.log("📨 USER JOB: Adding sent message to local state:", messageToAdd);
         setMessages((prevMessages) => {
-          // Avoid duplicate messages
+          // Avoid duplicate messages using the correct message object
           const messageExists = prevMessages.some(
-            (msg) => msg._id === res.data._id
+            (msg) => msg._id === messageToAdd._id
           );
           if (!messageExists) {
-            return [...prevMessages, res.data];
+            console.log("✅ USER JOB: Adding new sent message locally");
+            return [...prevMessages, messageToAdd];
           }
+          console.log("⚠️ USER JOB: Sent message already exists, skipping");
           return prevMessages;
         });
+      } else {
+        console.warn("❌ USER JOB: No message in response data or setMessages function missing");
       }
 
       // Clear input immediately for better UX
@@ -154,16 +160,28 @@ const MessageInput = ({
       console.log("✅ CLIENT: Message sent via API successfully:", res.data);
 
       // ✅ Immediately add the sent message to local state for instant feedback
-      if (res.data && setMessages) {
+      if (res.data?.message && setMessages) {
+        const messageToAdd = res.data.message;
+        console.log("📨 USER: Adding sent message to local state:", messageToAdd);
         setMessages((prevMessages) => {
-          // Avoid duplicate messages
+          // Avoid duplicate messages using the correct message object
           const messageExists = prevMessages.some(
-            (msg) => msg._id === res.data._id
+            (msg) => msg._id === messageToAdd._id
           );
+          console.log("📨 USER: Message exists check:", messageExists);
           if (!messageExists) {
-            return [...prevMessages, res.data];
+            console.log("✅ USER: Adding new sent message locally");
+            return [...prevMessages, messageToAdd];
           }
+          console.log("⚠️ USER: Sent message already exists, skipping");
           return prevMessages;
+        });
+      } else {
+        console.warn("❌ USER: No message in response data or setMessages function missing:", {
+          hasResponseData: !!res.data,
+          hasMessage: !!res.data?.message,
+          hasSetMessages: !!setMessages,
+          responseData: res.data
         });
       }
 

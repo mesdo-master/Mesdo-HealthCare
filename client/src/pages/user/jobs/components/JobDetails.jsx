@@ -187,7 +187,7 @@ const MatchPercentage = ({ job, user, calculateMatchPercentage }) => {
   return (
     <motion.div
       variants={itemVariants}
-      className="bg-white rounded-xl shadow-sm p-6 text-center border border-gray-100 mt-6"
+      className="bg-white rounded-xl shadow-sm p-6 text-center border border-gray-100 mt-[-10px]"
     >
       <h3 className="text-base font-medium text-gray-800 mb-1 text-start">
         Match Percentage

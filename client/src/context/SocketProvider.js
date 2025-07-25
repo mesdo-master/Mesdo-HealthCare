@@ -30,7 +30,7 @@ export const SocketProvider = ({ children }) => {
   const [typingUsers, setTypingUsers] = useState(new Map());
 
   // Get authentication state
-  const { currentUser, isAuthenticated } = useSelector((state) => state.auth);
+  const { currentUser, isAuthenticated, mode, businessProfile } = useSelector((state) => state.auth);
 
   // Event listeners storage
   const eventListeners = useRef(new Map());
@@ -93,7 +93,29 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    console.log("🔌 Socket: Initializing connection...");
+    // Determine the correct user ID and type based on current mode
+    let socketUserId = currentUser._id;
+    let socketUserType = "User";
+    
+    if (mode === "recruiter") {
+      // For recruiters, use business profile ID if available
+      if (businessProfile && businessProfile._id) {
+        socketUserId = businessProfile._id;
+        socketUserType = "BusinessProfile";
+        console.log("🔌 Socket: Connecting as recruiter with business profile ID:", socketUserId);
+      } else {
+        console.log("🔌 Socket: Recruiter mode but no business profile, using user ID:", socketUserId);
+      }
+    } else {
+      console.log("🔌 Socket: Connecting as individual user:", socketUserId);
+    }
+
+    console.log("🔌 Socket: Initializing connection...", {
+      mode,
+      socketUserId,
+      socketUserType,
+      hasBusinessProfile: !!businessProfile
+    });
 
     const newSocket = io(
       process.env.REACT_APP_SOCKET_URL ||
@@ -103,8 +125,8 @@ export const SocketProvider = ({ children }) => {
           token: token,
         },
         query: {
-          userId: currentUser._id,
-          userType: "User",
+          userId: socketUserId,
+          userType: socketUserType,
         },
         withCredentials: true,
         transports: ["websocket", "polling"],
@@ -269,7 +291,7 @@ export const SocketProvider = ({ children }) => {
     setSocket(newSocket);
 
     return newSocket;
-  }, [currentUser, isAuthenticated, getAuthToken]);
+  }, [currentUser, isAuthenticated, mode, businessProfile, getAuthToken]);
 
   // Cleanup socket connection
   const cleanup = useCallback(() => {
@@ -295,20 +317,25 @@ export const SocketProvider = ({ children }) => {
     }
   }, []);
 
-  // Initialize socket when user is authenticated
+  // Initialize socket when user is authenticated or mode changes
   useEffect(() => {
     if (currentUser && isAuthenticated) {
-      const newSocket = initializeSocket();
+      // Clean up existing connection before creating new one
+      cleanup();
+      
+      // Small delay to ensure cleanup is complete
+      const timer = setTimeout(() => {
+        const newSocket = initializeSocket();
+      }, 100);
 
       return () => {
-        if (newSocket) {
-          newSocket.disconnect();
-        }
+        clearTimeout(timer);
+        cleanup();
       };
     } else {
       cleanup();
     }
-  }, [currentUser, isAuthenticated, initializeSocket, cleanup]);
+  }, [currentUser, isAuthenticated, mode, businessProfile, initializeSocket, cleanup]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -393,6 +420,15 @@ export const SocketProvider = ({ children }) => {
     disconnect: useCallback(() => {
       cleanup();
     }, [cleanup]),
+
+    // Force reconnection with new role (for role switching)
+    forceReconnect: useCallback(() => {
+      console.log("🔄 Socket: Force reconnecting with current role...");
+      cleanup();
+      setTimeout(() => {
+        initializeSocket();
+      }, 100);
+    }, [cleanup, initializeSocket]),
   };
 
   // Context value

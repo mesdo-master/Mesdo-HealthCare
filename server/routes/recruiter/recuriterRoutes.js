@@ -1,5 +1,5 @@
 const express = require('express');
-const { sendMessage, getMessages, checkRecuriter, orgLogoUpload, fetchOrgData, orgBannerUpload, updateProfile, initiateChatRecuriter, getAllConversations } = require('../../controllers/recruiter/recuriterController');
+const { sendMessage, getMessages, checkRecuriter, orgLogoUpload, fetchOrgData, orgBannerUpload, updateProfile, initiateChatRecuriter, getAllConversations, clearMessages, deleteConversation } = require('../../controllers/recruiter/recuriterController');
 const { protectRoute } = require('../../middleware/authMiddleware');
 const upload = require('../../config/multer');
 const router = express.Router();
@@ -14,5 +14,7 @@ router.post('/initiate', initiateChatRecuriter);
 router.post('/sendMessage', protectRoute, sendMessage);
 router.get('/getMessages/:conversationId', getMessages);
 router.get('/allConversations', protectRoute, getAllConversations);
+router.delete('/clearMessages/:conversationId', protectRoute, clearMessages);
+router.delete('/deleteConversation/:conversationId', protectRoute, deleteConversation);
 
 module.exports = router;

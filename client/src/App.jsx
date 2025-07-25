@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth } from "./store/features/authSlice";
 import { useAuth } from "./hooks/useAuth";
+import { useRoleSwitch } from "./hooks/useSocket";
 import { Toaster } from "react-hot-toast";
 
 import HomePage from "./pages/HomePage";
@@ -40,6 +41,7 @@ import HiddenJobs from "./pages/user/jobs/HiddenJobsPage";
 import Settings from "./pages/settings/Settings";
 import SearchResults from "./pages/SearchResults";
 import PublicJobPage from "./pages/user/jobs/PublicJobPage";
+import RecruiterSettings from "./pages/recuriter/Settings";
 
 function AppRoutes() {
   const {
@@ -49,6 +51,13 @@ function AppRoutes() {
     needsRecruiterOnboarding,
     mode,
   } = useAuth();
+  
+  // Handle role switching for socket connections
+  const RoleSwitchHandler = () => {
+    useRoleSwitch();
+    return null;
+  };
+  
   const location = useLocation();
   const noSidebarOffsetRoutes = ["/jobs", "/settings"];
   const isNoSidebarOffset =
@@ -90,6 +99,7 @@ function AppRoutes() {
           (isJobDetailsOpen ? " blur-sm pointer-events-none select-none" : "")
         }
       >
+        <RoleSwitchHandler />
         <Sidebar />
         <div
           className="flex-1 min-h-screen"
@@ -100,7 +110,7 @@ function AppRoutes() {
             {/* Shared Authenticated Routes */}
             {/* <Route path="/" element={<HomePage />} /> */}
             <Route
-              path="/profile/:username"
+              path="/profile/:userId"
               element={
                 <ProtectedRoute role={["recruiter", "individual"]}>
                   <ProfilePage />
@@ -128,6 +138,14 @@ function AppRoutes() {
               element={
                 <ProtectedRoute role={["recruiter", "individual"]}>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recuriter/settings"
+              element={
+                <ProtectedRoute role="recruiter">
+                  <RecruiterSettings />
                 </ProtectedRoute>
               }
             />

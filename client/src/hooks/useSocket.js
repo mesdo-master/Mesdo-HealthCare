@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
+import { useSelector } from "react-redux";
 import { useSocket } from "../context/SocketProvider";
 
 /**
@@ -333,4 +334,38 @@ export const useThrottleSocket = (callback, delay) => {
   }, []);
 
   return throttledCallback;
+};
+
+/**
+ * Hook for handling role switching
+ */
+export const useRoleSwitch = () => {
+  const { forceReconnect } = useSocket();
+  const prevModeRef = useRef();
+  const { mode, businessProfile } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    // Skip on initial mount
+    if (prevModeRef.current === undefined) {
+      prevModeRef.current = mode;
+      return;
+    }
+
+    // If mode changed, force socket reconnection
+    if (prevModeRef.current !== mode) {
+      console.log(`🔄 Role switched from ${prevModeRef.current} to ${mode}, reconnecting socket...`);
+      forceReconnect();
+      prevModeRef.current = mode;
+    }
+  }, [mode, forceReconnect]);
+
+  // Also handle business profile changes for recruiters
+  useEffect(() => {
+    if (mode === "recruiter" && businessProfile) {
+      console.log("🔄 Business profile updated for recruiter, reconnecting socket...");
+      forceReconnect();
+    }
+  }, [businessProfile, mode, forceReconnect]);
+
+  return { forceReconnect };
 };

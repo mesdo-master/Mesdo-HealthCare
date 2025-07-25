@@ -24,6 +24,13 @@ const MessageInput = ({ selectedUser, setMessages, selectedConveresationId, togg
   };
 
   const handleSend = async () => {
+    console.log("🎯 RECRUITMENT MessageInput: handleSend called with:", {
+      inputMessage: inputMessage.trim(),
+      conversationId: selectedConveresationId,
+      selectedUser,
+      orgData: orgData?._id
+    });
+    
     if (!inputMessage.trim() && !selectedFile) return;
     if(!selectedConveresationId || !selectedUser || !orgData) return;
 
@@ -34,8 +41,9 @@ const MessageInput = ({ selectedUser, setMessages, selectedConveresationId, togg
       senderId : orgData._id
     };
 
+    console.log("🎯 RECRUITMENT: Sending message with data:", messageData);
     const res = await axiosInstance.post('/recuriter/sendMessage', messageData);
-    console.log(res)
+    console.log("🎯 RECRUITMENT: Response received:", res.data);
     setInputMessage("");
     setSelectedFile(null);
   };

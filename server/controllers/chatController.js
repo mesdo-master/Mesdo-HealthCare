@@ -44,11 +44,31 @@ const getChatHistory = async (req, res) => {
         .filter((participant) => participant.user._id.toString() !== userId)
         .map((participant) => participant.user);
 
+      // ✅ FIXED: Normalize message structure for group chats too
+      const normalizedMessages = messages.map(msg => {
+        // Extract the actual sender ID from the sender structure
+        let actualSenderId;
+        if (msg.sender?.user?._id) {
+          actualSenderId = msg.sender.user._id;
+        } else if (msg.sender?.user) {
+          actualSenderId = msg.sender.user;
+        } else {
+          actualSenderId = msg.sender;
+        }
+
+        return {
+          ...msg.toObject(),
+          sender: actualSenderId, // ✅ Use the actual ID for alignment
+          senderData: msg.sender?.user, // Keep populated data for display
+          senderType: msg.sender?.userType
+        };
+      });
+
       return res.status(200).json({
         success: true,
         message: "Group chat history fetched successfully",
         otherUsers,
-        messages,
+        messages: normalizedMessages, // ✅ Use normalized messages
         conversation: {
           id: conversation._id,
           name: conversation.name,
@@ -59,15 +79,59 @@ const getChatHistory = async (req, res) => {
       });
     } else {
       // Find the other participant
+      console.log('🔍 SERVER DEBUG: Finding other participant:', {
+        userId: userId,
+        userIdType: typeof userId,
+        participants: conversation.participants.map(p => ({
+          userId: p.user._id,
+          userType: p.userType,
+          userName: p.user.name
+        }))
+      });
+      
       const otherParticipant = conversation.participants.find(
-        (participant) => participant.user._id.toString() !== userId
+        (participant) => participant.user._id.toString() !== userId.toString()
       );
+      
+      console.log('🎯 SERVER DEBUG: Other participant found:', {
+        otherParticipant: otherParticipant ? {
+          userId: otherParticipant.user._id,
+          userName: otherParticipant.user.name,
+          userType: otherParticipant.userType
+        } : null
+      });
+
+      // ✅ FIXED: Normalize message structure for consistent alignment
+      const normalizedMessages = messages.map(msg => {
+        // Extract the actual sender ID from the sender structure
+        let actualSenderId;
+        if (msg.sender?.user?._id) {
+          actualSenderId = msg.sender.user._id;
+        } else if (msg.sender?.user) {
+          actualSenderId = msg.sender.user;
+        } else {
+          actualSenderId = msg.sender;
+        }
+
+        return {
+          ...msg.toObject(),
+          sender: actualSenderId, // ✅ Use the actual ID for alignment
+          senderData: msg.sender?.user, // Keep populated data for display
+          senderType: msg.sender?.userType
+        };
+      });
+
+      console.log("🎯 USER getChatHistory: Normalized message structure sample:", {
+        originalSample: messages[0]?.sender,
+        normalizedSample: normalizedMessages[0]?.sender,
+        messageCount: normalizedMessages.length
+      });
 
       return res.status(200).json({
         success: true,
         message: "Chat history fetched successfully",
         otherUser: otherParticipant ? otherParticipant.user : null,
-        messages,
+        messages: normalizedMessages, // ✅ Use normalized messages
         conversation: {
           id: conversation._id,
           category: conversation.category,
@@ -177,8 +241,8 @@ const initiateChat = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    console.log("📨 sendMessage called with body:", req.body);
-    console.log("📨 User:", req.user);
+    console.log("🎯 CHAT CONTROLLER: sendMessage called with:", req.body);
+    console.log("🎯 CHAT CONTROLLER: req.user:", req.user);
 
     const { receiverId, text, conversationId } = req.body;
     
@@ -191,11 +255,26 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    const senderId = req.user._id;
-    const senderUserType = (req.user?.role === 'recruiter') ? 'BusinessProfile' : 'User';
+    // ✅ FIXED: Determine correct sender ID based on user role
+    let senderId = req.user._id;
+    let senderUserType = 'User';
+    
+    if (req.user?.role === 'recruiter') {
+      // For recruiters, use business profile ID as sender
+      const businessProfile = await Business.findOne({ userId: req.user._id });
+      if (businessProfile) {
+        senderId = businessProfile._id;
+        senderUserType = 'BusinessProfile';
+        console.log("✅ CHAT: Recruiter message - using business profile ID:", senderId);
+      } else {
+        console.warn("⚠️ CHAT: Recruiter has no business profile, using user ID");
+        senderUserType = 'User';
+      }
+    }
 
     console.log("📨 Authenticated user details:", {
-      senderId,
+      originalUserId: req.user._id,
+      actualSenderId: senderId,
       senderUserType,
       userRole: req.user?.role || 'no-role',
       hasUser: !!req.user,
@@ -440,7 +519,7 @@ const sendMessage = async (req, res) => {
       id: populatedMessage._id,
       _id: populatedMessage._id,
       conversationId: conversation._id,
-      sender: populatedMessage.sender.user._id,
+      sender: senderId, // ✅ FIXED: Use the correct sender ID 
       senderData: populatedMessage.sender.user,
       receiver: populatedMessage.receiver?.user?._id,
       message: populatedMessage.message,
@@ -453,9 +532,23 @@ const sendMessage = async (req, res) => {
 
     console.log("✅ Message send completed successfully");
 
+    // ✅ FIXED: Normalize response message structure like recruiter controller
+    const responseMessage = {
+      ...populatedMessage,
+      sender: senderId, // ✅ Use the actual sender ID for alignment
+      senderData: populatedMessage.sender.user, // ✅ Populated data for display
+      senderType: senderUserType
+    };
+
+    console.log("🎯 CHAT API: Sending normalized response with sender ID:", {
+      senderId: senderId,
+      senderData: populatedMessage.sender.user,
+      responseMessageSender: responseMessage.sender
+    });
+
     res.status(201).json({
       success: true,
-      message: populatedMessage,
+      message: responseMessage,
       conversationId: conversation._id,
     });
   } catch (err) {
@@ -687,6 +780,214 @@ const getjobsConversations = async (req, res) => {
   }
 };
 
+const clearMessages = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user._id;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Conversation not found" 
+      });
+    }
+
+    const userType = (req.user?.role === 'recruiter') ? 'BusinessProfile' : 'User';
+    const isParticipant = conversation.participants.some(
+      (participant) => participant.user.toString() === userId.toString() && participant.userType === userType
+    );
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: you are not a member of this conversation",
+      });
+    }
+
+    await Message.deleteMany({ conversationId });
+    await conversation.updateLastMessage("", null, null);
+
+    res.status(200).json({
+      success: true,
+      message: "Messages cleared successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error clearing messages:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to clear messages",
+      error: error.message,
+    });
+  }
+};
+
+const deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user._id;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Conversation not found" 
+      });
+    }
+
+    const userType = (req.user?.role === 'recruiter') ? 'BusinessProfile' : 'User';
+    const isParticipant = conversation.participants.some(
+      (participant) => participant.user.toString() === userId.toString() && participant.userType === userType
+    );
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: you are not a member of this conversation",
+      });
+    }
+
+    await Message.deleteMany({ conversationId });
+    await Conversation.findByIdAndDelete(conversationId);
+
+    res.status(200).json({
+      success: true,
+      message: "Conversation deleted successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error deleting conversation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete conversation",
+      error: error.message,
+    });
+  }
+};
+
+// Delete individual message
+const deleteMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+    const userType = req.user?.role === 'recruiter' ? 'BusinessProfile' : 'User';
+
+    console.log('🗑️ Delete message request:', { messageId, userId, userType });
+
+    // Find the message
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    // Check if user is the sender of the message
+    const isSender = message.sender.user.toString() === userId.toString() && 
+                     message.sender.userType === userType;
+
+    if (!isSender) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own messages",
+      });
+    }
+
+    // Delete the message
+    await Message.findByIdAndDelete(messageId);
+
+    console.log('✅ Message deleted successfully:', messageId);
+
+    // Broadcast to conversation participants
+    broadcastToConversation(message.conversationId, 'messageDeleted', {
+      messageId,
+      conversationId: message.conversationId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Message deleted successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error deleting message:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete message",
+      error: error.message,
+    });
+  }
+};
+
+// Edit individual message
+const editMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { message: newMessageText } = req.body;
+    const userId = req.user._id;
+    const userType = req.user?.role === 'recruiter' ? 'BusinessProfile' : 'User';
+
+    console.log('✏️ Edit message request:', { messageId, userId, userType, newMessageText });
+
+    // Validate input
+    if (!newMessageText || newMessageText.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Message text is required",
+      });
+    }
+
+    // Find the message
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+    }
+
+    // Check if user is the sender of the message
+    const isSender = message.sender.user.toString() === userId.toString() && 
+                     message.sender.userType === userType;
+
+    if (!isSender) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only edit your own messages",
+      });
+    }
+
+    // Update the message
+    message.message = newMessageText.trim();
+    message.editedAt = new Date();
+    await message.save();
+
+    console.log('✅ Message edited successfully:', messageId);
+
+    // Broadcast to conversation participants
+    broadcastToConversation(message.conversationId, 'messageEdited', {
+      messageId,
+      conversationId: message.conversationId,
+      newMessage: newMessageText.trim(),
+      editedAt: message.editedAt,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Message edited successfully",
+      data: {
+        messageId,
+        newMessage: newMessageText.trim(),
+        editedAt: message.editedAt,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error editing message:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to edit message",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getChatHistory,
   initiateChat,
@@ -694,4 +995,8 @@ module.exports = {
   getAllConversations,
   createGroup,
   getjobsConversations,
+  clearMessages,
+  deleteConversation,
+  deleteMessage,
+  editMessage,
 };

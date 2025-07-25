@@ -2,6 +2,7 @@ const express = require("express");
 const { protectRoute } = require("../../middleware/authMiddleware");
 const {
   getProfileInfo,
+  getUserProfileById,
   updateUserInfo,
   updateProfilePic,
   updateCoverPic,
@@ -32,6 +33,7 @@ router.put("/updateProfile", protectRoute, updateUserInfo);
 router.post("/upload", protectRoute, upload.single("file"), handleUploads);
 router.get("/fetchExperiences", protectRoute, fetchExperiences);
 router.get("/fetchQualifications", protectRoute, fetchQualifications);
+router.get("/profile/:userId", protectRoute, getUserProfileById);
 router.post("/:username", getProfileInfo);
 
 module.exports = router;

@@ -15,11 +15,33 @@ app.set("trust proxy", true);
 //!Middilewares
 app.use(
   cors({
-    origin: [
-      "https://mesdo.vercel.app",
-      "https://mesdo-health-care-u5s9.vercel.app",
-      "http://localhost:3000",
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, etc.)
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        "https://mesdo.vercel.app",
+        "https://mesdo-health-care-u5s9.vercel.app",
+        "http://localhost:3000",
+      ];
+      
+      // Check exact matches
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Check for Vercel deployment pattern
+      if (origin.match(/^https:\/\/mesdo-health-care-.*\.vercel\.app$/)) {
+        return callback(null, true);
+      }
+      
+      // Check for other mesdo vercel deployments
+      if (origin.match(/^https:\/\/.*mesdo.*\.vercel\.app$/)) {
+        return callback(null, true);
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+    },
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
