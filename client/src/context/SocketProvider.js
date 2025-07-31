@@ -127,7 +127,8 @@ export const SocketProvider = ({ children }) => {
     });
 
     const newSocket = io(
-      process.env.REACT_APP_SOCKET_URL || "http://localhost:5020",
+      process.env.REACT_APP_SOCKET_URL ||
+        "https://mesdo-healthcare-4.onrender.com",
       {
         auth: {
           token: token,
@@ -158,7 +159,7 @@ export const SocketProvider = ({ children }) => {
 
       // Request online users list
       newSocket.emit("get-online-users");
-      
+
       // Test event to verify connection
       newSocket.emit("test-connection", { timestamp: Date.now() });
     });
@@ -300,11 +301,17 @@ export const SocketProvider = ({ children }) => {
     });
 
     newSocket.on("new-message", (messageData) => {
-      console.log("🔥 SOCKETPROVIDER: new-message event received:", messageData);
+      console.log(
+        "🔥 SOCKETPROVIDER: new-message event received:",
+        messageData
+      );
     });
 
     newSocket.on("message-received", (messageData) => {
-      console.log("🔥 SOCKETPROVIDER: message-received event received:", messageData);
+      console.log(
+        "🔥 SOCKETPROVIDER: message-received event received:",
+        messageData
+      );
     });
 
     newSocket.on("message-read", (data) => {
@@ -353,7 +360,7 @@ export const SocketProvider = ({ children }) => {
         }
         globalSocket = null;
       }
-      
+
       socketRef.current = null;
       setSocket(null);
       setIsConnected(false);
@@ -367,7 +374,10 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (currentUser && isAuthenticated) {
       // Prevent multiple connections - check both local and global socket
-      if (socketRef.current?.connected || (globalSocket && globalSocket.connected)) {
+      if (
+        socketRef.current?.connected ||
+        (globalSocket && globalSocket.connected)
+      ) {
         console.log("🔌 Socket: Already connected, skipping initialization");
         // If global socket exists but local ref doesn't, sync them
         if (globalSocket && !socketRef.current) {
