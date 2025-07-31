@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   ChevronDown,
@@ -71,6 +71,56 @@ const EditModal = ({
 
   // Qualification state
   const [qualifications, setQualifications] = useState([]);
+
+  // Modal ref for focus management
+  const modalRef = useRef(null);
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isEditing) {
+      // Store the current scroll position
+      const scrollY = window.scrollY;
+
+      // Add styles to prevent scrolling
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+
+      // Return function to restore scrolling when modal closes
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        // Restore scroll position
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isEditing]);
+
+  // Add keyboard event listener for escape key
+  useEffect(() => {
+    if (isEditing) {
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => {
+        document.removeEventListener("keydown", handleEscapeKey);
+      };
+    }
+  }, [isEditing]);
+
+  // Focus management for modal
+  useEffect(() => {
+    if (isEditing && modalRef.current) {
+      // Focus the first focusable element in the modal
+      const firstFocusableElement = modalRef.current.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (firstFocusableElement) {
+        firstFocusableElement.focus();
+      }
+    }
+  }, [isEditing]);
 
   const ModalTabs = [
     "Basic Information",
@@ -515,8 +565,27 @@ const EditModal = ({
 
   if (!isEditing) return null;
 
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      setIsEditing(false);
+    }
+  };
+
+  const handleEscapeKey = (e) => {
+    if (e.key === "Escape") {
+      setIsEditing(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4 font-inter mt-20">
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4 font-inter mt-20"
+      onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      ref={modalRef}
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[80vh] flex flex-col overflow-hidden relative">
         {/* Close Button */}
         <button
@@ -927,15 +996,15 @@ const EditModal = ({
                         </p>
                       </div>
                       <button
-                        className="flex items-center gap-2 bg-[#1890FF] hover:bg-blue-700 text-white px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg"
+                        className="flex items-center gap-2 text-[#1890FF] hover:text-blue-700 font-medium transition-colors"
                         onClick={() => {
                           setEditingExperienceId(null);
                           setEditingExperienceData(null);
                           setActiveModalTab("Add Work Experience");
                         }}
                       >
-                        <Plus size={16} />
-                        Add Experience
+                        <Plus className="w-4 h-4" />
+                        Add
                       </button>
                     </div>
 

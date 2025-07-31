@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../../../context/SocketProvider";
+import { useNotifications } from "../../../../context/NotificationContextFinal";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import axiosInstance from "../../../../lib/axio";
@@ -22,6 +23,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
   // ✅ Use socket utilities from context
   const { joinConversation, leaveConversation, on, off, isConnected } =
     useSocket();
+  const { markConversationAsRead } = useNotifications();
 
   const piimage =
     "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
@@ -112,6 +114,14 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
     getMessages();
   }, [selectedId, businessProfile._id, navigate]);
 
+  // ✅ Mark conversation as read when opened
+  useEffect(() => {
+    if (selectedId && selectedId !== "undefined") {
+      console.log('📜 RECRUITER: Marking conversation as read:', selectedId);
+      markConversationAsRead(selectedId);
+    }
+  }, [selectedId, markConversationAsRead]);
+
   // ✅ Enhanced socket integration for real-time messages
   useEffect(() => {
     // ✅ Enhanced validation for socket operations
@@ -131,9 +141,8 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
     }
 
     const handleNewMessage = (newMessage) => {
-      console.log("=".repeat(80));
-      console.log("📨 RECRUITER SOCKET: New message received");
-      console.log("=".repeat(80));
+      console.log("🔥 RECRUITER CHATCONTAINER: newMessage handler called!");
+      console.log("🔥 RECRUITER CHATCONTAINER: Message data:", newMessage);
       console.log("📦 FULL SOCKET MESSAGE:");
       console.log(JSON.stringify(newMessage, null, 2));
       console.log("🎯 Message sender:", newMessage.sender);

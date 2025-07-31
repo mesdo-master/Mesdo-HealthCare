@@ -8,3 +8,38 @@ html,body{
     overflow-x: hidden;
     width: 100%;
 }
+
+/* Simple wrapper - only adds left/right padding on larger screens */
+.main-layout-wrapper {
+  min-height: 100vh;
+}
+
+/* Inner content area - sidebar positions relative to this, not the padded wrapper */
+.inner-content-area {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Large screens get padding to center content */
+@media (min-width: 1441px) {
+  .main-layout-wrapper {
+    padding-left: clamp(20px, calc((100vw - 1440px) / 2), 200px);
+    padding-right: clamp(20px, calc((100vw - 1440px) / 2), 200px);
+  }
+}
+
+/* Medium screens get moderate padding */
+@media (min-width: 1200px) and (max-width: 1440px) {
+  .main-layout-wrapper {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+/* Small screens get minimal padding */
+@media (max-width: 1199px) {
+  .main-layout-wrapper {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}

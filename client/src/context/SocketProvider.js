@@ -11,6 +11,10 @@ import { useSelector } from "react-redux";
 
 const SocketContext = createContext(null);
 
+// Global singleton to prevent multiple socket instances
+let globalSocket = null;
+let globalSocketListeners = new Map();
+
 export const useSocket = () => {
   const context = useContext(SocketContext);
   if (!context) {
@@ -30,7 +34,9 @@ export const SocketProvider = ({ children }) => {
   const [typingUsers, setTypingUsers] = useState(new Map());
 
   // Get authentication state
-  const { currentUser, isAuthenticated, mode, businessProfile } = useSelector((state) => state.auth);
+  const { currentUser, isAuthenticated, mode, businessProfile } = useSelector(
+    (state) => state.auth
+  );
 
   // Event listeners storage
   const eventListeners = useRef(new Map());
@@ -80,7 +86,7 @@ export const SocketProvider = ({ children }) => {
     }
   }, []);
 
-  // Initialize socket connection
+  // Initialize socket connection - SIMPLIFIED
   const initializeSocket = useCallback(() => {
     if (!currentUser || !isAuthenticated) {
       console.log("🔌 Socket: User not authenticated, skipping connection");
@@ -93,33 +99,35 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
+    // SIMPLIFIED: Always disconnect existing socket and create new one
+    if (globalSocket) {
+      console.log("🔌 Socket: Disconnecting existing socket");
+      globalSocket.disconnect();
+      globalSocket.removeAllListeners();
+      globalSocket = null;
+    }
+
     // Determine the correct user ID and type based on current mode
     let socketUserId = currentUser._id;
     let socketUserType = "User";
-    
-    if (mode === "recruiter") {
-      // For recruiters, use business profile ID if available
-      if (businessProfile && businessProfile._id) {
-        socketUserId = businessProfile._id;
-        socketUserType = "BusinessProfile";
-        console.log("🔌 Socket: Connecting as recruiter with business profile ID:", socketUserId);
-      } else {
-        console.log("🔌 Socket: Recruiter mode but no business profile, using user ID:", socketUserId);
-      }
+
+    if (mode === "recruiter" && businessProfile?._id) {
+      socketUserId = businessProfile._id;
+      socketUserType = "BusinessProfile";
+      console.log("🔌 Socket: Connecting as recruiter:", socketUserId);
     } else {
-      console.log("🔌 Socket: Connecting as individual user:", socketUserId);
+      console.log("🔌 Socket: Connecting as user:", socketUserId);
     }
 
     console.log("🔌 Socket: Initializing connection...", {
       mode,
       socketUserId,
       socketUserType,
-      hasBusinessProfile: !!businessProfile
+      hasBusinessProfile: !!businessProfile,
     });
 
     const newSocket = io(
-      process.env.REACT_APP_SOCKET_URL ||
-        "https://mesdo-healthcare-3.onrender.com",
+      process.env.REACT_APP_SOCKET_URL || "http://localhost:5020",
       {
         auth: {
           token: token,
@@ -142,12 +150,17 @@ export const SocketProvider = ({ children }) => {
     // Connection event handlers
     newSocket.on("connect", () => {
       console.log("✅ Socket connected:", newSocket.id);
+      console.log("✅ Socket transport:", newSocket.io.engine.transport.name);
+      console.log("✅ Socket URL:", newSocket.io.uri);
       setIsConnected(true);
       setConnectionError(null);
       setReconnectAttempts(0);
 
       // Request online users list
       newSocket.emit("get-online-users");
+      
+      // Test event to verify connection
+      newSocket.emit("test-connection", { timestamp: Date.now() });
     });
 
     newSocket.on("disconnect", (reason) => {
@@ -281,12 +294,36 @@ export const SocketProvider = ({ children }) => {
       console.log("👤 User left conversation:", data.username);
     });
 
+    // Message notifications - Add comprehensive event logging
+    newSocket.on("newMessage", (messageData) => {
+      console.log("🔥 SOCKETPROVIDER: newMessage event received:", messageData);
+    });
+
+    newSocket.on("new-message", (messageData) => {
+      console.log("🔥 SOCKETPROVIDER: new-message event received:", messageData);
+    });
+
+    newSocket.on("message-received", (messageData) => {
+      console.log("🔥 SOCKETPROVIDER: message-received event received:", messageData);
+    });
+
+    newSocket.on("message-read", (data) => {
+      console.log("🔥 SOCKETPROVIDER: message-read event received:", data);
+    });
+
+    // Listen for ALL events for debugging
+    newSocket.onAny((eventName, ...args) => {
+      console.log(`🔥 SOCKETPROVIDER: ANY EVENT "${eventName}":`, args);
+    });
+
     // Error handling
     newSocket.on("error", (error) => {
       console.error("❌ Socket error:", error);
       setConnectionError(error.message);
     });
 
+    // Store as global singleton
+    globalSocket = newSocket;
     socketRef.current = newSocket;
     setSocket(newSocket);
 
@@ -301,13 +338,22 @@ export const SocketProvider = ({ children }) => {
       // Remove all event listeners
       eventListeners.current.forEach((listeners, event) => {
         listeners.forEach((listener) => {
-          socketRef.current.off(event, listener);
+          socketRef.current?.off(event, listener);
         });
       });
       eventListeners.current.clear();
 
-      // Disconnect socket
-      socketRef.current.disconnect();
+      // Only disconnect if this is the last reference
+      if (socketRef.current === globalSocket) {
+        if (globalSocket?.connected) {
+          globalSocket.disconnect();
+        }
+        if (globalSocket) {
+          globalSocket.removeAllListeners();
+        }
+        globalSocket = null;
+      }
+      
       socketRef.current = null;
       setSocket(null);
       setIsConnected(false);
@@ -320,12 +366,24 @@ export const SocketProvider = ({ children }) => {
   // Initialize socket when user is authenticated or mode changes
   useEffect(() => {
     if (currentUser && isAuthenticated) {
+      // Prevent multiple connections - check both local and global socket
+      if (socketRef.current?.connected || (globalSocket && globalSocket.connected)) {
+        console.log("🔌 Socket: Already connected, skipping initialization");
+        // If global socket exists but local ref doesn't, sync them
+        if (globalSocket && !socketRef.current) {
+          socketRef.current = globalSocket;
+          setSocket(globalSocket);
+          setIsConnected(true);
+        }
+        return;
+      }
+
       // Clean up existing connection before creating new one
       cleanup();
-      
+
       // Small delay to ensure cleanup is complete
       const timer = setTimeout(() => {
-        const newSocket = initializeSocket();
+        initializeSocket();
       }, 100);
 
       return () => {
@@ -335,7 +393,14 @@ export const SocketProvider = ({ children }) => {
     } else {
       cleanup();
     }
-  }, [currentUser, isAuthenticated, mode, businessProfile, initializeSocket, cleanup]);
+  }, [
+    currentUser,
+    isAuthenticated,
+    mode,
+    businessProfile,
+    initializeSocket,
+    cleanup,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {

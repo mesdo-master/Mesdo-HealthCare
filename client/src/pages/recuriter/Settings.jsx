@@ -146,7 +146,7 @@ const RecruiterSettings = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 ml-[-200px]">
+    <div className="flex flex-col h-screen bg-white ml-[-200px]">
       <div className="flex flex-1 overflow-hidden pt-16">
         <div className="flex-1 ml-[300px] overflow-y-auto p-8">
           <div className="max-w-5xl mx-auto">
@@ -179,19 +179,19 @@ const RecruiterSettings = () => {
               <div className="p-6">
                 {activeTab === "Account" && (
                   <div>
-                    <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                    <div className="flex justify-between items-start mb-6">
                       <div>
-                        <h2 className="text-lg font-medium text-gray-900">
-                          Organization Profile
+                        <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                          Your Team
                         </h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Please update your organization profile settings here
+                        <p className="text-sm text-gray-500 mb-6">
+                          Please update your profile settings here
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
                         <button
                           disabled={isSaving}
-                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
                         >
                           Cancel
                           <X className="w-4 h-4" />
@@ -199,7 +199,7 @@ const RecruiterSettings = () => {
                         <button
                           onClick={handleSave}
                           disabled={isSaving}
-                          className="px-3 py-1.5 text-sm font-medium text-white rounded-full disabled:opacity-50 flex items-center gap-2"
+                          className="px-3 py-1.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
                           style={{
                             background:
                               "linear-gradient(90deg, rgba(24,144,255,1) 0%, rgba(0,106,204,1) 100%)",
@@ -211,106 +211,250 @@ const RecruiterSettings = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-3 gap-8 items-center border-b border-gray-100 pb-6">
-                        <label className="text-sm font-medium text-black">
-                          Organization Name
-                        </label>
-                        <div className="col-span-2">
-                          <input
-                            type="text"
-                            value={formData.orgName}
-                            disabled
-                            className="w-[500px] mt-1 h-10 rounded-full border border-gray-200 px-3 text-gray-700 text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          />
+                    <div className="border-t border-gray-200 pt-6">
+                      <div className="space-y-6">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm flex items-center">
+                            Organisation Name
+                            <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
+                          </label>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={formData.orgName}
+                              disabled
+                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-8 items-center border-b border-gray-100 pb-6">
-                        <label className="text-sm font-medium text-black">
-                          Phone Number
-                        </label>
-                        <div className="col-span-2">
-                          <PhoneInput
-                            country={"gb"}
-                            enableAreaCodes={true}
-                            enableSearch={true}
-                            value={`${formData.countryCode}${formData.phoneNo}`}
-                            onChange={handlePhoneChange}
-                            inputClass="!w-[500px] !h-10 !rounded-full !border !border-gray-200 !pl-14 !pr-3 !text-gray-700 !text-sm !font-normal !focus:outline-none !focus:ring-1 !focus:ring-blue-500"
-                            buttonClass="!border-gray-200 !bg-white !h-10 !w-12"
-                            dropdownClass="!shadow-md !border-gray-200"
-                            searchClass="!bg-white !text-sm !border-gray-200"
-                          />
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                            Organisation Email
+                          </label>
+                          <div className="flex-1">
+                            <input
+                              type="email"
+                              value={
+                                businessProfile?.email || "yourexample@.com"
+                              }
+                              disabled
+                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-8 items-start border-b border-gray-100 pb-6">
-                        <label className="text-sm font-medium text-black pt-2">
-                          Profile Picture
-                        </label>
-                        <div className="col-span-2">
-                          <div className="flex items-start gap-4">
-                            <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                              <img
-                                src={formData.profilePic}
-                                alt="Profile"
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <div
-                                className="border border-dashed border-gray-300 rounded-xl h-[150px] w-[430px] p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 transition-colors cursor-pointer bg-white"
-                                onClick={() => fileInputRef.current?.click()}
-                                onDragOver={handleDragOver}
-                                onDrop={handleDrop}
-                              >
-                                <FileDown
-                                  className="w-8 h-8 mb-2 bg-gray-200 rounded-full p-1"
-                                  style={{ color: "rgba(24, 144, 255, 1)" }}
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                            City
+                          </label>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={businessProfile?.city || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  city: e.target.value,
+                                })
+                              }
+                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="Enter city"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                            Country
+                          </label>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={businessProfile?.state || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  state: e.target.value,
+                                })
+                              }
+                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="Enter country"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
+                            Profile Picture
+                          </label>
+                          <div className="flex-1">
+                            <div className="flex items-start gap-4">
+                              <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                <img
+                                  src={formData.profilePic}
+                                  alt="Profile"
+                                  className="h-full w-full object-cover"
                                 />
-                                <div className="flex flex-row items-center">
-                                  <span className="text-[#1890FF] text-sm font-medium inline">
-                                    Click here
+                              </div>
+                              <div className="flex-1">
+                                <div
+                                  className="border border-dashed border-gray-300 rounded-xl h-[150px] w-[430px] p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 transition-colors cursor-pointer bg-white"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  onDragOver={handleDragOver}
+                                  onDrop={handleDrop}
+                                >
+                                  <FileDown
+                                    className="w-8 h-8 mb-2 bg-gray-200 rounded-full p-1"
+                                    style={{ color: "rgba(24, 144, 255, 1)" }}
+                                  />
+                                  <div className="flex flex-row items-center">
+                                    <span className="text-[#1890FF] text-sm font-medium inline">
+                                      Click here
+                                    </span>
+                                    <span className="text-gray-500 text-xs ml-1 inline">
+                                      to upload your file or drag.
+                                    </span>
+                                  </div>
+                                  <span className="text-gray-500 text-xs mt-0.5">
+                                    Supported Format: SVG, JPG, PNG (10MB each)
                                   </span>
-                                  <span className="text-gray-500 text-xs ml-1 inline">
-                                    to upload your file or drag.
-                                  </span>
+                                  <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                  />
                                 </div>
-                                <span className="text-gray-500 text-xs mt-0.5">
-                                  Supported Format: SVG, JPG, PNG (10MB each)
-                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
+                          <label className="flex items-center w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
+                            Description
+                            <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
+                          </label>
+                          <div className="flex-1">
+                            <textarea
+                              value={formData.bio}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  bio: e.target.value,
+                                })
+                              }
+                              rows={4}
+                              className="w-full md:w-[500px] rounded-lg h-[150px] border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                              placeholder="Tell us about your organization."
+                            />
+                            <div className="text-xs text-gray-500 mt-1">
+                              {500 - (formData.bio?.length || 0)} characters
+                              remaining
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Your Team Section */}
+                      <div className="mt-8 pt-6 border-t border-gray-200">
+                        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
+                          <label className="flex items-center w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
+                            Your Team
+                            <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
+                          </label>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-4">
+                              <button className="text-[#1890FF] text-sm font-medium hover:underline">
+                                Invite Members
+                              </button>
+                            </div>
+
+                            {/* Search and Filter */}
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="relative flex-1 max-w-xs">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <input
-                                  ref={fileInputRef}
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={handleImageUpload}
+                                  type="text"
+                                  placeholder="Search"
+                                  className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 />
+                              </div>
+                              <button className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+                                Filter
+                              </button>
+                            </div>
+
+                            {/* Team Members List */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img
+                                      src="https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                                      alt="Profile"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900">
+                                      Dr. Rajeev Bhatia
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Primary Contact
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="px-2 py-1 text-xs font-medium text-blue-600 bg-white border border-blue-200 rounded-full">
+                                  Admin
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <img
+                                      src="https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                                      alt="Profile"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900">
+                                      Dr. Rajeev Bhatia
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Recruiter
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full">
+                                  Member
+                                </span>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-8 items-start">
-                        <label className="flex items-center text-sm font-medium text-black pt-2">
-                          About
-                          <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
-                        </label>
-                        <div className="col-span-2">
-                          <textarea
-                            value={formData.bio}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                bio: e.target.value,
-                              })
-                            }
-                            rows={4}
-                            className="w-[500px] rounded-lg h-[150px] border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                            placeholder="Tell us about your organization."
-                          />
+                      {/* Delete Account Section */}
+                      <div className="mt-8 pt-6 border-t border-gray-200">
+                        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-red-600 font-normal text-sm pt-2">
+                            Delete Account
+                          </label>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-500 mb-4">
+                              Permanently delete the account, all your saved
+                              data, preferences, and activity history will be
+                              lost.
+                            </p>
+                            <button className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+                              Delete Account
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

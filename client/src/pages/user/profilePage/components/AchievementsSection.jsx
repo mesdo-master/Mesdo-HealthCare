@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pencil, AwardIcon, Trash2 } from "lucide-react";
+import { Pencil, AwardIcon } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
 
 const AchievementsSection = ({
@@ -112,13 +112,6 @@ const AchievementsSection = ({
                     aria-label="Edit achievement"
                   >
                     <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteAchievement(achievement.id)}
-                    className="text-gray-400 hover:text-red-500 p-2 rounded-full transition"
-                    aria-label="Delete achievement"
-                  >
-                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               )}

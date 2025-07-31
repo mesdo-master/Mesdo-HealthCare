@@ -16,7 +16,7 @@ export default function MessagesView({ applicant }) {
   const { currentUser, businessProfile } = useSelector((state) => state.auth);
   const [conversationId, setConversationId] = useState();
 
-  const socket = useSocket();
+  const { on, off, isConnected } = useSocket();
   const { jobId } = useParams();
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function MessagesView({ applicant }) {
   }, [conversationId]);
 
   useEffect(() => {
-    if (!socket || !otherUser || !currentUser) return;
+    if (!isConnected || !otherUser || !currentUser) return;
 
     const handleNewMessage = (newMessage) => {
       // Check if the sender is either the current user or the otherUser
@@ -79,12 +79,12 @@ export default function MessagesView({ applicant }) {
       }
     };
 
-    socket.on("newMessage", handleNewMessage);
+    on("newMessage", handleNewMessage);
 
     return () => {
-      socket.off("newMessage", handleNewMessage);
+      off("newMessage", handleNewMessage);
     };
-  }, [socket, currentUser, otherUser]);
+  }, [on, off, isConnected, currentUser, otherUser, businessProfile]);
 
   const emptyMessagesText = [
     "No messages yet. Looks like a clean slate 🧼",

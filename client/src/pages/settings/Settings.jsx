@@ -222,19 +222,19 @@ const Settings = () => {
               <div className="p-6">
                 {activeTab === "Account" && (
                   <div>
-                    <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                    <div className="flex justify-between items-start mb-6">
                       <div>
-                        <h2 className="text-lg font-medium text-gray-900">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-1">
                           Your Profile
                         </h2>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-gray-500 mb-6">
                           Please update your profile settings here
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
                         <button
                           disabled={isSaving}
-                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
                         >
                           Cancel
                           <X className="w-4 h-4" />
@@ -242,7 +242,7 @@ const Settings = () => {
                         <button
                           onClick={handleSave}
                           disabled={isSaving}
-                          className="px-3 py-1.5 text-sm font-medium text-white rounded-full disabled:opacity-50 flex items-center gap-2"
+                          className="px-3 py-1.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
                           style={{
                             background:
                               "linear-gradient(90deg, rgba(24,144,255,1) 0%, rgba(0,106,204,1) 100%)",
@@ -254,106 +254,108 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-3 gap-8 items-center border-b border-gray-100 pb-6">
-                        <label className="text-sm font-medium text-black">
-                          Username
-                        </label>
-                        <div className="col-span-2">
-                          <input
-                            type="text"
-                            value={formData.username}
-                            disabled
-                            className="w-[500px] mt-1 h-10 rounded-full border border-gray-200 px-3 text-gray-700 text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          />
+                    <div className="border-t border-gray-200 pt-6">
+                      <div className="space-y-6">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                            Username
+                          </label>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={formData.username}
+                              disabled
+                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-8 items-center border-b border-gray-100 pb-6">
-                        <label className="text-sm font-medium text-black">
-                          Phone Number
-                        </label>
-                        <div className="col-span-2">
-                          <PhoneInput
-                            country={"gb"}
-                            enableAreaCodes={true}
-                            enableSearch={true}
-                            value={`${formData.countryCode}${formData.phoneNo}`}
-                            onChange={handlePhoneChange}
-                            inputClass="!w-[500px] !h-10 !rounded-full !border !border-gray-200 !pl-14 !pr-3 !text-gray-700 !text-sm !font-normal !focus:outline-none !focus:ring-1 !focus:ring-blue-500"
-                            buttonClass="!border-gray-200 !bg-white !h-10 !w-12"
-                            dropdownClass="!shadow-md !border-gray-200"
-                            searchClass="!bg-white !text-sm !border-gray-200"
-                          />
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                            Phone Number
+                          </label>
+                          <div className="flex-1">
+                            <PhoneInput
+                              country={"gb"}
+                              enableAreaCodes={true}
+                              enableSearch={true}
+                              value={`${formData.countryCode}${formData.phoneNo}`}
+                              onChange={handlePhoneChange}
+                              inputClass="!w-full !md:w-[500px] !h-10 !rounded-lg !border !border-gray-200 !pl-14 !pr-3 !text-gray-700 !text-sm !font-normal !focus:outline-none !focus:ring-1 !focus:ring-blue-500"
+                              buttonClass="!border-gray-200 !bg-white !h-10 !w-12"
+                              dropdownClass="!shadow-md !border-gray-200"
+                              searchClass="!bg-white !text-sm !border-gray-200"
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-8 items-start border-b border-gray-100 pb-6">
-                        <label className="text-sm font-medium text-black pt-2">
-                          Profile Picture
-                        </label>
-                        <div className="col-span-2">
-                          <div className="flex items-start gap-4">
-                            <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                              <img
-                                src={formData.profilePic}
-                                alt="Profile"
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <div
-                                className="border border-dashed border-gray-300 rounded-xl h-[150px] w-[430px] p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 transition-colors cursor-pointer bg-white"
-                                onClick={() => fileInputRef.current?.click()}
-                                onDragOver={handleDragOver}
-                                onDrop={handleDrop}
-                              >
-                                <FileDown
-                                  className="w-8 h-8 mb-2 bg-gray-200 rounded-full p-1"
-                                  style={{ color: "rgba(24, 144, 255, 1)" }}
+                        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
+                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
+                            Profile Picture
+                          </label>
+                          <div className="flex-1">
+                            <div className="flex items-start gap-4">
+                              <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                <img
+                                  src={formData.profilePic}
+                                  alt="Profile"
+                                  className="h-full w-full object-cover"
                                 />
-                                <div className="flex flex-row items-center">
-                                  <span className="text-[#1890FF] text-sm font-medium inline">
-                                    Click here
+                              </div>
+                              <div className="flex-1">
+                                <div
+                                  className="border border-dashed border-gray-300 rounded-xl h-[150px] w-full md:w-[430px] p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 transition-colors cursor-pointer bg-white"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  onDragOver={handleDragOver}
+                                  onDrop={handleDrop}
+                                >
+                                  <FileDown
+                                    className="w-8 h-8 mb-2 bg-gray-200 rounded-full p-1"
+                                    style={{ color: "rgba(24, 144, 255, 1)" }}
+                                  />
+                                  <div className="flex flex-row items-center">
+                                    <span className="text-[#1890FF] text-sm font-medium inline">
+                                      Click here
+                                    </span>
+                                    <span className="text-gray-500 text-xs ml-1 inline">
+                                      to upload your file or drag.
+                                    </span>
+                                  </div>
+                                  <span className="text-gray-500 text-xs mt-0.5">
+                                    Supported Format: SVG, JPG, PNG (10MB each)
                                   </span>
-                                  <span className="text-gray-500 text-xs ml-1 inline">
-                                    to upload your file or drag.
-                                  </span>
+                                  <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                  />
                                 </div>
-                                <span className="text-gray-500 text-xs mt-0.5">
-                                  Supported Format: SVG, JPG, PNG (10MB each)
-                                </span>
-                                <input
-                                  ref={fileInputRef}
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={handleImageUpload}
-                                />
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-8 items-start">
-                        <label className="flex items-center text-sm font-medium text-black pt-2">
-                          Biography
-                          <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
-                        </label>
-                        <div className="col-span-2">
-                          <textarea
-                            value={formData.bio}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                bio: e.target.value,
-                              })
-                            }
-                            rows={4}
-                            className="w-[500px] rounded-lg h-[150px] border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                            placeholder="Hi there! 👋 I'm X-AE-A-19, an AI enthusiast and fitness aficionado."
-                          />
+                        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
+                          <label className="flex items-center w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
+                            Biography
+                            <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
+                          </label>
+                          <div className="flex-1">
+                            <textarea
+                              value={formData.bio}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  bio: e.target.value,
+                                })
+                              }
+                              rows={4}
+                              className="w-full md:w-[500px] rounded-lg h-[150px] border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                              placeholder="Hi there! 👋 I'm X-AE-A-19, an AI enthusiast and fitness aficionado."
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -6,16 +6,20 @@ import reportWebVitals from './reportWebVitals';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
 import { SocketProvider } from './context/SocketProvider';
+import { NotificationProvider } from './context/NotificationContextFinal';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  // Temporarily disabled StrictMode to fix socket duplicate connections
+  // <React.StrictMode>
     <Provider store={store}>
       <SocketProvider>
-        <App />
+        <NotificationProvider>
+          <App />
+        </NotificationProvider>
       </SocketProvider>
     </Provider>
-  </React.StrictMode>
+  // </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

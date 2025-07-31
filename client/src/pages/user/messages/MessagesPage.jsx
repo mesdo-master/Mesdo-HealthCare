@@ -5,18 +5,24 @@ import ChatContainer from "./components/ChatContainer";
 import { useParams } from "react-router-dom";
 import axiosInstance from "../../../lib/axio";
 import { useSocket } from "../../../context/SocketProvider";
+import { useNotifications } from "../../../context/NotificationContextFinal";
 
 function Messages() {
   const { conversationId } = useParams();
   // ✅ Get socket connection status
   const { isConnected, connectionError, reconnect } = useSocket();
+  const { markConversationAsRead } = useNotifications();
 
   const [selectedConversation, setSelectedConversation] =
     useState(conversationId);
 
   useEffect(() => {
     setSelectedConversation(conversationId);
-  }, [conversationId]);
+    // Mark conversation as read when opened
+    if (conversationId) {
+      markConversationAsRead(conversationId);
+    }
+  }, [conversationId, markConversationAsRead]);
 
   const [activeTab, setActiveTab] = useState("Personal");
   const [selectedUser, setSelectedUser] = useState(null);

@@ -86,6 +86,7 @@ const OverviewTab = ({
                 openModal={openModal}
                 setActiveQualificationTab={setActiveQualificationTab}
                 setEditingQualification={setEditingQualification}
+                setActiveModalTab={setActiveModalTab}
                 userData={userData}
               />
 

@@ -11,6 +11,7 @@ import { MdWork } from "react-icons/md";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { SlBadge } from "react-icons/sl";
+import { CheckCircle, XCircle } from "lucide-react";
 import Resume from "./Resume";
 import Message from "./Message";
 import { useNavigate } from "react-router-dom";
@@ -27,50 +28,62 @@ const schoolIcon2 =
 const schoolIcon3 =
   "https://res.cloudinary.com/dy9voteoc/image/upload/v1744904312/School_3_egvf9b.png";
 // HEADER with three sections: Job Application, Resume, Message
-function TopBar({ setSelectedApplicant, applicants = [], currentIndex = 0 }) {
+function TopBar({
+  setSelectedApplicant,
+  applicants = [],
+  currentIndex = 0,
+  onClose,
+}) {
   const navigate = useNavigate();
   const total = applicants.length;
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white mt-[7vh]">
+    <div className="sticky top-0 h-16 bg-white flex items-center justify-between px-8 z-10 border-b border-[#E5E7EB]">
       {/* Left side: back/forward arrows + "1 out of 10" */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-3 ml-2">
         {/* Back Button - Navigates to Applicants Section */}
         <button
-          className="p-1 text-gray-600 hover:text-gray-900"
+          className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
           onClick={() => navigate("/applicants/:jobTitle")}
+          aria-label="Back to Applicants"
         >
-          <AiOutlineArrowLeft className="text-lg" />
+          <AiOutlineArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
         <button
-          className="p-1 text-gray-600 hover:text-gray-900"
+          className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
           onClick={() => {
             if (currentIndex > 0)
               setSelectedApplicant(applicants[currentIndex - 1]);
           }}
           disabled={currentIndex === 0}
+          aria-label="Previous Applicant"
         >
-          <AiOutlineUp className="text-lg rotate-[-90deg]" />
+          <AiOutlineUp className="w-5 h-5 text-gray-700 rotate-[-90deg]" />
         </button>
-        <span className="text-sm text-gray-500">
+        <span
+          className="text-sm text-gray-500 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           {total > 0 ? `${currentIndex + 1} out of ${total}` : "-"}
         </span>
         <button
-          className="p-1 text-gray-600 hover:text-gray-900"
+          className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
           onClick={() => {
             if (currentIndex < total - 1)
               setSelectedApplicant(applicants[currentIndex + 1]);
           }}
           disabled={currentIndex === total - 1}
+          aria-label="Next Applicant"
         >
-          <AiOutlineDown className="text-lg rotate-[-90deg]" />
+          <AiOutlineDown className="w-5 h-5 text-gray-700 rotate-[-90deg]" />
         </button>
       </div>
       {/* Right side: close icon */}
       <button
-        className="p-1 text-gray-600 hover:text-gray-900"
-        onClick={() => setSelectedApplicant(null)}
+        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 mr-2"
+        onClick={onClose || (() => setSelectedApplicant(null))}
+        aria-label="Close"
       >
-        <AiOutlineClose className="text-xl" />
+        <AiOutlineClose className="w-5 h-5 text-gray-700" />
       </button>
     </div>
   );
@@ -87,6 +100,11 @@ function ProfileHeaderWithTabs({
   const [currentStatus, setCurrentStatus] = useState(
     applicant.status || "Applied"
   );
+
+  // Update currentStatus when applicant status changes
+  useEffect(() => {
+    setCurrentStatus(applicant.status || "Applied");
+  }, [applicant.status]);
 
   const handleAcceptApplication = async () => {
     try {
@@ -160,45 +178,8 @@ function ProfileHeaderWithTabs({
   };
 
   const renderActionButtons = () => {
-    if (currentStatus === "Accepted") {
-      return (
-        <div className="flex items-center space-x-2">
-          <div
-            className={`flex items-center justify-center rounded-md text-sm font-medium ${getStatusColor(
-              "Accepted"
-            )}`}
-            style={{
-              width: "141px",
-              height: "48px",
-              borderRadius: "6px",
-              padding: "12px 24px 12px 32px",
-              gap: "8px",
-            }}
-          >
-            <span>Accepted</span> ✔
-          </div>
-        </div>
-      );
-    } else if (currentStatus === "Rejected") {
-      return (
-        <div className="flex items-center space-x-2">
-          <div
-            className={`flex items-center justify-center rounded-md text-sm font-medium ${getStatusColor(
-              "Rejected"
-            )}`}
-            style={{
-              width: "141px",
-              height: "48px",
-              borderRadius: "6px",
-              padding: "12px 24px 12px 32px",
-              gap: "8px",
-            }}
-          >
-            <span>Rejected</span> ✖
-          </div>
-        </div>
-      );
-    } else {
+    // Show Accept/Reject buttons only for "Applied" status
+    if (currentStatus === "Applied") {
       return (
         <div className="flex items-center space-x-2">
           <button
@@ -214,7 +195,7 @@ function ProfileHeaderWithTabs({
             }}
           >
             <span>{loading ? "Processing..." : "Accept"}</span>{" "}
-            {!loading && "✔"}
+            {!loading && <CheckCircle className="w-5 h-5 text-green-600" />}
           </button>
 
           <button
@@ -230,33 +211,67 @@ function ProfileHeaderWithTabs({
             }}
           >
             <span>{loading ? "Processing..." : "Reject"}</span>{" "}
-            {!loading && "✖"}
+            {!loading && <XCircle className="w-5 h-5 text-red-600" />}
           </button>
+        </div>
+      );
+    } else {
+      // Show current status badge for all other statuses
+      return (
+        <div className="flex items-center space-x-2">
+          <div
+            className={`flex items-center justify-center rounded-md text-sm font-medium ${getStatusColor(
+              currentStatus
+            )} gap-2`}
+            style={{
+              width: "141px",
+              height: "48px",
+              borderRadius: "6px",
+              padding: "12px 24px 12px 32px",
+            }}
+          >
+            <span>{currentStatus}</span>
+            {currentStatus === "Accepted" && (
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            )}
+            {currentStatus === "Rejected" && (
+              <XCircle className="w-5 h-5 text-red-600" />
+            )}
+            {currentStatus !== "Accepted" && currentStatus !== "Rejected" && (
+              <span style={{ width: 20, display: "inline-block" }} />
+            )}
+          </div>
         </div>
       );
     }
   };
 
   return (
-    <div className="bg-white shadow-sm">
+    <div className="bg-white shadow-sm border-b border-gray-200">
       {/* Profile Info */}
-      <div className="flex items-center justify-between px-4 py-4 h-38">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between px-8 pt-6 pb-4">
+        <div className="flex items-center gap-5 flex-1">
           <img
             src={
               applicant.profilePicture ||
               "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
             }
             alt="Profile"
-            className="w-14 h-14 rounded-full object-cover"
+            className="w-16 h-16 rounded-lg object-cover border border-gray-100"
           />
-          <div>
-            <h1 className="text-base font-semibold text-gray-800">
+          <div className="flex flex-col gap-1">
+            <span
+              className="text-2xl font-medium text-gray-900 leading-tight font-inter"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
               {applicant.name}
-            </h1>
-            {/* <p className="text-sm text-gray-500">
-              Dermatologist at Apollo Hospital | MBBS ---> change this in the future
-            </p> */}
+            </span>
+            <span
+              className="text-base text-gray-500 font-normal font-inter"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              {applicant.email}
+            </span>
           </div>
         </div>
 
@@ -264,26 +279,41 @@ function ProfileHeaderWithTabs({
         {renderActionButtons()}
       </div>
 
-      {/* Spacing between profile details and tabs */}
-      <div className="border-t border-gray-200"></div>
-
       {/* Tabs */}
-      <div className="flex items-center space-x-6 px-4 mt-2">
-        <TabItem
-          label="Job Application"
-          active={activeTab === "jobApplication"}
+      <div className="flex gap-8 px-8 border-b text-base font-medium">
+        <button
+          className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
+            activeTab === "jobApplication"
+              ? "border-[#222] text-[#222]"
+              : "border-transparent text-gray-500 hover:text-[#222]"
+          }`}
           onClick={() => onTabClick("jobApplication")}
-        />
-        <TabItem
-          label="Resume"
-          active={activeTab === "Resume"}
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          <MdWork size={18} /> Job Application
+        </button>
+        <button
+          className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
+            activeTab === "Resume"
+              ? "border-[#222] text-[#222]"
+              : "border-transparent text-gray-500 hover:text-[#222]"
+          }`}
           onClick={() => onTabClick("Resume")}
-        />
-        <TabItem
-          label="Messages"
-          active={activeTab === "Messages"}
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          Resume
+        </button>
+        <button
+          className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
+            activeTab === "Messages"
+              ? "border-[#222] text-[#222]"
+              : "border-transparent text-gray-500 hover:text-[#222]"
+          }`}
           onClick={() => onTabClick("Messages")}
-        />
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          Messages
+        </button>
       </div>
     </div>
   );
@@ -293,9 +323,10 @@ function TabItem({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`relative py-3 text-sm font-medium text-gray-600 hover:text-gray-800 transition ${
+      className={`relative py-3 text-sm font-medium text-gray-600 hover:text-gray-800 transition font-inter ${
         active ? "text-gray-800" : ""
       }`}
+      style={{ fontFamily: "Inter, sans-serif" }}
     >
       {label}
       {active && (
@@ -314,6 +345,7 @@ function ProfileHeader({
   onStatusUpdate,
   applicants = [],
   currentIndex = 0,
+  onClose,
 }) {
   const [applicantStatus, setApplicantStatus] = useState(
     applicant.status || "Applied"
@@ -333,6 +365,7 @@ function ProfileHeader({
         setSelectedApplicant={setSelectedApplicant}
         applicants={applicants}
         currentIndex={currentIndex}
+        onClose={onClose}
       />
       <ProfileHeaderWithTabs
         activeTab={activeTab}
@@ -372,12 +405,18 @@ function ProfileHeader({
 // About + Qualification Container with a tracking line style
 function AboutSection({ applicant }) {
   return (
-    <div className="bg-white rounded-md shadow-sm p-4 md:p-6">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
       {/* Title */}
-      <h2 className="text-lg font-semibold text-gray-800 mb-2">About</h2>
+      <h2
+        className="text-lg font-medium text-gray-800 mb-4 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
+        About
+      </h2>
       {/* Render HTML */}
       <div
-        className="text-sm text-gray-600 leading-relaxed"
+        className="text-sm text-gray-700 leading-relaxed font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
         dangerouslySetInnerHTML={{
           __html: applicant?.about || "<em>No information provided.</em>",
         }}
@@ -391,8 +430,11 @@ function QualificationSection({ applicant }) {
   const educationList = applicant?.education || [];
 
   return (
-    <div className="bg-white rounded-md shadow-sm p-4 md:p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+      <h2
+        className="text-lg font-medium text-gray-800 mb-4 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
         Qualification
       </h2>
 
@@ -409,7 +451,10 @@ function QualificationSection({ applicant }) {
           ))}
         </div>
       ) : (
-        <div className="text-sm text-gray-500 italic">
+        <div
+          className="text-sm text-gray-500 italic font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           No qualifications added yet.
         </div>
       )}
@@ -422,9 +467,24 @@ function QualificationItem({ icon, title, institute, date }) {
     <div className="flex items-start space-x-3">
       <div className="mt-1">{icon}</div>
       <div>
-        <p className="text-sm font-semibold text-gray-800">{title}</p>
-        <p className="text-sm text-gray-600">{institute}</p>
-        <p className="text-xs text-gray-500 mt-1">{date}</p>
+        <p
+          className="text-sm font-medium text-gray-800 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {title}
+        </p>
+        <p
+          className="text-sm text-gray-600 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {institute}
+        </p>
+        <p
+          className="text-xs text-gray-500 mt-1 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {date}
+        </p>
       </div>
     </div>
   );
@@ -435,8 +495,11 @@ function WorkExperienceSection({ applicant }) {
   const experiences = applicant?.experience || [];
 
   return (
-    <div className="bg-white rounded-md shadow-sm p-4 md:p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+      <h2
+        className="text-lg font-medium text-gray-800 mb-4 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
         Work Experience
       </h2>
 
@@ -454,7 +517,10 @@ function WorkExperienceSection({ applicant }) {
           ))}
         </div>
       ) : (
-        <div className="text-sm text-gray-500 italic">
+        <div
+          className="text-sm text-gray-500 italic font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           No work experience added yet.
         </div>
       )}
@@ -476,12 +542,28 @@ function WorkExperienceItem({
 
       {/* Content */}
       <div>
-        <p className="text-sm font-semibold text-gray-800">{title}</p>
-        <p className="text-sm text-gray-600 mt-0.5">{organization}</p>
-        <p className="text-xs text-gray-500 mt-1">{date}</p>
+        <p
+          className="text-sm font-medium text-gray-800 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {title}
+        </p>
+        <p
+          className="text-sm text-gray-600 mt-0.5 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {organization}
+        </p>
+        <p
+          className="text-xs text-gray-500 mt-1 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {date}
+        </p>
 
         <div
-          className="mt-2 text-sm text-gray-600 leading-relaxed space-y-2"
+          className="mt-2 text-sm text-gray-600 leading-relaxed space-y-2 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
           dangerouslySetInnerHTML={{ __html: htmlDescription }}
         />
       </div>
@@ -495,10 +577,13 @@ function SkillsCertificatesSection({ applicant }) {
   const certifications = applicant?.certifications || [];
 
   return (
-    <div className="bg-white rounded-md shadow-sm p-4 md:p-6 space-y-8">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 space-y-8">
       {/* Skills Section */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <h2
+          className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           <FaTools className="text-blue-600" /> Skills
         </h2>
         {skills.length > 0 ? (
@@ -506,14 +591,18 @@ function SkillsCertificatesSection({ applicant }) {
             {skills.map((skill, index) => (
               <span
                 key={index}
-                className="inline-block bg-blue-50 text-blue-700 text-sm py-1 px-3 rounded-full"
+                className="inline-block bg-blue-50 text-blue-700 text-sm py-1 px-3 rounded-full font-inter"
+                style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {skill}
               </span>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 mt-2 italic">
+          <p
+            className="text-sm text-gray-500 mt-2 italic font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
             No skills added yet.
           </p>
         )}
@@ -521,7 +610,10 @@ function SkillsCertificatesSection({ applicant }) {
 
       {/* Certificates Section */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <h2
+          className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           <SlBadge className="text-yellow-600" /> Certificates &amp; Awards
         </h2>
         {certifications.length > 0 ? (
@@ -537,7 +629,10 @@ function SkillsCertificatesSection({ applicant }) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 mt-2 italic">
+          <p
+            className="text-sm text-gray-500 mt-2 italic font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
             No certificates or awards added yet.
           </p>
         )}
@@ -550,7 +645,10 @@ function CertificateItem({ name, issuer, date, icon }) {
   return (
     <div className="flex items-start space-x-3">
       {icon}
-      <div className="text-sm text-gray-600">
+      <div
+        className="text-sm text-gray-600 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
         <p className="font-medium text-gray-800">{name}</p>
         <p className="mt-1">
           {issuer} | {date}
@@ -574,8 +672,9 @@ function ApplicationStatusDropdown({
   );
   const [loading, setLoading] = useState(false);
 
-  // Determine if dropdown should be enabled based on current status
-  const isDropdownEnabled = currentStatus === "Accepted";
+  // Enable dropdown for any status except 'Applied' and 'Rejected'
+  const isDropdownEnabled =
+    currentStatus !== "Applied" && currentStatus !== "Rejected";
 
   const toggleOpen = () => {
     if (isDropdownEnabled) {
@@ -618,11 +717,7 @@ function ApplicationStatusDropdown({
   // Update selectedStatus when currentStatus changes
   React.useEffect(() => {
     setSelectedStatus(currentStatus || "Applied");
-
-    // Auto-open dropdown when status changes to "Accepted"
-    if (currentStatus === "Accepted") {
-      setIsOpen(true);
-    }
+    if (isDropdownEnabled) setIsOpen(false);
   }, [currentStatus]);
 
   // Define colors based on selected status
@@ -653,7 +748,7 @@ function ApplicationStatusDropdown({
 
   return (
     <div
-      className={`rounded-md shadow-sm ${
+      className={`rounded-xl shadow-sm border border-gray-100 ${
         !isDropdownEnabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
       }`}
       style={{
@@ -669,12 +764,22 @@ function ApplicationStatusDropdown({
         onClick={toggleOpen}
       >
         <div className="flex items-center space-x-2">
-          <h2 className="text-base font-medium" style={{ color: getColor() }}>
+          <h2
+            className="text-base font-medium font-inter"
+            style={{ color: getColor(), fontFamily: "Inter, sans-serif" }}
+          >
             {selectedStatus}
           </h2>
           {!isDropdownEnabled && (
-            <span className="text-xs text-gray-500">
-              (Accept applicant to enable)
+            <span
+              className="text-xs text-gray-500 font-inter"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              {currentStatus === "Applied"
+                ? "(Accept applicant to enable)"
+                : currentStatus === "Rejected"
+                ? "(Rejected applicants cannot be staged)"
+                : null}
             </span>
           )}
         </div>
@@ -694,21 +799,25 @@ function ApplicationStatusDropdown({
 
       {/* Dropdown Content */}
       {isOpen && isDropdownEnabled && (
-        <div className="bg-white p-4 space-y-2 rounded-b-md">
+        <div className="bg-white p-4 space-y-2 rounded-b-xl">
           {statusOptions.map((status) => (
             <button
               key={status}
               disabled={loading}
-              className={`w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 disabled:opacity-50 ${
+              className={`w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 disabled:opacity-50 font-inter ${
                 selectedStatus === status ? "bg-gray-100 font-medium" : ""
               }`}
+              style={{ fontFamily: "Inter, sans-serif" }}
               onClick={() => handleStatusChange(status)}
             >
               {status}
             </button>
           ))}
           {loading && (
-            <div className="text-center text-sm text-gray-500">
+            <div
+              className="text-center text-sm text-gray-500 font-inter"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
               Updating status...
             </div>
           )}
@@ -721,8 +830,16 @@ function ApplicationStatusDropdown({
 function InterviewStage({ label }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-700">{label}</span>
-      <button className="text-sm text-blue-500 hover:text-blue-600">
+      <span
+        className="text-sm text-gray-700 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
+        {label}
+      </span>
+      <button
+        className="text-sm text-blue-500 hover:text-blue-600 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
         Edit
       </button>
     </div>
@@ -731,33 +848,58 @@ function InterviewStage({ label }) {
 
 function PersonalInformation({ applicant }) {
   return (
-    <div className="bg-white rounded-md shadow-sm p-4">
-      <h2 className="text-base font-semibold text-gray-800 mb-3">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+      <h2
+        className="text-lg font-medium text-gray-800 mb-4 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
         Personal Information
       </h2>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-gray-500">Email Address</span>
-        <a
-          href="mailto:rahulthakar@gmail.com"
-          className="text-sm text-blue-600 hover:underline"
-        >
-          {applicant.email}
-        </a>
-      </div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-gray-500">Mobile No.</span>
-        <a
-          href={`tel:+91${applicant.phoneNo}`}
-          className="text-sm text-blue-600 hover:underline"
-        >
-          +91 {applicant.phoneNo}
-        </a>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">Location</span>
-        <span className="text-sm text-gray-700">
-          {applicant.location.city}, {applicant.location.state}
-        </span>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span
+            className="text-sm text-gray-500 font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            Email Address
+          </span>
+          <a
+            href="mailto:rahulthakar@gmail.com"
+            className="text-sm text-blue-600 hover:underline font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            {applicant.email}
+          </a>
+        </div>
+        <div className="flex items-center justify-between">
+          <span
+            className="text-sm text-gray-500 font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            Mobile No.
+          </span>
+          <a
+            href={`tel:+91${applicant.phoneNo}`}
+            className="text-sm text-blue-600 hover:underline font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            +91 {applicant.phoneNo}
+          </a>
+        </div>
+        <div className="flex items-center justify-between">
+          <span
+            className="text-sm text-gray-500 font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            Location
+          </span>
+          <span
+            className="text-sm text-gray-700 font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            {applicant.location.city}, {applicant.location.state}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -787,8 +929,11 @@ function MatchPercentage({ applicant, jobId }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-md shadow-sm p-4 md:p-6 text-center">
-        <div className="text-center text-sm text-gray-500">
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center">
+        <div
+          className="text-center text-sm text-gray-500 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           Loading job details...
         </div>
       </div>
@@ -797,8 +942,11 @@ function MatchPercentage({ applicant, jobId }) {
 
   if (error) {
     return (
-      <div className="bg-white rounded-md shadow-sm p-4 md:p-6 text-center">
-        <div className="text-center text-sm text-red-500">
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center">
+        <div
+          className="text-center text-sm text-red-500 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           Error: {error.message}
         </div>
       </div>
@@ -807,8 +955,11 @@ function MatchPercentage({ applicant, jobId }) {
 
   if (!job) {
     return (
-      <div className="bg-white rounded-md shadow-sm p-4 md:p-6 text-center">
-        <div className="text-center text-sm text-gray-500">
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center">
+        <div
+          className="text-center text-sm text-gray-500 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
           No job data found
         </div>
       </div>
@@ -821,11 +972,17 @@ function MatchPercentage({ applicant, jobId }) {
   const breakdown = getMatchBreakdown(job, applicant);
 
   return (
-    <div className="bg-white rounded-md shadow-sm p-4 md:p-6 text-center">
-      <h3 className="text-base font-medium text-gray-800 mb-1 text-start">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center">
+      <h3
+        className="text-base font-medium text-gray-800 mb-1 text-start font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
         Match Percentage
       </h3>
-      <p className="text-sm text-gray-500 text-start mb-4">
+      <p
+        className="text-sm text-gray-500 text-start mb-4 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
         Here's how well this candidate matches your job criteria.
       </p>
 
@@ -847,20 +1004,36 @@ function MatchPercentage({ applicant, jobId }) {
         />
       </div>
 
-      <p className="text-2xl font-medium text-gray-800 mb-1">{percentage}%</p>
-      <p className="text-sm text-gray-500 mb-4">Match Score</p>
+      <p
+        className="text-2xl font-medium text-gray-800 mb-1 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
+        {percentage}%
+      </p>
+      <p
+        className="text-sm text-gray-500 mb-4 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
+        Match Score
+      </p>
       <hr className="mb-4" />
 
       {/* Qualification */}
       <div className="text-left mt-4">
-        <h3 className="text-lg font-medium text-gray-800">Qualification</h3>
+        <h3
+          className="text-lg font-medium text-gray-800 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          Qualification
+        </h3>
         <div className="flex flex-wrap gap-2 mt-2">
           <span
-            className={`inline-block text-sm py-1 px-3 rounded-md ${
+            className={`inline-block text-sm py-1 px-3 rounded-md font-inter ${
               breakdown?.qualification?.matched
                 ? "bg-[#1890FF] text-white"
                 : "bg-red-100 text-red-600"
             }`}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             {breakdown?.qualification?.userHas ||
               applicant?.education?.[0]?.qualification ||
@@ -871,14 +1044,20 @@ function MatchPercentage({ applicant, jobId }) {
 
       {/* Experience */}
       <div className="text-left mt-4">
-        <h3 className="text-lg font-medium text-gray-800">Experience</h3>
+        <h3
+          className="text-lg font-medium text-gray-800 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          Experience
+        </h3>
         <div className="flex flex-wrap gap-2 mt-2">
           <span
-            className={`inline-block text-sm py-1 px-3 rounded-md ${
+            className={`inline-block text-sm py-1 px-3 rounded-md font-inter ${
               breakdown?.experience?.matched
                 ? "bg-[#1890FF] text-white"
                 : "bg-red-100 text-red-600"
             }`}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             {breakdown?.experience?.userHas
               ? `${breakdown.experience.userHas} Years`
@@ -889,12 +1068,18 @@ function MatchPercentage({ applicant, jobId }) {
 
       {/* Skills */}
       <div className="text-left mt-4">
-        <h3 className="text-lg font-medium text-gray-800">Skills</h3>
+        <h3
+          className="text-lg font-medium text-gray-800 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          Skills
+        </h3>
         <div className="flex flex-wrap gap-2 mt-2">
           {breakdown?.skills?.matched?.map((skill, index) => (
             <span
               key={index}
-              className="inline-block bg-[#1890FF] text-white text-sm py-1 px-3 rounded-md"
+              className="inline-block bg-[#1890FF] text-white text-sm py-1 px-3 rounded-md font-inter"
+              style={{ fontFamily: "Inter, sans-serif" }}
             >
               {skill}
             </span>
@@ -902,14 +1087,18 @@ function MatchPercentage({ applicant, jobId }) {
           {breakdown?.skills?.unmatched?.map((skill, index) => (
             <span
               key={`unmatched-${index}`}
-              className="inline-block bg-red-100 text-red-600 text-sm py-1 px-3 rounded-md"
+              className="inline-block bg-red-100 text-red-600 text-sm py-1 px-3 rounded-md font-inter"
+              style={{ fontFamily: "Inter, sans-serif" }}
             >
               {skill}
             </span>
           ))}
           {!breakdown?.skills?.matched?.length &&
             !breakdown?.skills?.unmatched?.length && (
-              <span className="text-sm text-gray-500">
+              <span
+                className="text-sm text-gray-500 font-inter"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
                 No skills data available
               </span>
             )}
@@ -918,14 +1107,20 @@ function MatchPercentage({ applicant, jobId }) {
 
       {/* Location */}
       <div className="text-left mt-4">
-        <h3 className="text-lg font-medium text-gray-800">Location</h3>
+        <h3
+          className="text-lg font-medium text-gray-800 font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          Location
+        </h3>
         <div className="flex flex-wrap gap-2 mt-2">
           <span
-            className={`inline-block text-sm py-1 px-3 rounded-md ${
+            className={`inline-block text-sm py-1 px-3 rounded-md font-inter ${
               breakdown?.location?.matched
                 ? "bg-[#1890FF] text-white"
                 : "bg-red-100 text-red-600"
             }`}
+            style={{ fontFamily: "Inter, sans-serif" }}
           >
             {breakdown?.location?.userHas || "Not specified"}
           </span>
@@ -951,6 +1146,7 @@ export function ApplicantDetails({
   onStatusUpdate,
   applicants = [],
   currentIndex = 0,
+  onClose,
 }) {
   const [activeTab, setActiveTab] = useState("jobApplication");
 
@@ -959,18 +1155,21 @@ export function ApplicantDetails({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ProfileHeader
-          activeTab={activeTab}
-          onTabClick={handleTabClick}
-          applicant={applicant}
-          setSelectedApplicant={setSelectedApplicant}
-          jobId={jobId}
-          onStatusUpdate={onStatusUpdate}
-          applicants={applicants}
-          currentIndex={currentIndex}
-        />
+    <div className="h-full bg-gray-50 font-sans overflow-auto">
+      <div className="flex flex-row gap-6 p-6 min-h-0">
+        <div className="flex-1 min-w-0 flex flex-col gap-6">
+          <ProfileHeader
+            activeTab={activeTab}
+            onTabClick={handleTabClick}
+            applicant={applicant}
+            setSelectedApplicant={setSelectedApplicant}
+            jobId={jobId}
+            onStatusUpdate={onStatusUpdate}
+            applicants={applicants}
+            currentIndex={currentIndex}
+            onClose={onClose}
+          />
+        </div>
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ import {
 import ProfileSection from "./component/ProfileSection";
 import SkillsSpecialization from "../../recuriter/origanizationProfile/component/SkillsSpecialization";
 import ProfileCompletionNudge from "../../../components/ProfileCompletionNudge";
+import Header from "../../../components/Header";
 import { useDispatch, useSelector } from "react-redux";
 import axiosInstance from "../../../lib/axio";
 import { useParams } from "react-router-dom";
@@ -1259,7 +1260,7 @@ const OrganizationProfile = () => {
     );
   }
 
-  const SIDEBAR_WIDTH = "200px";
+  const SIDEBAR_WIDTH = "80px";
 
   const handleSaveMoreInfo = async (updatedInfo) => {
     try {
@@ -1358,12 +1359,11 @@ const OrganizationProfile = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen w-screen ml-[-210px] mt-[40px] max-w-[1800px] mx-auto">
-      <div
-        className="flex pt-16"
-        style={{ marginLeft: SIDEBAR_WIDTH, justifyContent: "center" }}
-      >
-        <div className="max-w-5xl w-full mx-auto">
+    <div className="flex min-h-screen bg-white mt-[10px] mr-[80px]">
+      {/* Sidebar is rendered by parent layout */}
+      <div className="flex-1" style={{ marginLeft: SIDEBAR_WIDTH }}>
+        <Header />
+        <div className="flex flex-col px-7 py-8 mt-[7vh]">
           {/* Profile Section */}
           <ProfileSection
             userData={userData}

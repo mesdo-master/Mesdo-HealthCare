@@ -3,6 +3,7 @@ import { ArrowLeft, Search, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import CreateGroupModal from "./CreateGroupModal";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../../../../context/NotificationContextFinal";
 import axiosInstance from "../../../../lib/axio";
 
 const MessageList = ({
@@ -24,10 +25,26 @@ const MessageList = ({
   const [jobConversations, setJobConversations] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const navigate = useNavigate();
+  const { unreadConversations } = useNotifications();
 
-  // ✅ Safe filtering with proper array check
+  // ✅ ENHANCED filtering and sorting logic - prioritize unread and recent messages
   let filteredConversations = Array.isArray(users)
-    ? users.filter((conv) => conv.category === activeTab)
+    ? users
+        .filter((conv) => conv.category === activeTab)
+        .sort((a, b) => {
+          // First priority: Unread conversations come first
+          const aIsUnread = unreadConversations.has(a._id);
+          const bIsUnread = unreadConversations.has(b._id);
+          
+          if (aIsUnread && !bIsUnread) return -1;
+          if (!aIsUnread && bIsUnread) return 1;
+          
+          // Second priority: Sort by last message time (most recent first)
+          const aTime = new Date(a.lastMessageAt || a.updatedAt || a.createdAt || 0);
+          const bTime = new Date(b.lastMessageAt || b.updatedAt || b.createdAt || 0);
+          
+          return bTime - aTime; // Most recent first
+        })
     : [];
 
   const handleOpenMessage = (conversation) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pencil, Briefcase, Trash2 } from "lucide-react";
+import { Pencil, Briefcase } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
 
 const WorkExperienceDisplay = ({
@@ -56,7 +56,7 @@ const WorkExperienceDisplay = ({
     setEditingExperienceId(exp.id);
     setEditingExperienceData({ ...exp });
     setActiveModalTab("Add Work Experience");
-    setIsEditing(true);
+    openModal("Work Experience");
   };
 
   // Delete handler for a specific experience
@@ -164,22 +164,7 @@ const WorkExperienceDisplay = ({
                 )}
               </div>
               {isOwnProfile && (
-                <div className="flex flex-col md:flex-row items-center justify-center gap-2 ml-4">
-                  <button
-                    onClick={() => handleEditExperience(exp)}
-                    className="text-gray-400 hover:text-gray-600 p-2 rounded-full transition"
-                    aria-label="Edit experience"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteExperience(exp.id)}
-                    className="text-gray-400 hover:text-red-500 p-2 rounded-full transition"
-                    aria-label="Delete experience"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-2 ml-4"></div>
               )}
             </div>
           ))

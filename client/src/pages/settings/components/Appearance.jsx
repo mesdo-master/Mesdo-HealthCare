@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { getAppearanceSettings, updateAppearanceSettings } from "./settingsService";
+import {
+  getAppearanceSettings,
+  updateAppearanceSettings,
+} from "./settingsService";
 
 const Appearance = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +56,7 @@ const Appearance = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg px-8 py-6 shadow-sm max-w-4xl mx-auto">
+      <div className="bg-white rounded-lg px-8 py-6 shadow-sm">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
@@ -68,7 +71,7 @@ const Appearance = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg px-8 py-6 shadow-sm max-w-4xl mx-auto">
+    <div className="bg-white rounded-lg px-8 py-6 shadow-sm">
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1">
@@ -83,49 +86,49 @@ const Appearance = () => {
         </div>
       </div>
 
-      <hr className="mb-6" />
+      <div className="border-t border-gray-200 pt-6">
+        <div className="space-y-4">
+          <div className="text-sm text-gray-700 font-medium">Theme</div>
 
-      <div className="space-y-4">
-        <div className="text-sm text-gray-700 font-medium">Theme</div>
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="radio"
+              name="theme"
+              value="system"
+              checked={theme === "system"}
+              onChange={() => handleThemeChange("system")}
+              disabled={isSaving}
+              className="form-radio h-4 w-4 text-blue-600"
+            />
+            <span className="text-gray-800 text-sm">Device Settings</span>
+          </label>
 
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="radio"
-            name="theme"
-            value="system"
-            checked={theme === "system"}
-            onChange={() => handleThemeChange("system")}
-            disabled={isSaving}
-            className="form-radio h-4 w-4 text-blue-600"
-          />
-          <span className="text-gray-800 text-sm">Device Settings</span>
-        </label>
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="radio"
+              name="theme"
+              value="light"
+              checked={theme === "light"}
+              onChange={() => handleThemeChange("light")}
+              disabled={isSaving}
+              className="form-radio h-4 w-4 text-blue-600"
+            />
+            <span className="text-gray-800 text-sm">Light Mode</span>
+          </label>
 
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="radio"
-            name="theme"
-            value="light"
-            checked={theme === "light"}
-            onChange={() => handleThemeChange("light")}
-            disabled={isSaving}
-            className="form-radio h-4 w-4 text-blue-600"
-          />
-          <span className="text-gray-800 text-sm">Light Mode</span>
-        </label>
-
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="radio"
-            name="theme"
-            value="dark"
-            checked={theme === "dark"}
-            onChange={() => handleThemeChange("dark")}
-            disabled={isSaving}
-            className="form-radio h-4 w-4 text-blue-600"
-          />
-          <span className="text-gray-800 text-sm">Dark Mode</span>
-        </label>
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="radio"
+              name="theme"
+              value="dark"
+              checked={theme === "dark"}
+              onChange={() => handleThemeChange("dark")}
+              disabled={isSaving}
+              className="form-radio h-4 w-4 text-blue-600"
+            />
+            <span className="text-gray-800 text-sm">Dark Mode</span>
+          </label>
+        </div>
       </div>
     </div>
   );

@@ -5,11 +5,13 @@ import NoChatSelected from "../../user/messages/components/NoChatSelected";
 import ChatContainer from "./components/ChatContainer";
 import axiosInstance from "../../../lib/axio";
 import { useSocket } from "../../../context/SocketProvider";
+import { useNotifications } from "../../../context/NotificationContextFinal";
 
 function MessagesRecuriter() {
   const { conversationId } = useParams();
   // ✅ Get socket connection status
   const { isConnected, connectionError, reconnect } = useSocket();
+  const { markConversationAsRead } = useNotifications();
 
   console.log(conversationId);
   const [selectedConversation, setSelectedConversation] =
@@ -17,7 +19,11 @@ function MessagesRecuriter() {
 
   useEffect(() => {
     setSelectedConversation(conversationId);
-  }, [conversationId]);
+    // Mark conversation as read when opened
+    if (conversationId) {
+      markConversationAsRead(conversationId);
+    }
+  }, [conversationId, markConversationAsRead]);
 
   const [activeTab, setActiveTab] = useState("Recruitment");
   const [selectedUser, setSelectedUser] = useState(null);

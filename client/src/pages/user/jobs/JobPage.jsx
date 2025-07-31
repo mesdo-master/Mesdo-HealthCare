@@ -97,7 +97,7 @@ const JobPage = () => {
   }, [isClosing, navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 mt-[-40px] ml-[30px] mr-[10px] ">
+    <div className="flex flex-col min-h-screen bg-white mt-[-40px] ml-[30px] mr-[10px] ">
       {/* Blur sidebar + main content when jobId is present */}
       <div className={jobId ? "blur-sm pointer-events-none select-none" : ""}>
         <div className={"flex flex-1 overflow-hidden pt-16 mb-7 mr-20 ml-18"}>

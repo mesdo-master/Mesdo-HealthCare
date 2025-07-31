@@ -1,7 +1,11 @@
 import { Users } from "lucide-react";
+import { useNotifications } from "../../../../context/NotificationContextFinal";
 
 const UserListItem = ({ user, selectedUser, onClick }) => {
+  const { unreadConversations } = useNotifications();
   const isGroup = user?.isGroup;
+  const conversationId = user._id || user.id;
+  const hasUnreadMessages = unreadConversations.has(conversationId);
 
   const truncateMessage = (message) => {
     if (!message) return "No messages yet";
@@ -44,7 +48,7 @@ const UserListItem = ({ user, selectedUser, onClick }) => {
       onClick={onClick}
       className={`flex items-center py-3 px-4 cursor-pointer hover:bg-gray-50 ${
         selectedUser?.id === user.id ? "bg-gray-50" : ""
-      }`}
+      } ${hasUnreadMessages ? "bg-blue-50 border-l-4 border-blue-500" : ""}`}
     >
       <div className="relative">
         <img
@@ -72,14 +76,19 @@ const UserListItem = ({ user, selectedUser, onClick }) => {
 
       <div className="ml-3 flex-1">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-base">
+          <h3 className={`font-semibold text-base ${hasUnreadMessages ? 'text-blue-600' : ''}`}>
             {isGroup ? user.name : user.otherParticipant?.name}
           </h3>
-          <span className="text-sm text-gray-500">
-            {formatLastMessageTime(user.lastMessageTime)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">
+              {formatLastMessageTime(user.lastMessageTime)}
+            </span>
+            {hasUnreadMessages && (
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            )}
+          </div>
         </div>
-        <p className="text-gray-500 text-sm truncate">
+        <p className={`text-sm truncate ${hasUnreadMessages ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
           {truncateMessage(user.lastMessage)}
         </p>
       </div>

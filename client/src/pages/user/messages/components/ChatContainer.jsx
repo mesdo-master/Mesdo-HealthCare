@@ -5,6 +5,7 @@ import MessageSkeleton from "../MessageSkeleton";
 import axiosInstance from "../../../../lib/axio";
 import { useSelector } from "react-redux";
 import { useSocket, useOnlineUsers } from "../../../../context/SocketProvider";
+import { useNotifications } from "../../../../context/NotificationContextFinal";
 import { getMessageDateLabel } from "../../../../lib/utils";
 import { useNavigate } from "react-router-dom";
 import {
@@ -28,6 +29,7 @@ const ChatContainer = ({
   const { joinConversation, leaveConversation, on, off, isConnected } =
     useSocket();
   const onlineUsers = useOnlineUsers();
+  const { markConversationAsRead } = useNotifications();
 
   const piimage =
     "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
@@ -151,6 +153,14 @@ const ChatContainer = ({
     }
   }, [selectedId, activeTab, navigate]);
 
+  // ✅ Mark conversation as read when opened
+  useEffect(() => {
+    if (selectedId && selectedId !== "undefined") {
+      console.log('📜 USER: Marking conversation as read:', selectedId);
+      markConversationAsRead(selectedId);
+    }
+  }, [selectedId, markConversationAsRead]);
+
   // ✅ Enhanced socket integration for real-time messages
   useEffect(() => {
     // ✅ Enhanced validation for socket operations
@@ -179,10 +189,8 @@ const ChatContainer = ({
     }
 
     const handleNewMessage = (newMessage) => {
-      console.log(
-        "🔔 USER: New message received in ChatContainer:",
-        newMessage
-      );
+      console.log("🔥 USER CHATCONTAINER: newMessage handler called!");
+      console.log("🔥 USER CHATCONTAINER: Message data:", newMessage);
       console.log("🔔 USER: Current selectedId:", selectedId);
       console.log("🔔 USER: Current messages count:", messages.length);
 

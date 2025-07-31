@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pencil, GraduationCap, Trash2 } from "lucide-react";
+import { Pencil, GraduationCap } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
 
 const EducationSection = ({
@@ -7,6 +7,7 @@ const EducationSection = ({
   openModal,
   setActiveQualificationTab,
   setEditingQualification,
+  setActiveModalTab,
   userData,
 }) => {
   const [qualifications, setQualifications] = useState([]);
@@ -54,7 +55,7 @@ const EducationSection = ({
 
   const handleEditQualification = (qualification) => {
     setEditingQualification(qualification);
-    setActiveQualificationTab("Edit");
+    setActiveModalTab("Add Qualification");
     openModal("Qualification");
   };
 
@@ -175,22 +176,7 @@ const EducationSection = ({
                 )}
               </div>
               {isOwnProfile && (
-                <div className="flex flex-col items-center gap-2">
-                  <button
-                    onClick={() => handleEditQualification(qualification)}
-                    className="text-gray-400 hover:text-gray-600 p-2 rounded-full transition"
-                    aria-label="Edit qualification"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteQualification(qualification.id)}
-                    className="text-gray-400 hover:text-red-500 p-2 rounded-full transition"
-                    aria-label="Delete qualification"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <div className="flex flex-col items-center gap-2"></div>
               )}
             </div>
           ))

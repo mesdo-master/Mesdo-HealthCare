@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { modeToggle } from "../store/features/authSlice";
 import { useAuth } from "../hooks/useAuth";
+import { useNotifications } from "../context/NotificationContextFinal";
 import hospitalicon from "../assets/hospitalicon.png";
 import axiosInstance from "../lib/axio";
 import SettingsIcon from "../assets/Settings.png";
@@ -25,6 +26,7 @@ export default function Sidebar({ className = "" }) {
   const navigate = useNavigate();
   const { isAuthenticated, currentUser, businessProfile, mode, logout } =
     useAuth();
+  const { unreadMessageCount } = useNotifications();
 
   const [showSwitchLoader, setShowSwitchLoader] = useState(false);
   const [navigating, setNavigating] = useState(false);
@@ -104,10 +106,10 @@ export default function Sidebar({ className = "" }) {
         </div>
       )}
       <div
-        className={`fixed left-0 top-0 h-full w-[210px] bg-white z-40 ${className}`}
+        className={`absolute left-0 top-0 h-full w-[210px] bg-white z-40 ${className}`}
       ></div>
       <aside
-        className={`fixed top-0 left-0 h-full w-[210px] md:w-[210px] lg:w-[18vw] ml-[70px] bg-[#FFFFFF] shadow-md flex flex-col pt-[12vh] z-50 ${className}`}
+        className={`absolute top-0 left-0 h-full w-[210px] md:w-[210px] lg:w-[15vw] ml-[70px] bg-white flex flex-col pt-[12vh] z-50 ${className}`}
         style={
           showSwitchLoader || navigating
             ? { pointerEvents: "none", opacity: 0.7 }
@@ -208,6 +210,7 @@ export default function Sidebar({ className = "" }) {
                         }
                         navTo={"/organization/messages"}
                         text="Messages"
+                        notificationCount={unreadMessageCount}
                       />
                       <NavItem
                         icon={
@@ -277,6 +280,22 @@ export default function Sidebar({ className = "" }) {
                             : "/settings"
                         }
                       />
+                      <li>
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center space-x-2 px-3 py-2 w-full rounded-md text-sm text-[#7F7F7F] transition-all hover:bg-gray-100 group"
+                        >
+                          <Power
+                            color="currentColor"
+                            className="transition-colors group-hover:text-[#1890FF]"
+                            strokeWidth={1.8}
+                            size={22}
+                          />
+                          <span className="transition-colors group-hover:text-[#1890FF]">
+                            Logout
+                          </span>
+                        </button>
+                      </li>
                     </ul>
                   </div>
                 </>
@@ -314,6 +333,7 @@ export default function Sidebar({ className = "" }) {
                         navTo={"/messages"}
                         onNavigate={handleNavigation}
                         isActive={location.pathname.startsWith("/messages")}
+                        notificationCount={unreadMessageCount}
                       />
                       <NavItem
                         icon={
@@ -392,7 +412,14 @@ Sidebar.propTypes = {
 };
 
 /* Reusable NavItem Component */
-const NavItem = ({ navTo, icon, text, onNavigate, isActive }) => {
+const NavItem = ({
+  navTo,
+  icon,
+  text,
+  onNavigate,
+  isActive,
+  notificationCount,
+}) => {
   const handleClick = (e) => {
     if (onNavigate && navTo) {
       e.preventDefault();
@@ -408,13 +435,25 @@ const NavItem = ({ navTo, icon, text, onNavigate, isActive }) => {
         className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm text-[#7F7F7F] transition-all hover:bg-gray-100 group"
         style={{ position: "relative", overflow: "hidden" }}
       >
-        {React.cloneElement(icon, {
-          className: "transition-colors group-hover:text-[#1890FF]",
-          color: "currentColor",
-        })}
+        <div className="relative">
+          {React.cloneElement(icon, {
+            className: "transition-colors group-hover:text-[#1890FF]",
+            color: "currentColor",
+          })}
+          {/* Notification indicator */}
+          {notificationCount > 0 && (
+            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+              {notificationCount > 99 ? "99+" : notificationCount}
+            </div>
+          )}
+        </div>
         <span className="transition-colors group-hover:text-[#1890FF]">
           {text}
         </span>
+        {/* Simple dot indicator for smaller screens or alternative style */}
+        {notificationCount > 0 && (
+          <div className="w-2 h-2 bg-red-500 rounded-full ml-auto animate-pulse"></div>
+        )}
       </Link>
     </li>
   );
@@ -425,4 +464,6 @@ NavItem.propTypes = {
   text: PropTypes.string.isRequired,
   navTo: PropTypes.string,
   onNavigate: PropTypes.func,
+  isActive: PropTypes.bool,
+  notificationCount: PropTypes.number,
 };

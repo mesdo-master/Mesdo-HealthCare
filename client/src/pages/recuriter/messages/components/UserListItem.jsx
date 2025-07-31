@@ -1,4 +1,9 @@
+import { useNotifications } from "../../../../context/NotificationContextFinal";
+
 const UserListItem = ({ user, selectedId, onClick }) => {
+  const { unreadConversations } = useNotifications();
+  const conversationId = user._id || user.id;
+  const hasUnreadMessages = unreadConversations.has(conversationId);
   const formatLastMessageTime = (timestamp) => {
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return "";
@@ -34,7 +39,7 @@ const UserListItem = ({ user, selectedId, onClick }) => {
       onClick={onClick}
       className={`flex items-center py-3 px-4 cursor-pointer hover:bg-gray-50 ${
         selectedId === (user._id || user.id) ? "bg-blue-50 border-r-2 border-blue-500" : ""
-      }`}
+      } ${hasUnreadMessages ? "bg-blue-50 border-l-4 border-blue-500" : ""}`}
     >
       <div className="relative">
         <img
@@ -48,14 +53,19 @@ const UserListItem = ({ user, selectedId, onClick }) => {
       </div>
       <div className="ml-3 flex-1">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">
+          <h3 className={`font-semibold ${hasUnreadMessages ? 'text-blue-600' : ''}`}>
             {user.otherParticipant?.name || "Unknown User"}
           </h3>
-          <span className="text-sm text-gray-500">
-            {formatLastMessageTime(user.lastMessageTime)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">
+              {formatLastMessageTime(user.lastMessageTime)}
+            </span>
+            {hasUnreadMessages && (
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            )}
+          </div>
         </div>
-        <p className="text-gray-500 text-sm truncate">
+        <p className={`text-sm truncate ${hasUnreadMessages ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
           {user.lastMessage || "No messages yet"}
         </p>
       </div>

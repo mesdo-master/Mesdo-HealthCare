@@ -528,10 +528,10 @@ const JobDetails = ({ onClose }) => {
 
   const [conversationId, setConversationId] = useState();
 
-  const socket = useSocket();
+  const { on, off, isConnected } = useSocket();
 
   useEffect(() => {
-    if (!socket || !otherUser || !currentUser) return;
+    if (!isConnected || !otherUser || !currentUser) return;
 
     const handleNewMessage = (newMessage) => {
       // Check if the sender is either the current user or the otherUser
@@ -545,12 +545,12 @@ const JobDetails = ({ onClose }) => {
       }
     };
 
-    socket.on("newMessage", handleNewMessage);
+    on("newMessage", handleNewMessage);
 
     return () => {
-      socket.off("newMessage", handleNewMessage);
+      off("newMessage", handleNewMessage);
     };
-  }, [socket, currentUser, otherUser]);
+  }, [on, off, isConnected, currentUser, otherUser]);
 
   const messageEndRef = useRef(null);
   useEffect(() => {

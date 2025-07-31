@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import CreateGroupModal from "./CreateGroupModal";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../../../../context/NotificationContextFinal";
 import axiosInstance from "../../../../lib/axio";
 
 const MessageList = ({
@@ -20,18 +21,66 @@ const MessageList = ({
 
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const navigate = useNavigate();
+  const { unreadConversations } = useNotifications();
 
-  // ✅ Improved filtering logic with proper safety checks
+  // ✅ ENHANCED filtering and sorting logic - prioritize unread and recent messages
   const filteredConversations = Array.isArray(users)
-    ? users.filter((conv) => {
-        if (activeTab === "Jobs") {
-          return conv.category === "Recruitment" || conv.category === "Jobs";
-        }
-        return conv.category === activeTab;
-      })
+    ? users
+        .filter((conv) => {
+          if (activeTab === "Jobs") {
+            return conv.category === "Recruitment" || conv.category === "Jobs";
+          }
+          return conv.category === activeTab;
+        })
+        .sort((a, b) => {
+          // First priority: Unread conversations come first
+          const aIsUnread = unreadConversations.has(a._id);
+          const bIsUnread = unreadConversations.has(b._id);
+          
+          if (aIsUnread && !bIsUnread) return -1;
+          if (!aIsUnread && bIsUnread) return 1;
+          
+          // Second priority: Sort by last message time (most recent first)
+          const aTime = new Date(a.lastMessageAt || a.updatedAt || a.createdAt || 0);
+          const bTime = new Date(b.lastMessageAt || b.updatedAt || b.createdAt || 0);
+          
+          return bTime - aTime; // Most recent first
+        })
     : [];
 
-  console.log("Filtered conversations:", filteredConversations);
+  console.log("🔍 MESSAGE LIST DEBUG:", {
+    totalUsers: users?.length,
+    filteredCount: filteredConversations?.length,
+    unreadConversations: Array.from(unreadConversations),
+    activeTab,
+    firstFewConversations: filteredConversations?.slice(0, 3).map(conv => ({
+      id: conv._id,
+      category: conv.category,
+      isUnread: unreadConversations.has(conv._id),
+      lastMessageAt: conv.lastMessageAt,
+      updatedAt: conv.updatedAt,
+      createdAt: conv.createdAt,
+      lastMessage: conv.lastMessage?.text || 'No message',
+      lastMessageSender: conv.lastMessage?.sender || 'Unknown'
+    }))
+  });
+
+  // Additional debugging for sorting logic
+  console.log("🔍 MESSAGE LIST SORT DEBUG:", {
+    beforeSort: users?.slice(0, 3).map(conv => ({
+      id: conv._id,
+      isUnread: unreadConversations.has(conv._id),
+      lastMessageAt: conv.lastMessageAt,
+      updatedAt: conv.updatedAt
+    })),
+    afterSort: filteredConversations?.slice(0, 3).map(conv => ({
+      id: conv._id,
+      isUnread: unreadConversations.has(conv._id),
+      lastMessageAt: conv.lastMessageAt,
+      updatedAt: conv.updatedAt
+    })),
+    unreadConversationsSize: unreadConversations.size
+  });
 
   const handleOpenMessage = (conversation) => {
     navigate(`/messages/${conversation._id}`);

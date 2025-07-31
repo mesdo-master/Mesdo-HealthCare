@@ -6,6 +6,7 @@ import { ApplicantDetails } from "./ApplicantDetails";
 import axiosInstance from "../../../../lib/axio";
 import { useSelector } from "react-redux";
 import { calculateMatchPercentage } from "../../../../utils/matchPercentage";
+import ReactDOM from "react-dom";
 
 const progressStages = ["Applied", "Interview", "Offer", "Hired"];
 
@@ -16,6 +17,30 @@ export default function Applicants() {
   const [sortType, setSortType] = useState("matchPercentage");
   const totalApplicants = applicants?.length || 0;
   const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Prevent background scrolling when ApplicantDetails is open
+  useEffect(() => {
+    if (selectedApplicant && !isClosing) {
+      // Store the current scroll position
+      const scrollY = window.scrollY;
+
+      // Add styles to prevent scrolling
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+
+      // Cleanup function to restore scrolling
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [selectedApplicant, isClosing]);
 
   const handleSort = () => {
     const sortedApplicants = [...applicants].sort((a, b) => {
@@ -72,6 +97,18 @@ export default function Applicants() {
         progress: getProgressFromStatus(newStatus),
       }));
     }
+  };
+
+  const requestClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setSelectedApplicant(null);
+      setIsClosing(false);
+    }, 300);
+  };
+
+  const handleExitComplete = () => {
+    setIsClosing(false);
   };
 
   useEffect(() => {
@@ -341,43 +378,57 @@ export default function Applicants() {
                   </p>
                 </div>
               )}
-
-              {/* Right-Side Drawer for Applicant Details */}
-              <AnimatePresence>
-                {selectedApplicant && (
-                  <motion.div
-                    initial={{ x: "100%" }}
-                    animate={{ x: 0 }}
-                    exit={{ x: "100%" }}
-                    transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                    className="fixed top-0 right-0 w-4/5 h-full bg-white shadow-lg p-6 overflow-auto"
-                  >
-                    {/* Close Button */}
-                    <button
-                      onClick={() => setSelectedApplicant(null)}
-                      className="absolute top-4 right-4 text-gray-600 hover:text-black"
-                    >
-                      ✕
-                    </button>
-
-                    {/* ApplicantDetail Component */}
-                    <ApplicantDetails
-                      applicant={selectedApplicant}
-                      setSelectedApplicant={setSelectedApplicant}
-                      jobId={jobId}
-                      onStatusUpdate={handleStatusUpdate}
-                      applicants={applicants}
-                      currentIndex={applicants.findIndex(
-                        (a) => a.id === selectedApplicant?.id
-                      )}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ApplicantDetails slide-in with blur backdrop (rendered in portal) */}
+      {selectedApplicant &&
+        ReactDOM.createPortal(
+          <>
+            <AnimatePresence>
+              <>
+                {!isClosing && (
+                  <div className="fixed inset-0 z-[199] bg-black/30 backdrop-blur-sm shadow-2xl transition-all duration-300" />
+                )}
+              </>
+            </AnimatePresence>
+            <AnimatePresence mode="wait" onExitComplete={handleExitComplete}>
+              {!isClosing && (
+                <motion.div
+                  className="fixed inset-y-0 right-0 w-4/5 max-w-6xl bg-white z-[200] shadow-2xl overflow-hidden h-full"
+                  initial={{ x: "100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "100%", opacity: 0 }}
+                  transition={{
+                    type: "tween",
+                    duration: 0.6,
+                    ease: [0.25, 0.46, 0.45, 0.94], // Ultra-smooth cubic bezier
+                  }}
+                  style={{
+                    willChange: "transform, opacity",
+                    backfaceVisibility: "hidden",
+                    transform: "translateZ(0)",
+                  }}
+                >
+                  <ApplicantDetails
+                    applicant={selectedApplicant}
+                    setSelectedApplicant={setSelectedApplicant}
+                    jobId={jobId}
+                    onStatusUpdate={handleStatusUpdate}
+                    applicants={applicants}
+                    currentIndex={applicants.findIndex(
+                      (a) => a.id === selectedApplicant?.id
+                    )}
+                    onClose={requestClose}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>,
+          document.body
+        )}
     </div>
   );
 }

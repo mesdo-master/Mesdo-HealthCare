@@ -12,6 +12,7 @@ import { checkAuth } from "./store/features/authSlice";
 import { useAuth } from "./hooks/useAuth";
 import { useRoleSwitch } from "./hooks/useSocket";
 import { Toaster } from "react-hot-toast";
+import NotificationDebug from "./components/NotificationDebug";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -51,13 +52,13 @@ function AppRoutes() {
     needsRecruiterOnboarding,
     mode,
   } = useAuth();
-  
+
   // Handle role switching for socket connections
   const RoleSwitchHandler = () => {
     useRoleSwitch();
     return null;
   };
-  
+
   const location = useLocation();
   const noSidebarOffsetRoutes = ["/jobs", "/settings"];
   const isNoSidebarOffset =
@@ -65,6 +66,15 @@ function AppRoutes() {
       location.pathname.startsWith(route)
     ) || /^\/jobs\/[\w-]+$/.test(location.pathname);
   const isJobDetailsOpen = !!matchPath("/jobs/:jobId", location.pathname);
+
+  // Routes that have custom Header rendering (excluding messages)
+  const customHeaderRoutes = ["/organization/", "/profile/"];
+  const excludeMessageRoutes = ["/organization/messages", "/messages"];
+  const hasCustomHeader = customHeaderRoutes.some((route) =>
+    location.pathname.includes(route)
+  ) && !excludeMessageRoutes.some((route) =>
+    location.pathname.startsWith(route)
+  );
 
   return isAuthenticated ? (
     // Handle onboarding routes
@@ -93,176 +103,186 @@ function AppRoutes() {
         <Route path="*" element={<Navigate to="/onboarding-recruiter" />} />
       </Routes>
     ) : (
-      <div
-        className={
-          "flex" +
-          (isJobDetailsOpen ? " blur-sm pointer-events-none select-none" : "")
-        }
-      >
-        <RoleSwitchHandler />
-        <Sidebar />
-        <div
-          className="flex-1 min-h-screen"
-          style={isNoSidebarOffset ? {} : { marginLeft: "18vw" }}
-        >
-          <Header />
-          <Routes>
-            {/* Shared Authenticated Routes */}
-            {/* <Route path="/" element={<HomePage />} /> */}
-            <Route
-              path="/profile/:userId"
-              element={
-                <ProtectedRoute role={["recruiter", "individual"]}>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/organization/:orgname"
-              element={
-                <ProtectedRoute role={["recruiter", "individual"]}>
-                  <OrganizationProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute role={["recruiter", "individual"]}>
-                  <NotificationPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute role={["recruiter", "individual"]}>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recuriter/settings"
-              element={
-                <ProtectedRoute role="recruiter">
-                  <RecruiterSettings />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/search" element={<SearchResults />} />
-
-            {/* Individual User Routes */}
-            <Route
-              path="/jobs"
-              element={
-                <ProtectedRoute role="individual">
-                  {" "}
-                  <JobPage />{" "}
-                </ProtectedRoute>
-              }
+      <div className="main-layout-wrapper">
+        <div className="inner-content-area">
+          <div
+            className={
+              "flex" +
+              (isJobDetailsOpen
+                ? " blur-sm pointer-events-none select-none"
+                : "")
+            }
+          >
+            <RoleSwitchHandler />
+            <Sidebar />
+            <div
+              className="flex-1 min-h-screen"
+              style={isNoSidebarOffset ? {} : { marginLeft: "15vw" }}
             >
-              <Route
-                path=":jobId"
-                element={
-                  <ProtectedRoute role="individual">
-                    <JobDetails />
-                  </ProtectedRoute>
-                }
-              />
-            </Route>
-            <Route
-              path="/appliedJobs"
-              element={
-                <ProtectedRoute role="individual">
-                  <AppliedJob />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/savedJobs"
-              element={
-                <ProtectedRoute role="individual">
-                  <SavedJobs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/hiddenJobs"
-              element={
-                <ProtectedRoute role="individual">
-                  <HiddenJobs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/messages"
-              element={
-                <ProtectedRoute role="individual">
-                  <Messages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/messages/:conversationId"
-              element={
-                <ProtectedRoute role="individual">
-                  <Messages />
-                </ProtectedRoute>
-              }
-            />
+              <div className="w-full">
+                {!hasCustomHeader && <Header />}
+                <div className="w-full">
+                  <Routes>
+                    {/* Shared Authenticated Routes */}
+                    {/* <Route path="/" element={<HomePage />} /> */}
+                    <Route
+                      path="/profile/:userId"
+                      element={
+                        <ProtectedRoute role={["recruiter", "individual"]}>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/organization/:orgname"
+                      element={
+                        <ProtectedRoute role={["recruiter", "individual"]}>
+                          <OrganizationProfile />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/notifications"
+                      element={
+                        <ProtectedRoute role={["recruiter", "individual"]}>
+                          <NotificationPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute role={["recruiter", "individual"]}>
+                          <Settings />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/recuriter/settings"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <RecruiterSettings />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/search" element={<SearchResults />} />
 
-            {/* Recruiter Routes */}
-            <Route
-              path="/recruitment"
-              element={
-                <ProtectedRoute role="recruiter">
-                  <RecruitmentPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recruitment/create"
-              element={
-                <ProtectedRoute role="recruiter">
-                  <CreateJob />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/recruitment/:jobId/applicants"
-              element={
-                <ProtectedRoute role="recruiter">
-                  <Applicants />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/organization/messages"
-              element={
-                <ProtectedRoute role="recruiter">
-                  <MessagesRecuriter />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/organization/messages/:conversationId"
-              element={
-                <ProtectedRoute role="recruiter">
-                  <MessagesRecuriter />
-                </ProtectedRoute>
-              }
-            />
+                    {/* Individual User Routes */}
+                    <Route
+                      path="/jobs"
+                      element={
+                        <ProtectedRoute role="individual">
+                          {" "}
+                          <JobPage />{" "}
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route
+                        path=":jobId"
+                        element={
+                          <ProtectedRoute role="individual">
+                            <JobDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Route>
+                    <Route
+                      path="/appliedJobs"
+                      element={
+                        <ProtectedRoute role="individual">
+                          <AppliedJob />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/savedJobs"
+                      element={
+                        <ProtectedRoute role="individual">
+                          <SavedJobs />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/hiddenJobs"
+                      element={
+                        <ProtectedRoute role="individual">
+                          <HiddenJobs />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/messages"
+                      element={
+                        <ProtectedRoute role="individual">
+                          <Messages />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/messages/:conversationId"
+                      element={
+                        <ProtectedRoute role="individual">
+                          <Messages />
+                        </ProtectedRoute>
+                      }
+                    />
 
-            {/* Catch all for unknown authenticated routes */}
-            <Route
-              path="*"
-              element={
-                <Navigate
-                  to={mode === "individual" ? "/jobs" : "/recruitment"}
-                />
-              }
-            />
-          </Routes>
+                    {/* Recruiter Routes */}
+                    <Route
+                      path="/recruitment"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <RecruitmentPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/recruitment/create"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <CreateJob />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/recruitment/:jobId/applicants"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <Applicants />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/organization/messages"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <MessagesRecuriter />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/organization/messages/:conversationId"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <MessagesRecuriter />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Catch all for unknown authenticated routes */}
+                    <Route
+                      path="*"
+                      element={
+                        <Navigate
+                          to={mode === "individual" ? "/jobs" : "/recruitment"}
+                        />
+                      }
+                    />
+                  </Routes>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -317,6 +337,7 @@ function App() {
     <Router>
       <Toaster position="top-right" />
       <AppRoutes />
+      <NotificationDebug />
     </Router>
   );
 }
