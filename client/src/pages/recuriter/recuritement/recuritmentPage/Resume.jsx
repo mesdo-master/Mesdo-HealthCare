@@ -2,7 +2,7 @@ export default function Resume({ applicant }) {
   const resumeUrl = applicant.resume;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white p-4 md:p-6 rounded-md shadow-sm w-full max-w-4xl">
         {resumeUrl ? (
           <iframe
@@ -27,7 +27,9 @@ export default function Resume({ applicant }) {
               />
             </svg>
             <p className="text-lg font-medium">No resume uploaded</p>
-            <p className="text-sm text-gray-400">This candidate hasn’t uploaded a resume yet.</p>
+            <p className="text-sm text-gray-400">
+              This candidate hasn’t uploaded a resume yet.
+            </p>
           </div>
         )}
       </div>

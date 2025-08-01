@@ -12,12 +12,10 @@ import {
 } from "lucide-react";
 import axiosInstance from "../../lib/axio";
 
-
 export default function NotificationPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [notifications, setNotifications] = useState([]);
- const { currentUser,mode } = useSelector((state) => state.auth);
-
+  const { currentUser, mode } = useSelector((state) => state.auth);
 
   const formatRelativeTime = (isoDateStr) => {
     const postedDate = new Date(isoDateStr);
@@ -42,26 +40,20 @@ export default function NotificationPage() {
     return `${Math.floor(diff / units.year)} yr ago`;
   };
 
-
-
-
-
   const fetchAllNotifications = async () => {
     try {
       const response = await axiosInstance.get(`/notifications/?mode=${mode}`);
-      console.log(response)
+      console.log(response);
       setNotifications(response.data.data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
   };
 
-
-   useEffect(() => {
+  useEffect(() => {
     if (!currentUser) return;
     fetchAllNotifications();
-  }, [currentUser,mode]);
-
+  }, [currentUser, mode]);
 
   const handleDelete = async (id) => {
     // await deleteNotificationAPI(id);
@@ -110,7 +102,7 @@ export default function NotificationPage() {
   };
 
   return (
-    <div className="h-screen bg-gray-50 pt-[10vh]">
+    <div className="h-screen pt-10">
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex gap-8">
           <div className="flex-1">
@@ -127,10 +119,11 @@ export default function NotificationPage() {
               ].map(({ key, icon, label }) => (
                 <button
                   key={key}
-                  className={`flex items-center space-x-2 ${activeTab === key
-                    ? "text-blue-600 border-b-2 border-blue-600 pb-4 -mb-4"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`flex items-center space-x-2 ${
+                    activeTab === key
+                      ? "text-blue-600 border-b-2 border-blue-600 pb-4 -mb-4"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                   onClick={() => setActiveTab(key)}
                 >
                   {icon}
@@ -151,7 +144,10 @@ export default function NotificationPage() {
                   switch (item.type) {
                     case "FOLLOW_REQUEST":
                       return (
-                        <div key={item._id} className="flex items-start space-x-4">
+                        <div
+                          key={item._id}
+                          className="flex items-start space-x-4"
+                        >
                           <img
                             src={item.data?.profileImage}
                             alt="profile"
@@ -159,16 +155,27 @@ export default function NotificationPage() {
                           />
                           <div className="flex-1">
                             <p className="text-sm text-gray-900">
-                              <span className="font-medium">{item.data.fullName}</span> has sent you a connection request
+                              <span className="font-medium">
+                                {item.data.fullName}
+                              </span>{" "}
+                              has sent you a connection request
                             </p>
 
                             {item.status === "accepted" ? (
                               <p className="text-sm text-green-600 mt-2 font-medium">
-                                You and <span className="font-semibold">{item.data.fullName}</span> are now connected.
+                                You and{" "}
+                                <span className="font-semibold">
+                                  {item.data.fullName}
+                                </span>{" "}
+                                are now connected.
                               </p>
                             ) : item.status === "rejected" ? (
                               <p className="text-sm text-red-500 mt-2 font-medium">
-                                You rejected <span className="font-semibold">{item.data.fullName}</span>'s connection request.
+                                You rejected{" "}
+                                <span className="font-semibold">
+                                  {item.data.fullName}
+                                </span>
+                                's connection request.
                               </p>
                             ) : (
                               <div className="flex gap-2 mt-2">
@@ -195,48 +202,78 @@ export default function NotificationPage() {
 
                     case "NEW_JOB":
                       return (
-                        <div key={item._id} className="flex items-start space-x-4">
+                        <div
+                          key={item._id}
+                          className="flex items-start space-x-4"
+                        >
                           <Briefcase className="w-10 h-10 text-blue-500" />
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900">
-                              New Opening at {item.data.company}: {item.data.role}
+                              New Opening at {item.data.company}:{" "}
+                              {item.data.role}
                             </p>
-                            <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                            <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2">View Job</button>
-                            <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(item.createdAt)}</p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {item.description}
+                            </p>
+                            <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2">
+                              View Job
+                            </button>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatRelativeTime(item.createdAt)}
+                            </p>
                           </div>
                         </div>
                       );
 
                     case "APPLICATION_STATUS_CHANGE":
                       return (
-                        <div key={item._id} className="flex items-start space-x-4">
+                        <div
+                          key={item._id}
+                          className="flex items-start space-x-4"
+                        >
                           <Bell className="w-10 h-10 text-green-500" />
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900">
-                              {item.data.company} changed your application status to{" "}
-                              <span className="text-green-600 font-semibold">{item.data.status}</span>
+                              {item.data.company} changed your application
+                              status to{" "}
+                              <span className="text-green-600 font-semibold">
+                                {item.data.status}
+                              </span>
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(item.createdAt)}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatRelativeTime(item.createdAt)}
+                            </p>
                           </div>
                         </div>
                       );
 
                     case "ACCOUNT_VERIFICATION":
                       return (
-                        <div key={item._id} className="flex items-start space-x-4">
+                        <div
+                          key={item._id}
+                          className="flex items-start space-x-4"
+                        >
                           <Bell className="w-10 h-10 text-yellow-500" />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">Your account is pending verification.</p>
-                            <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                            <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(item.createdAt)}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              Your account is pending verification.
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {item.description}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatRelativeTime(item.createdAt)}
+                            </p>
                           </div>
                         </div>
                       );
 
                     case "FOLLOW_ACCEPTED":
                       return (
-                        <div key={item._id} className="flex items-start space-x-4">
+                        <div
+                          key={item._id}
+                          className="flex items-start space-x-4"
+                        >
                           <img
                             src={item.data?.profileImage}
                             alt="profile"
@@ -244,7 +281,10 @@ export default function NotificationPage() {
                           />
                           <div className="flex-1">
                             <p className="text-sm text-gray-900">
-                              <span className="font-medium">{item.data.fullName}</span> accepted your connection request
+                              <span className="font-medium">
+                                {item.data.fullName}
+                              </span>{" "}
+                              accepted your connection request
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               {formatRelativeTime(item.createdAt)}
@@ -255,21 +295,32 @@ export default function NotificationPage() {
 
                     default:
                       return (
-                        <div key={item._id} className="flex items-start space-x-4">
+                        <div
+                          key={item._id}
+                          className="flex items-start space-x-4"
+                        >
                           <Bell className="w-10 h-10 text-gray-500" />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{item.title}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {item.title}
+                            </p>
                             {item.description && (
-                              <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {item.description}
+                              </p>
                             )}
-                            <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(item.createdAt)}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatRelativeTime(item.createdAt)}
+                            </p>
                           </div>
                         </div>
                       );
                   }
                 })
               ) : (
-                <p className="text-sm text-gray-500 text-center">No notifications</p>
+                <p className="text-sm text-gray-500 text-center">
+                  No notifications
+                </p>
               )}
             </div>
           </div>

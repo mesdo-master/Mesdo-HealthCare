@@ -186,7 +186,7 @@ const HiddenJobs = () => {
 
   return (
     <motion.div
-      className="ml-[5vw] pt-[10vh] min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30"
+      className="ml-[5vw] pt-10 min-h-screen"
       variants={containerVariants}
       initial="initial"
       animate="animate"

@@ -821,7 +821,7 @@ const JobDetails = ({ onClose }) => {
                 "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg?semt=ais_hybrid&w=740"
               }
               alt={organizationData.name}
-              className="w-16 h-16 rounded-lg object-contain border border-gray-100"
+              className="w-16 h-16 rounded-lg object-cover border border-gray-100"
               onError={(e) => {
                 e.target.src =
                   "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg?semt=ais_hybrid&w=740";

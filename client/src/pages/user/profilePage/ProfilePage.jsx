@@ -234,7 +234,7 @@ const ProfilePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA]">
         <div className="max-w-md w-full mx-4">
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
             {/* Icon */}
@@ -292,11 +292,11 @@ const ProfilePage = () => {
 
   return (
     <>
-      <div className="flex min-h-screen bg-white mt-[10px] mr-[80px]">
+      <div className="flex min-h-screen mt-[10px] mr-[80px]">
         {/* Sidebar is rendered by parent layout */}
         <div className="flex-1" style={{ marginLeft: SIDEBAR_WIDTH }}>
           <Header />
-          <div className="flex flex-col px-7 py-8 mt-[7vh]">
+          <div className="flex flex-col px-7 py-8 mt-10">
             {/* Profile Section */}
             <ProfileHeader
               userData={userData}

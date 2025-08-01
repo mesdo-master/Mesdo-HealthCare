@@ -11,10 +11,10 @@ const RecruitementPage = () => {
   const [showProfileNudge, setShowProfileNudge] = useState(true);
 
   return (
-    <div className="flex min-h-screen bg-white mt-[10px] mr-[80px]">
+    <div className="flex min-h-screen mt-[10px] mr-[80px]">
       {/* Sidebar is rendered by parent layout */}
       <div className="flex-1" style={{ marginLeft: SIDEBAR_WIDTH }}>
-        <div className="flex flex-col px-7 py-8 mt-[7vh]">
+        <div className="flex flex-col px-7 py-8 mt-10">
           <Topbar />
           <Filters />
           <JobList />

@@ -156,8 +156,8 @@ const AppliedJob = ({ inUserProfile }) => {
   return (
     <motion.div
       className={`${
-        !inUserProfile && " ml-[5vw] pt-[10vh]"
-      } min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30`}
+        !inUserProfile && " ml-[5vw] pt-10"
+      } min-h-screen bg-[#F5F7FA]`}
       variants={containerVariants}
       initial="initial"
       animate="animate"
@@ -242,129 +242,132 @@ const AppliedJob = ({ inUserProfile }) => {
                   transition={{ delay: index * 0.05 }}
                   className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200/60 hover:shadow-lg hover:bg-white/90 transition-all duration-300 overflow-hidden"
                 >
-                {/* Job Header */}
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="flex gap-4 flex-1">
-                      {/* Company Logo */}
-                      <div className="w-16 h-16 rounded-xl border border-slate-200/60 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-blue-50 overflow-hidden flex-shrink-0 shadow-sm">
-                        <img
-                          src={
-                            job.hospitalLogo ||
-                            "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg"
-                          }
-                          alt="Hospital Logo"
-                          className="w-12 h-12 object-contain"
-                          onError={(e) => {
-                            e.target.src =
-                              "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg";
-                          }}
-                        />
-                      </div>
-
-                      {/* Job Details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold text-slate-800 truncate">
-                            {job.jobTitle}
-                          </h3>
-                          <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                              applicationStatus
-                            )} bg-current bg-opacity-10 flex-shrink-0 shadow-sm`}
-                          >
-                            {applicationStatus}
-                          </span>
+                  {/* Job Header */}
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex gap-4 flex-1">
+                        {/* Company Logo */}
+                        <div className="w-16 h-16 rounded-xl border border-slate-200/60 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-blue-50 overflow-hidden flex-shrink-0 shadow-sm">
+                          <img
+                            src={
+                              job.hospitalLogo ||
+                              "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg"
+                            }
+                            alt="Hospital Logo"
+                            className="w-12 h-12 object-cover"
+                            onError={(e) => {
+                              e.target.src =
+                                "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg";
+                            }}
+                          />
                         </div>
 
-                        <div className="flex items-center gap-6 text-sm text-slate-600 mb-3">
-                          <div className="flex items-center gap-2">
-                            <Building className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium">
-                              {job.HospitalName}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-slate-400" />
-                            <span>{job.location}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-slate-400" />
-                            <span>Applied {formatRelativeTime(appliedAt)}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {job.employmentType && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-sm">
-                              {job.employmentType}
-                            </span>
-                          )}
-                          {job.experience && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-purple-50/80 text-purple-700 border border-purple-200/60 shadow-sm">
-                              {job.experience}+ years
-                            </span>
-                          )}
-                          <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-emerald-50/80 text-emerald-700 border border-emerald-200/60 shadow-sm">
-                            {formatSalary(
-                              job.salaryRangeFrom,
-                              job.salaryRangeTo
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status Progress Tracker */}
-                  <div className="pt-6 border-t border-slate-200/60">
-                    <div className="flex items-center justify-between relative">
-                      {statusStages.map((stage, index) => (
-                        <div
-                          key={stage}
-                          className="flex flex-col items-center relative z-10"
-                        >
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 shadow-sm ${
-                              index <= currentStatusIndex
-                                ? "bg-emerald-500 text-white shadow-emerald-200"
-                                : "bg-slate-200 text-slate-500"
-                            }`}
-                          >
-                            {index + 1}
-                          </div>
-                          <div className="mt-3 text-center">
-                            <div
-                              className={`text-xs font-medium ${
-                                index <= currentStatusIndex
-                                  ? "text-emerald-600"
-                                  : "text-slate-500"
-                              }`}
+                        {/* Job Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-semibold text-slate-800 truncate">
+                              {job.jobTitle}
+                            </h3>
+                            <span
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                                applicationStatus
+                              )} bg-current bg-opacity-10 flex-shrink-0 shadow-sm`}
                             >
-                              {stage}
+                              {applicationStatus}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-6 text-sm text-slate-600 mb-3">
+                            <div className="flex items-center gap-2">
+                              <Building className="w-4 h-4 text-slate-400" />
+                              <span className="font-medium">
+                                {job.HospitalName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-slate-400" />
+                              <span>{job.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-slate-400" />
+                              <span>
+                                Applied {formatRelativeTime(appliedAt)}
+                              </span>
                             </div>
                           </div>
-                        </div>
-                      ))}
 
-                      {/* Progress Line */}
-                      <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 -z-0">
-                        <div
-                          className="h-full bg-emerald-500 transition-all duration-500 ease-out"
-                          style={{
-                            width: `${
-                              (currentStatusIndex / (statusStages.length - 1)) *
-                              100
-                            }%`,
-                          }}
-                        />
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {job.employmentType && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-sm">
+                                {job.employmentType}
+                              </span>
+                            )}
+                            {job.experience && (
+                              <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-purple-50/80 text-purple-700 border border-purple-200/60 shadow-sm">
+                                {job.experience}+ years
+                              </span>
+                            )}
+                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-emerald-50/80 text-emerald-700 border border-emerald-200/60 shadow-sm">
+                              {formatSalary(
+                                job.salaryRangeFrom,
+                                job.salaryRangeTo
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status Progress Tracker */}
+                    <div className="pt-6 border-t border-slate-200/60">
+                      <div className="flex items-center justify-between relative">
+                        {statusStages.map((stage, index) => (
+                          <div
+                            key={stage}
+                            className="flex flex-col items-center relative z-10"
+                          >
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 shadow-sm ${
+                                index <= currentStatusIndex
+                                  ? "bg-emerald-500 text-white shadow-emerald-200"
+                                  : "bg-slate-200 text-slate-500"
+                              }`}
+                            >
+                              {index + 1}
+                            </div>
+                            <div className="mt-3 text-center">
+                              <div
+                                className={`text-xs font-medium ${
+                                  index <= currentStatusIndex
+                                    ? "text-emerald-600"
+                                    : "text-slate-500"
+                                }`}
+                              >
+                                {stage}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Progress Line */}
+                        <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 -z-0">
+                          <div
+                            className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+                            style={{
+                              width: `${
+                                (currentStatusIndex /
+                                  (statusStages.length - 1)) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
           </div>
         </AnimatePresence>
 

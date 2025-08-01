@@ -78,15 +78,18 @@ function Messages() {
         // ✅ Remove duplicate conversations based on otherParticipant ID
         const uniqueConversations = conversations.reduce((acc, conv) => {
           if (!conv.otherParticipant) return acc;
-          
-          const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
-          const existingIndex = acc.findIndex(
-            (existing) => {
-              const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
-              return existingParticipantId === participantId && existing.category === conv.category;
-            }
-          );
-          
+
+          const participantId =
+            conv.otherParticipant.id || conv.otherParticipant._id;
+          const existingIndex = acc.findIndex((existing) => {
+            const existingParticipantId =
+              existing.otherParticipant?.id || existing.otherParticipant?._id;
+            return (
+              existingParticipantId === participantId &&
+              existing.category === conv.category
+            );
+          });
+
           if (existingIndex === -1) {
             // No duplicate found, add the conversation
             acc.push(conv);
@@ -95,17 +98,20 @@ function Messages() {
             const existing = acc[existingIndex];
             const convTime = new Date(conv.lastMessageTime || 0);
             const existingTime = new Date(existing.lastMessageTime || 0);
-            
+
             if (convTime > existingTime) {
               acc[existingIndex] = conv;
             }
           }
-          
+
           return acc;
         }, []);
 
         console.log(`Processed ${activeTab} conversations:`, conversations);
-        console.log(`Unique conversations after deduplication:`, uniqueConversations);
+        console.log(
+          `Unique conversations after deduplication:`,
+          uniqueConversations
+        );
         setAllConversations(uniqueConversations);
       } catch (err) {
         console.error("Error fetching conversations:", err);
@@ -149,27 +155,30 @@ function Messages() {
           // ✅ Apply same deduplication logic for socket refresh
           const uniqueConversations = conversations.reduce((acc, conv) => {
             if (!conv.otherParticipant) return acc;
-            
-            const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
-            const existingIndex = acc.findIndex(
-              (existing) => {
-                const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
-                return existingParticipantId === participantId && existing.category === conv.category;
-              }
-            );
-            
+
+            const participantId =
+              conv.otherParticipant.id || conv.otherParticipant._id;
+            const existingIndex = acc.findIndex((existing) => {
+              const existingParticipantId =
+                existing.otherParticipant?.id || existing.otherParticipant?._id;
+              return (
+                existingParticipantId === participantId &&
+                existing.category === conv.category
+              );
+            });
+
             if (existingIndex === -1) {
               acc.push(conv);
             } else {
               const existing = acc[existingIndex];
               const convTime = new Date(conv.lastMessageTime || 0);
               const existingTime = new Date(existing.lastMessageTime || 0);
-              
+
               if (convTime > existingTime) {
                 acc[existingIndex] = conv;
               }
             }
-            
+
             return acc;
           }, []);
 
@@ -234,34 +243,37 @@ function Messages() {
           } else if (res.data.conversations) {
             conversations = res.data.conversations;
           }
-          
+
           // ✅ Apply same deduplication logic for group creation refresh
           const uniqueConversations = conversations.reduce((acc, conv) => {
             if (!conv.otherParticipant) return acc;
-            
-            const participantId = conv.otherParticipant.id || conv.otherParticipant._id;
-            const existingIndex = acc.findIndex(
-              (existing) => {
-                const existingParticipantId = existing.otherParticipant?.id || existing.otherParticipant?._id;
-                return existingParticipantId === participantId && existing.category === conv.category;
-              }
-            );
-            
+
+            const participantId =
+              conv.otherParticipant.id || conv.otherParticipant._id;
+            const existingIndex = acc.findIndex((existing) => {
+              const existingParticipantId =
+                existing.otherParticipant?.id || existing.otherParticipant?._id;
+              return (
+                existingParticipantId === participantId &&
+                existing.category === conv.category
+              );
+            });
+
             if (existingIndex === -1) {
               acc.push(conv);
             } else {
               const existing = acc[existingIndex];
               const convTime = new Date(conv.lastMessageTime || 0);
               const existingTime = new Date(existing.lastMessageTime || 0);
-              
+
               if (convTime > existingTime) {
                 acc[existingIndex] = conv;
               }
             }
-            
+
             return acc;
           }, []);
-          
+
           setAllConversations(uniqueConversations);
         } catch (error) {
           console.error("Error refreshing conversations:", error);
@@ -286,7 +298,7 @@ function Messages() {
   console.log("Socket connected:", isConnected);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen">
       {/* ✅ Connection Status Bar */}
       {!isConnected && (
         <div className="bg-red-500 text-white px-4 py-2 text-sm flex items-center justify-between">

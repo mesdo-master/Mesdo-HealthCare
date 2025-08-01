@@ -186,7 +186,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             ? "w-full h-auto"
             : fullWidth
             ? "w-full h-[180px] min-h-[100px]"
-            : "w-[1002px] h-[180px] ml-3 min-h-[100px]"
+            : "w-[1002px] h-[180px] min-h-[100px] ml-4"
         } rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-[#E4E5E8] relative flex ${
           small ? "flex-col" : "items-center"
         } cursor-pointer ${isHiding ? "opacity-50 pointer-events-none" : ""}`}
@@ -200,7 +200,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
         >
           <img
             alt="Company Logo"
-            className="w-24 h-24 object-contain rounded-lg border border-gray-200 p-1 bg-white"
+            className="w-24 h-24 object-cover rounded-lg border border-gray-200 p-1 bg-white"
             src={
               job.hospitalLogo ||
               "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg?semt=ais_hybrid&w=740"

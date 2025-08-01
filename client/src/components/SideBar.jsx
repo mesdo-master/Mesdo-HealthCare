@@ -188,6 +188,7 @@ export default function Sidebar({ className = "" }) {
                         }
                         navTo={"/recruitment"}
                         text="Recruitment"
+                        isActive={location.pathname.startsWith("/recruitment")}
                       />
 
                       {/* <NavItem
@@ -211,6 +212,9 @@ export default function Sidebar({ className = "" }) {
                         navTo={"/organization/messages"}
                         text="Messages"
                         notificationCount={unreadMessageCount}
+                        isActive={location.pathname.startsWith(
+                          "/organization/messages"
+                        )}
                       />
                       <NavItem
                         icon={
@@ -222,6 +226,9 @@ export default function Sidebar({ className = "" }) {
                         }
                         text="Profile"
                         navTo={`/organization/${businessProfile?._id}`}
+                        isActive={location.pathname.startsWith(
+                          `/organization/${businessProfile?._id}`
+                        )}
                       />
                     </ul>
                   </div>
@@ -432,12 +439,18 @@ const NavItem = ({
       <Link
         to={navTo || "#"}
         onClick={handleClick}
-        className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm text-[#7F7F7F] transition-all hover:bg-gray-100 group"
+        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-all group ${
+          isActive
+            ? "bg-[#E6F0FF] text-[#1890FF]"
+            : "text-[#7F7F7F] hover:bg-gray-100"
+        }`}
         style={{ position: "relative", overflow: "hidden" }}
       >
         <div className="relative">
           {React.cloneElement(icon, {
-            className: "transition-colors group-hover:text-[#1890FF]",
+            className: isActive
+              ? "text-[#1890FF]"
+              : "transition-colors group-hover:text-[#1890FF]",
             color: "currentColor",
           })}
           {/* Notification indicator */}
@@ -447,7 +460,13 @@ const NavItem = ({
             </div>
           )}
         </div>
-        <span className="transition-colors group-hover:text-[#1890FF]">
+        <span
+          className={
+            isActive
+              ? "text-[#1890FF]"
+              : "transition-colors group-hover:text-[#1890FF]"
+          }
+        >
           {text}
         </span>
         {/* Simple dot indicator for smaller screens or alternative style */}

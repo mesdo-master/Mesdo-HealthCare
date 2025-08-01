@@ -162,7 +162,7 @@ export default function Applicants() {
 
   const { currentUser } = useSelector((state) => state.auth);
   return (
-    <div className="bg-gray-50 h-screen flex mt-[10vh] ml-[6vw]">
+    <div className="h-screen flex mt-10 ml-[6vw] bg-[#F5F7FA]">
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col ml-70">
         {/* TOP BAR */}

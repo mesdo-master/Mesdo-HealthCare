@@ -182,9 +182,7 @@ const SavedJobs = ({ inUserProfile }) => {
 
   return (
     <motion.div
-      className={`${
-        !inUserProfile && " ml-[5vw] pt-[10vh]"
-      } min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30`}
+      className={`${!inUserProfile && " ml-[5vw] pt-10"} min-h-screen`}
       variants={containerVariants}
       initial="initial"
       animate="animate"

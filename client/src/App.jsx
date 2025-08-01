@@ -70,11 +70,9 @@ function AppRoutes() {
   // Routes that have custom Header rendering (excluding messages)
   const customHeaderRoutes = ["/organization/", "/profile/"];
   const excludeMessageRoutes = ["/organization/messages", "/messages"];
-  const hasCustomHeader = customHeaderRoutes.some((route) =>
-    location.pathname.includes(route)
-  ) && !excludeMessageRoutes.some((route) =>
-    location.pathname.startsWith(route)
-  );
+  const hasCustomHeader =
+    customHeaderRoutes.some((route) => location.pathname.includes(route)) &&
+    !excludeMessageRoutes.some((route) => location.pathname.startsWith(route));
 
   return isAuthenticated ? (
     // Handle onboarding routes
@@ -117,7 +115,11 @@ function AppRoutes() {
             <Sidebar />
             <div
               className="flex-1 min-h-screen"
-              style={isNoSidebarOffset ? {} : { marginLeft: "15vw" }}
+              style={{
+                ...(isNoSidebarOffset ? {} : { marginLeft: "15vw" }),
+                backgroundColor: "#F5F7FA !important",
+                background: "#F5F7FA !important",
+              }}
             >
               <div className="w-full">
                 {!hasCustomHeader && <Header />}

@@ -189,7 +189,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen">
       <div className="flex flex-1 overflow-hidden pt-16">
         <div className="flex-1 ml-[300px] overflow-y-auto p-8">
           <div className="max-w-5xl mx-auto">

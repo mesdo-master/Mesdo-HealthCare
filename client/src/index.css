@@ -7,6 +7,52 @@
 html,body{
     overflow-x: hidden;
     width: 100%;
+    background-color: #F5F7FA;
+}
+
+/* Global background color for main content area (excluding sidebar) */
+.main-layout-wrapper .inner-content-area > div > div:last-child {
+  background-color: #F5F7FA !important;
+}
+
+/* Additional specificity for the main content div */
+.main-layout-wrapper .inner-content-area > div > div:last-child > div {
+  background-color: #F5F7FA !important;
+}
+
+/* Ensure sidebar keeps white background */
+.main-layout-wrapper .inner-content-area > div > div:first-child {
+  background-color: white !important;
+}
+
+/* Sidebar specific white background overrides */
+[class*="absolute"][class*="bg-white"] {
+  background-color: white !important;
+}
+
+/* More specific sidebar white background rules */
+.absolute.bg-white {
+  background-color: white !important;
+}
+
+/* Sidebar container white background */
+.main-layout-wrapper .inner-content-area > div > div:first-child,
+.main-layout-wrapper .inner-content-area > div > div:first-child * {
+  background-color: white !important;
+}
+
+/* Global white background for entire left sidebar area */
+/* This covers the area from left edge to full sidebar width (210px) */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 210px;
+  height: 100vh;
+  background-color: white;
+  z-index: 30;
+  pointer-events: none;
 }
 
 /* Simple wrapper - only adds left/right padding on larger screens */
@@ -18,6 +64,11 @@ html,body{
 .inner-content-area {
   position: relative;
   min-height: 100vh;
+}
+
+/* Global app background */
+#root {
+  background-color: #F5F7FA !important;
 }
 
 /* Large screens get padding to center content */

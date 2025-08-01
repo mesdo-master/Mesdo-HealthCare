@@ -1,4 +1,4 @@
-    import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Bell,
   Briefcase,
@@ -156,7 +156,7 @@ export default function NotificationApp() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex gap-8">
           <div className="flex-1">

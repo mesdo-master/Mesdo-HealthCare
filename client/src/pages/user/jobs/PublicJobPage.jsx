@@ -92,7 +92,7 @@ const PublicJobPage = () => {
               "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg?semt=ais_hybrid&w=740"
             }
             alt="Logo"
-            className="w-20 h-20 rounded-lg object-contain border"
+            className="w-20 h-20 rounded-lg object-cover border"
           />
           <div>
             <span className="inline-block bg-[#E6E6FA] text-[#A259FF] text-xs font-medium px-3 py-1 rounded mb-2">

@@ -36,7 +36,7 @@ const JobCard = ({ job, onEdit, onDelete }) => {
   }, [openDropdown]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-[#F1F1F1] ml-[-30px] p-4 sm:p-6 lg:p-9 w-full max-w-full sm:max-w-[587px] mx-auto transition hover:shadow-md h-auto min-h-[320px] flex flex-col justify-between">
+    <div className="bg-white rounded-2xl shadow-sm border border-[#F1F1F1] p-4 sm:p-6 lg:p-9 w-full max-w-full sm:max-w-[587px] mx-auto transition hover:shadow-md h-auto min-h-[320px] flex flex-col justify-between">
       {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirm && (
