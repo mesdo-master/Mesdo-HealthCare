@@ -186,7 +186,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             ? "w-full h-auto"
             : fullWidth
             ? "w-full h-[180px] min-h-[100px]"
-            : "w-[1002px] h-[180px] min-h-[100px] ml-4"
+            : "w-[990px] h-[180px] min-h-[100px] ml-4"
         } rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-[#E4E5E8] relative flex ${
           small ? "flex-col" : "items-center"
         } cursor-pointer ${isHiding ? "opacity-50 pointer-events-none" : ""}`}
