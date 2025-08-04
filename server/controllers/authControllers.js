@@ -17,6 +17,8 @@ const googleAuth = (req, res) => {
 const googleAuthCallback = async (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, user) => {
     if (err || !user) {
+      console.error("Google auth callback error:", err);
+      console.error("User object:", user);
       return res
         .status(400)
         .json({ message: "Google authentication failed", success: false });
@@ -52,7 +54,8 @@ const googleAuthCallback = async (req, res, next) => {
     });
 
     // Redirect to frontend with token in URL as additional fallback
-    res.redirect(`https://mesdo-health-care-u5s9.vercel.app?token=${token}`);
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    res.redirect(`${clientUrl}?token=${token}`);
   })(req, res, next);
 };
 

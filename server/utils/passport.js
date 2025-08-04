@@ -8,10 +8,14 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:5020/auth/google/callback",
+      callbackURL: process.env.NODE_ENV === 'production' 
+        ? "https://mesdo-healthcare-4.onrender.com/auth/google/callback"
+        : "http://localhost:5020/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log("Google OAuth callback - Profile received:", profile.displayName, profile.emails?.[0]?.value);
+        
         if (!profile.emails || profile.emails.length === 0) {
           console.error("No email found in Google profile:", profile);
           return done(new Error("Email not available from Google"), null);
