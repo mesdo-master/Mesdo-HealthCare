@@ -84,7 +84,7 @@ const searchRoutes = require("./routes/searchRoutes");
 const socketRoutes = require("./routes/socketRoutes");
 
 //Routes
-app.use("/auth", authRoutes);
+app.use("/", authRoutes);
 app.use("/onboarding", onBoardingRoutes);
 app.use("/users", userRoutes);
 app.use("/chats", chatRoutes);
