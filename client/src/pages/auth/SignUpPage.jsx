@@ -85,7 +85,7 @@ const SignUpPage = () => {
     // Redirect to backend Google auth route
     const apiUrl =
       process.env.REACT_APP_API_URL ||
-      "http://localhost:5020";
+      "https://mesdo-healthcare-4.onrender.com";
     window.location.href = `${apiUrl}/auth/google`;
   };
 
