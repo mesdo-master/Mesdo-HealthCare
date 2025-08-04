@@ -10,6 +10,35 @@ html,body{
     background-color: #F5F7FA;
 }
 
+/* Global primary blue color standardization */
+:root {
+  --primary-blue: #1890FF;
+  --primary-blue-hover: #1570EF;
+  --primary-blue-active: #0D6EFD;
+  --primary-blue-light: #E6F4FF;
+}
+
+/* Ensure consistent primary blue usage */
+.text-primary-blue {
+  color: #1890FF !important;
+}
+
+.bg-primary-blue {
+  background-color: #1890FF !important;
+}
+
+.border-primary-blue {
+  border-color: #1890FF !important;
+}
+
+.focus\:ring-primary-blue:focus {
+  --tw-ring-color: #1890FF !important;
+}
+
+.focus\:border-primary-blue:focus {
+  border-color: #1890FF !important;
+}
+
 /* Global background color for main content area (excluding sidebar) */
 .main-layout-wrapper .inner-content-area > div > div:last-child {
   background-color: #F5F7FA !important;
@@ -43,7 +72,8 @@ html,body{
 
 /* Global white background for entire left sidebar area */
 /* This covers the area from left edge to full sidebar width (210px) */
-body::before {
+/* Only apply to authenticated routes that use main-layout-wrapper */
+.main-layout-wrapper::before {
   content: '';
   position: fixed;
   top: 0;
@@ -69,6 +99,23 @@ body::before {
 /* Global app background */
 #root {
   background-color: #F5F7FA !important;
+}
+
+/* Onboarding pages should be full-screen with white background */
+/* Override any global background for onboarding routes */
+body[data-route*="onboarding"] #root,
+#root[data-onboarding="true"] {
+  background-color: white !important;
+}
+
+/* Ensure onboarding pages take full width and height */
+body[data-route*="onboarding"] .onboarding-container,
+#root[data-onboarding="true"] .onboarding-container {
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: white !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Large screens get padding to center content */

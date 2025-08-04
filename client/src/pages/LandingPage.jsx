@@ -5,8 +5,10 @@ import { Link } from "react-router-dom";
 const LandingPage = () => {
   const handleGoogleLogin = () => {
     // Redirect to backend Google auth route
-    window.location.href =
-      "https://mesdo-healthcare-4.onrender.com/auth/google";
+    const apiUrl =
+      process.env.REACT_APP_API_URL ||
+      "http://localhost:5020";
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   return (
@@ -38,7 +40,7 @@ const LandingPage = () => {
               Sign Up with Google
             </button>
             <Link to={"/login"}>
-              <button className="w-full py-3 px-4 my-4 bg-[#1890FF] text-white rounded-lg hover:bg-blue-700 transition">
+              <button className="w-full py-3 px-4 my-4 bg-[#1890FF] text-white rounded-lg hover:bg-primary-600 transition">
                 Login
               </button>
             </Link>

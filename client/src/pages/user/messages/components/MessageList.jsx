@@ -5,6 +5,8 @@ import CreateGroupModal from "./CreateGroupModal";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../../../context/NotificationContextFinal";
 import axiosInstance from "../../../../lib/axio";
+import { MessageSquare } from "lucide-react";
+import MesdoLogo from "../../../../assets/mesdo_logo.png";
 
 const MessageList = ({
   users, // <------ AllConversations
@@ -36,14 +38,18 @@ const MessageList = ({
           // First priority: Unread conversations come first
           const aIsUnread = unreadConversations.has(a._id);
           const bIsUnread = unreadConversations.has(b._id);
-          
+
           if (aIsUnread && !bIsUnread) return -1;
           if (!aIsUnread && bIsUnread) return 1;
-          
+
           // Second priority: Sort by last message time (most recent first)
-          const aTime = new Date(a.lastMessageAt || a.updatedAt || a.createdAt || 0);
-          const bTime = new Date(b.lastMessageAt || b.updatedAt || b.createdAt || 0);
-          
+          const aTime = new Date(
+            a.lastMessageAt || a.updatedAt || a.createdAt || 0
+          );
+          const bTime = new Date(
+            b.lastMessageAt || b.updatedAt || b.createdAt || 0
+          );
+
           return bTime - aTime; // Most recent first
         })
     : [];
@@ -53,33 +59,33 @@ const MessageList = ({
     filteredCount: filteredConversations?.length,
     unreadConversations: Array.from(unreadConversations),
     activeTab,
-    firstFewConversations: filteredConversations?.slice(0, 3).map(conv => ({
+    firstFewConversations: filteredConversations?.slice(0, 3).map((conv) => ({
       id: conv._id,
       category: conv.category,
       isUnread: unreadConversations.has(conv._id),
       lastMessageAt: conv.lastMessageAt,
       updatedAt: conv.updatedAt,
       createdAt: conv.createdAt,
-      lastMessage: conv.lastMessage?.text || 'No message',
-      lastMessageSender: conv.lastMessage?.sender || 'Unknown'
-    }))
+      lastMessage: conv.lastMessage?.text || "No message",
+      lastMessageSender: conv.lastMessage?.sender || "Unknown",
+    })),
   });
 
   // Additional debugging for sorting logic
   console.log("🔍 MESSAGE LIST SORT DEBUG:", {
-    beforeSort: users?.slice(0, 3).map(conv => ({
+    beforeSort: users?.slice(0, 3).map((conv) => ({
       id: conv._id,
       isUnread: unreadConversations.has(conv._id),
       lastMessageAt: conv.lastMessageAt,
-      updatedAt: conv.updatedAt
+      updatedAt: conv.updatedAt,
     })),
-    afterSort: filteredConversations?.slice(0, 3).map(conv => ({
+    afterSort: filteredConversations?.slice(0, 3).map((conv) => ({
       id: conv._id,
       isUnread: unreadConversations.has(conv._id),
       lastMessageAt: conv.lastMessageAt,
-      updatedAt: conv.updatedAt
+      updatedAt: conv.updatedAt,
     })),
-    unreadConversationsSize: unreadConversations.size
+    unreadConversationsSize: unreadConversations.size,
   });
 
   const handleOpenMessage = (conversation) => {
@@ -103,30 +109,43 @@ const MessageList = ({
   }, []);
 
   return (
-    <div className="w-[340px] bg-white/90 border-r border-gray-100 flex flex-col rounded-l-2xl shadow-lg h-full">
+    <div className="w-[340px] bg-white/90 border-r border-gray-100 flex flex-col rounded-l-2xl h-full">
       <div className="p-4 border-b border-gray-100">
-        <h1 className="text-xl font-semibold mb-4">Messages</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-semibold">Messages</h1>
+          <button
+            onClick={() => setShowCreateGroupModal(true)}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Create new group"
+          >
+            <img
+              src="https://res.cloudinary.com/dy9voteoc/image/upload/v1743997226/CreateMessage_vz54wg.png"
+              alt="Create group"
+              className="w-5 h-5"
+            />
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-4 h-4" />
             <input
               type="text"
               placeholder={`Search ${activeTab.toLowerCase()}...`}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-100 border border-gray-200"
+              className="w-full pl-9 pr-3 py-1.5 bg-gray-50 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-100 border border-gray-200 text-xs"
             />
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-xl p-1 mb-4">
+        <div className="bg-gray-50 rounded-xl p-1 mb-4 ml-3">
           <div className="flex">
             {["Personal", "Groups", "Jobs"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
+                className={`flex-1 py-2 px-4 text-xs font-medium rounded-lg transition-all duration-200 ${
                   activeTab === tab
-                    ? "bg-white text-blue-500 shadow"
+                    ? "bg-white text-blue-500"
                     : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                 }`}
               >
@@ -171,13 +190,17 @@ const MessageList = ({
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <div className="text-5xl mb-3">💬</div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
+              <img src={MesdoLogo} alt="Mesdo Logo" className="w-12 h-12" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
               No {activeTab.toLowerCase()} conversations
             </h2>
-            <p className="text-gray-500 text-center max-w-xs text-sm">
+            <p className="text-sm text-gray-500 text-center max-w-xs">
               {activeTab === "Jobs"
                 ? "No job-related conversations yet. Apply to jobs to start chatting with recruiters!"
+                : activeTab === "Personal"
+                ? "Your personal chats will appear here. Start connecting with people!"
                 : `No ${activeTab.toLowerCase()} messages yet. Start a conversation to get started!`}
             </p>
           </div>

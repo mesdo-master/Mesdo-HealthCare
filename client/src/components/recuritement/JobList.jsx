@@ -235,21 +235,8 @@ const JobCard = ({ job, onEdit, onDelete }) => {
 };
 
 // ✅ JobCards Component (Uses JobCard)
-export default function JobList() {
-  const [jobs, setJobs] = useState(null); // null means loading
+export default function JobList({ jobs = [], loading = false, onJobsUpdate }) {
   const navigate = useNavigate();
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const response = await axiosInstance.get("/jobs");
-        setJobs(response.data.jobs);
-      } catch (error) {
-        setJobs([]); // fallback to empty
-        console.log(error);
-      }
-    };
-    fetchJobs();
-  }, []);
 
   const handleEdit = (jobId) => {
     navigate(`/recruitment/create?jobId=${jobId}`);
@@ -258,13 +245,16 @@ export default function JobList() {
   const handleDelete = async (jobId) => {
     try {
       await axiosInstance.delete(`/jobs/${jobId}`);
-      setJobs((prev) => prev.filter((job) => job._id !== jobId));
+      // Call parent callback to update jobs list
+      if (onJobsUpdate) {
+        onJobsUpdate(jobId);
+      }
     } catch (err) {
       alert("Failed to delete job.");
     }
   };
 
-  if (jobs === null) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center w-full py-24">
         <div className="flex flex-col items-center bg-white rounded-xl shadow-lg px-8 py-10">

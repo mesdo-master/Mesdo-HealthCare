@@ -149,20 +149,20 @@ const NewGroupModal = ({ isOpen, onClose, onCreate, users }) => {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50"
+          className="absolute inset-0 flex items-center justify-center z-50"
         >
           <motion.div
             initial={{ scale: 0.95, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className={`bg-white rounded-lg ${
-              step === 1 ? "w-[360px] h-[506px]" : "w-full max-w-md"
-            } flex flex-col`}
+            className={`bg-white rounded-2xl shadow-xl ${
+              step === 1 ? "w-80 max-w-md" : "w-full max-w-md"
+            } mx-auto`}
           >
             {/* Step 1: Select members */}
             {step === 1 && (

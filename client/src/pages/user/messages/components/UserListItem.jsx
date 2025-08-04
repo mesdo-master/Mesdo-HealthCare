@@ -56,7 +56,8 @@ const UserListItem = ({ user, selectedUser, onClick }) => {
             isGroup
               ? user.avatar ||
                 "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-              : user.otherParticipant?.profilePicture || user.otherParticipant?.orgLogo ||
+              : user.otherParticipant?.profilePicture ||
+                user.otherParticipant?.orgLogo ||
                 "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
           }
           alt={isGroup ? user.name : user.otherParticipant?.name}
@@ -76,7 +77,11 @@ const UserListItem = ({ user, selectedUser, onClick }) => {
 
       <div className="ml-3 flex-1">
         <div className="flex items-center justify-between">
-          <h3 className={`font-semibold text-base ${hasUnreadMessages ? 'text-blue-600' : ''}`}>
+          <h3
+            className={`font-semibold text-base ${
+              hasUnreadMessages ? "text-blue-600" : ""
+            }`}
+          >
             {isGroup ? user.name : user.otherParticipant?.name}
           </h3>
           <div className="flex items-center gap-2">
@@ -88,7 +93,11 @@ const UserListItem = ({ user, selectedUser, onClick }) => {
             )}
           </div>
         </div>
-        <p className={`text-sm truncate ${hasUnreadMessages ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+        <p
+          className={`text-sm truncate ${
+            hasUnreadMessages ? "text-blue-600 font-medium" : "text-gray-500"
+          }`}
+        >
           {truncateMessage(user.lastMessage)}
         </p>
       </div>

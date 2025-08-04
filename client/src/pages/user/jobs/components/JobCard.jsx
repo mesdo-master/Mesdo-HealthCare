@@ -186,7 +186,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             ? "w-full h-auto"
             : fullWidth
             ? "w-full h-[180px] min-h-[100px]"
-            : "w-[990px] h-[180px] min-h-[100px] ml-4"
+            : "w-full h-[180px] min-h-[100px]"
         } rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-[#E4E5E8] relative flex ${
           small ? "flex-col" : "items-center"
         } cursor-pointer ${isHiding ? "opacity-50 pointer-events-none" : ""}`}
@@ -194,13 +194,15 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
       >
         {/* Logo */}
         <div
-          className={`flex items-center justify-center w-24 h-24 mr-6 flex-shrink-0${
-            small ? " mb-4 w-12 h-12 mr-3" : ""
-          }`}
+          className={`flex items-center justify-center ${
+            small ? "mb-4 w-12 h-12 mr-3" : "w-[135px] h-[128px] mr-6"
+          } flex-shrink-0`}
         >
           <img
             alt="Company Logo"
-            className="w-24 h-24 object-cover rounded-lg border border-gray-200 p-1 bg-white"
+            className={`object-cover rounded-lg border border-gray-200 p-1 bg-white ${
+              small ? "w-12 h-12" : "w-[135px] h-[128px]"
+            }`}
             src={
               job.hospitalLogo ||
               "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg?semt=ais_hybrid&w=740"
@@ -304,10 +306,10 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                 </div>
               </div>
               {/* Title and Company */}
-              <h3 className="text-xl font-semibold text-gray-800 leading-tight mb-1">
+              <h3 className="text-xl font-semibold text-gray-800 leading-tight mb-2">
                 {job.jobTitle}
               </h3>
-              <p className="text-sm text-gray-500 mb-3 truncate">
+              <p className="text-sm text-gray-500 mb-6">
                 {job.HospitalName} <span className="mx-1">|</span>{" "}
                 {job.location}
               </p>
@@ -325,13 +327,41 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
               </div>
             </div>
             {/* Match Percentage - only for large cards */}
-            <div className="flex flex-col items-center mt-20 justify-center ml-6 min-w-[80px]">
-              <div className="flex flex-col items-center justify-center mb-1">
-                <span className="text-green-500 text-xl font-bold">
-                  {job.matchPercentage}%
-                </span>
+            <div className="flex flex-col items-center mt-[80px] justify-center ml-6 min-w-[80px]">
+              <div className="relative w-10 h-10">
+                <svg
+                  className="w-10 h-10 transform -rotate-90"
+                  viewBox="0 0 36 36"
+                >
+                  {/* Background circle */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="2"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray={`${job.matchPercentage * 1.01} 100`}
+                    strokeDashoffset="0"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-green-600">
+                    {job.matchPercentage}%
+                  </span>
+                </div>
               </div>
-              <span className="text-xs text-gray-500">Match</span>
+              <span className="text-xs text-slate-500">Match</span>
             </div>
           </>
         )}
@@ -392,10 +422,40 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             {/* Match Percentage for small cards */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-green-500 text-lg font-bold">
-                  {job.matchPercentage}%
-                </span>
-                <span className="text-xs text-gray-500">Match</span>
+                <div className="relative w-8 h-8">
+                  <svg
+                    className="w-8 h-8 transform -rotate-90"
+                    viewBox="0 0 36 36"
+                  >
+                    {/* Background circle */}
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      fill="none"
+                      stroke="#e5e7eb"
+                      strokeWidth="2"
+                    />
+                    {/* Progress circle */}
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeDasharray={`${job.matchPercentage * 1.01} 100`}
+                      strokeDashoffset="0"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-green-600">
+                      {job.matchPercentage}%
+                    </span>
+                  </div>
+                </div>
+                <span className="text-xs text-slate-500">Match</span>
               </div>
               <button
                 className="hover:text-gray-600 relative"

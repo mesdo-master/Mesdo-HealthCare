@@ -2,9 +2,11 @@ import { BsFillBookmarkCheckFill, BsThreeDotsVertical } from "react-icons/bs";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, BookLock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import axiosInstance from "../../../lib/axio";
 import JobCard from "./components/JobCard";
+import { calculateMatchPercentage } from "../../../utils/matchPercentage";
+import { useSelector } from "react-redux";
 
 // Animation variants
 const containerVariants = {
@@ -37,7 +39,129 @@ const itemVariants = {
 };
 
 // Custom wrapper component for hidden jobs with overlay
-const HiddenJobCard = ({ job, onUnhide, isUnhiding }) => {
+const HiddenJobCard = ({ job, onUnhide, isUnhiding, currentUser }) => {
+  const navigate = useNavigate();
+
+  const formatRelativeTime = (isoDateStr) => {
+    const postedDate = new Date(isoDateStr);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - postedDate) / 1000);
+
+    const secondsIn = {
+      minute: 60,
+      hour: 3600,
+      day: 86400,
+      week: 604800,
+      month: 2629746,
+      year: 31556952,
+    };
+
+    if (diffInSeconds < secondsIn.minute) {
+      return "Just now";
+    } else if (diffInSeconds < secondsIn.hour) {
+      const mins = Math.floor(diffInSeconds / secondsIn.minute);
+      return `${mins} minute${mins > 1 ? "s" : ""} ago`;
+    } else if (diffInSeconds < secondsIn.day) {
+      const hours = Math.floor(diffInSeconds / secondsIn.hour);
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    } else if (diffInSeconds < secondsIn.week) {
+      const days = Math.floor(diffInSeconds / secondsIn.day);
+      return `${days} day${days > 1 ? "s" : ""} ago`;
+    } else if (diffInSeconds < secondsIn.month) {
+      const weeks = Math.floor(diffInSeconds / secondsIn.week);
+      return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+    } else if (diffInSeconds < secondsIn.year) {
+      const months = Math.floor(diffInSeconds / secondsIn.month);
+      return `${months} month${months > 1 ? "s" : ""} ago`;
+    } else {
+      const years = Math.floor(diffInSeconds / secondsIn.year);
+      return `${years} year${years > 1 ? "s" : ""} ago`;
+    }
+  };
+
+  const calculateMatchPercentage = (job, user) => {
+    if (!user || !job) return 75;
+
+    const jobSkills = Array.isArray(job.skills)
+      ? job.skills.map((s) => s.toLowerCase())
+      : [];
+    const userSkills = Array.isArray(user.skills)
+      ? user.skills.map((s) => s.toLowerCase())
+      : [];
+
+    let skillScore = 0;
+    if (jobSkills.length > 0 && userSkills.length > 0) {
+      const matchedSkills = userSkills.filter((s) => jobSkills.includes(s));
+      skillScore = matchedSkills.length / jobSkills.length;
+    } else {
+      skillScore = 0.5;
+    }
+
+    let userExp = 0;
+    if (Array.isArray(user.experience) && user.experience.length > 0) {
+      userExp = Math.max(
+        ...user.experience.map((exp) => {
+          if (exp.startDate && exp.endDate) {
+            return (
+              (new Date(exp.endDate) - new Date(exp.startDate)) /
+              (1000 * 60 * 60 * 24 * 365)
+            );
+          } else if (exp.startDate && exp.currentlyWorking) {
+            return (
+              (Date.now() - new Date(exp.startDate)) /
+              (1000 * 60 * 60 * 24 * 365)
+            );
+          }
+          return 0;
+        })
+      );
+    }
+    const jobExp = Number(job.experience) || 0;
+    let expScore = 0;
+    if (jobExp > 0) {
+      expScore = Math.min(userExp / jobExp, 1);
+    } else {
+      expScore = 0.8;
+    }
+
+    let locationScore = 0;
+    if (user.location?.city && job.location) {
+      locationScore =
+        user.location.city.toLowerCase() === job.location.toLowerCase() ? 1 : 0;
+    } else {
+      locationScore = 0.5;
+    }
+
+    let salaryScore = 0;
+    if (user.expectedSalary && job.salaryRangeFrom && job.salaryRangeTo) {
+      salaryScore =
+        user.expectedSalary >= job.salaryRangeFrom &&
+        user.expectedSalary <= job.salaryRangeTo
+          ? 1
+          : 0;
+    } else {
+      salaryScore = 0.5;
+    }
+
+    const match =
+      skillScore * 65 + expScore * 20 + locationScore * 10 + salaryScore * 5;
+    return Math.round(match);
+  };
+
+  const matchPercentage = (() => {
+    if (!currentUser) {
+      return job.matchPercentage || 85;
+    }
+
+    const calculated = calculateMatchPercentage(job, currentUser);
+
+    if (calculated <= 10) {
+      return job.matchPercentage || 85;
+    }
+
+    return calculated;
+  })();
+
   return (
     <div className="relative">
       {/* Hidden Overlay */}
@@ -73,13 +197,130 @@ const HiddenJobCard = ({ job, onUnhide, isUnhiding }) => {
         </motion.div>
       </div>
 
-      {/* JobCard underneath */}
-      <JobCard
-        job={{
-          ...job,
-          matchPercentage: job.matchPercentage || 85,
-        }}
-      />
+      {/* Custom Job Card matching Applied Jobs UI */}
+      <motion.div
+        className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200/60 hover:shadow-lg hover:bg-white/90 transition-all duration-300 overflow-hidden"
+        onClick={() => navigate(`/jobs/${job._id}`)}
+      >
+        {/* Job Header */}
+        <div className="p-6">
+          <div className="flex gap-4">
+            {/* Company Logo - Left Section */}
+            <div className="w-[135px] h-[128px] rounded-lg border border-slate-200/60 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-blue-50 overflow-hidden flex-shrink-0 shadow-sm relative">
+              <img
+                src={
+                  job.hospitalLogo ||
+                  "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg"
+                }
+                alt="Hospital Logo"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src =
+                    "https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg";
+                }}
+              />
+            </div>
+
+            {/* Job Details - Middle Section */}
+            <div className="flex-1 min-w-0">
+              {/* Recently active tag - positioned to overlap logo */}
+              <div className="relative -mt-2 ml-2 mb-4">
+                <span className="text-xs font-medium text-[#9254DE]">
+                  Recently active
+                </span>
+              </div>
+
+              {/* Job Title */}
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                {job.jobTitle}
+              </h3>
+
+              {/* Company and Location */}
+              <p className="text-sm text-slate-600 mb-6">
+                {job.HospitalName} | {job.location}
+              </p>
+
+              {/* Job Tags */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {job.experience && (
+                  <div className="flex items-center gap-1 bg-[#F1F6FF] text-[#1890FF] px-3 py-1 rounded-md text-xs font-medium">
+                    <span>{job.experience} Years</span>
+                  </div>
+                )}
+                {(job.salaryRangeFrom || job.salaryRangeTo) && (
+                  <div className="flex items-center gap-1 bg-[#F1F6FF] text-[#1890FF] px-3 py-1 rounded-md text-xs font-medium">
+                    <span>
+                      {job.salaryRangeFrom / 100000} -{" "}
+                      {job.salaryRangeTo / 100000}L / year
+                    </span>
+                  </div>
+                )}
+                {job.employmentType && (
+                  <div className="flex items-center gap-1 bg-[#F1F6FF] text-[#1890FF] px-3 py-1 rounded-md text-xs font-medium">
+                    <span>{job.employmentType}</span>
+                  </div>
+                )}
+                {job.qualification && (
+                  <div className="flex items-center gap-1 bg-[#F1F6FF] text-[#1890FF] px-3 py-1 rounded-md text-xs font-medium">
+                    <span>{job.qualification}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Section - Status and Match */}
+            <div className="flex flex-col items-end gap-4 flex-shrink-0">
+              {/* Posted Date and Options */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">
+                  Posted {formatRelativeTime(job.createdAt)}
+                </span>
+                <button className="text-slate-400 hover:text-slate-600">
+                  <BsThreeDotsVertical size={16} />
+                </button>
+              </div>
+
+              {/* Match Percentage - Bottom Corner */}
+              <div className="flex flex-col items-center gap-1 mt-[80px]">
+                <div className="relative w-10 h-10">
+                  <svg
+                    className="w-10 h-10 transform -rotate-90"
+                    viewBox="0 0 36 36"
+                  >
+                    {/* Background circle */}
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      fill="none"
+                      stroke="#e5e7eb"
+                      strokeWidth="2"
+                    />
+                    {/* Progress circle */}
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeDasharray={`${matchPercentage * 1.01} 100`}
+                      strokeDashoffset="0"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-green-600">
+                      {matchPercentage}%
+                    </span>
+                  </div>
+                </div>
+                <span className="text-xs text-slate-500">Match</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
@@ -89,6 +330,38 @@ const HiddenJobs = () => {
   const [hiddenJobs, setHiddenJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unhidingJobId, setUnhidingJobId] = useState(null);
+  const [sortBy, setSortBy] = useState("Recently Hidden");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const currentUser = useSelector((state) => state.auth.user);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Current user data:", currentUser);
+    if (hiddenJobs.length > 0) {
+      console.log("Sample job data:", hiddenJobs[0]);
+      console.log(
+        "Sample match calculation:",
+        calculateMatchPercentage(hiddenJobs[0], currentUser)
+      );
+    }
+  }, [currentUser, hiddenJobs]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const sortOptions = ["Recently Hidden", "Job Title", "Company Name"];
 
   useEffect(() => {
     const getHiddenJobs = async () => {
@@ -171,6 +444,35 @@ const HiddenJobs = () => {
     }
   }
 
+  // Sort hidden jobs based on selected option
+  const sortedHiddenJobs = useMemo(() => {
+    if (!hiddenJobs.length) return [];
+
+    const sorted = [...hiddenJobs];
+    switch (sortBy) {
+      case "Recently Hidden":
+        return sorted.sort((a, b) => {
+          const dateA = new Date(a.hiddenAt || a.createdAt || 0);
+          const dateB = new Date(b.hiddenAt || b.createdAt || 0);
+          return dateB - dateA;
+        });
+      case "Job Title":
+        return sorted.sort((a, b) => {
+          const titleA = (a.jobTitle || "").toLowerCase();
+          const titleB = (b.jobTitle || "").toLowerCase();
+          return titleA.localeCompare(titleB);
+        });
+      case "Company Name":
+        return sorted.sort((a, b) => {
+          const companyA = (a.HospitalName || "").toLowerCase();
+          const companyB = (b.HospitalName || "").toLowerCase();
+          return companyA.localeCompare(companyB);
+        });
+      default:
+        return sorted;
+    }
+  }, [hiddenJobs, sortBy]);
+
   if (loading) {
     return (
       <div className="ml-[5vw] pt-[10vh] h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
@@ -185,116 +487,174 @@ const HiddenJobs = () => {
   }
 
   return (
-    <motion.div
-      className="ml-[5vw] pt-10 min-h-screen"
-      variants={containerVariants}
-      initial="initial"
-      animate="animate"
-    >
-      {/* Top Bar */}
-      <motion.div
-        className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shadow-sm"
-        variants={itemVariants}
-      >
-        <div className="px-8 pt-6 pb-4 flex flex-col md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start md:items-center gap-4">
-            <motion.button
-              onClick={() => navigate(-1)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200/60 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-200 shadow-sm"
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ArrowLeft size={18} className="text-slate-600" />
-            </motion.button>
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden pt-[140px]">
+        <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
+          <div className="max-w-5xl mx-auto w-full">
+            <div className="bg-white rounded-lg border border-gray-200 w-full mt-[-40px]">
+              <div className="p-10">
+                <motion.div
+                  className="min-h-screen"
+                  variants={containerVariants}
+                  initial="initial"
+                  animate="animate"
+                >
+                  {/* Top Bar */}
+                  <motion.div
+                    className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shadow-sm"
+                    variants={itemVariants}
+                  >
+                    <div className="px-8 pt-6 pb-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <button
+                          onClick={() => navigate(-1)}
+                          className="text-slate-600 hover:text-slate-800 transition-colors"
+                        >
+                          <ArrowLeft size={16} />
+                        </button>
+                        <span
+                          className="text-slate-800"
+                          style={{
+                            fontFamily: "Inter",
+                            fontWeight: 500,
+                            fontStyle: "normal",
+                            fontSize: "20px",
+                            lineHeight: "100%",
+                            letterSpacing: "0%",
+                          }}
+                        >
+                          Back / Hidden Jobs
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
 
-            <div className="flex flex-col justify-center">
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-2xl font-semibold text-slate-800">
-                  Hidden Jobs
-                </h2>
-                <span className="bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 text-sm font-medium px-3 py-1.5 rounded-full border border-orange-200/60 shadow-sm">
-                  {hiddenJobs.length} Hidden
-                </span>
+                  {/* Main Content */}
+                  <motion.div
+                    className="max-w-7xl mx-auto p-6"
+                    variants={itemVariants}
+                  >
+                    {/* Header Controls */}
+                    <motion.div
+                      className="flex justify-between items-center mb-8"
+                      variants={itemVariants}
+                    >
+                      <p className="text-sm text-slate-500">
+                        Showing {hiddenJobs.length} results
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-500">Sort by:</span>
+                        <div className="relative" ref={dropdownRef}>
+                          <button
+                            className="text-sm font-semibold text-slate-800 cursor-pointer transition-all duration-200 hover:text-slate-600 flex items-center justify-between min-w-[140px]"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                          >
+                            <span>{sortBy}</span>
+                            <svg
+                              className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
+                                isDropdownOpen ? "rotate-180" : ""
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </button>
+
+                          {/* Dropdown Options */}
+                          {isDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1">
+                              {sortOptions.map((option) => (
+                                <button
+                                  key={option}
+                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 transition-colors duration-150 ${
+                                    sortBy === option
+                                      ? "text-slate-800 font-medium"
+                                      : "text-slate-600"
+                                  }`}
+                                  onClick={() => {
+                                    setSortBy(option);
+                                    setIsDropdownOpen(false);
+                                  }}
+                                >
+                                  {option}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Jobs List */}
+                    <AnimatePresence mode="popLayout">
+                      <div className="space-y-4">
+                        {sortedHiddenJobs.map((job, index) => (
+                          <motion.div
+                            key={job._id}
+                            variants={itemVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit={{
+                              opacity: 0,
+                              scale: 0.95,
+                              y: -20,
+                              transition: { duration: 0.3 },
+                            }}
+                            transition={{ delay: index * 0.05 }}
+                            className="max-w-4xl"
+                          >
+                            <HiddenJobCard
+                              job={job}
+                              onUnhide={handleUnhideJob}
+                              isUnhiding={unhidingJobId === job._id}
+                              currentUser={currentUser}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </AnimatePresence>
+
+                    {/* Empty State */}
+                    {hiddenJobs.length === 0 && (
+                      <motion.div
+                        className="text-center py-16"
+                        variants={itemVariants}
+                      >
+                        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-orange-50 rounded-full flex items-center justify-center shadow-sm">
+                          <BookLock className="text-slate-400 text-2xl" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                          No Hidden Jobs
+                        </h3>
+                        <p className="text-slate-600 mb-6">
+                          You haven't hidden any jobs yet. Hidden jobs will
+                          appear here.
+                        </p>
+                        <motion.button
+                          onClick={() => navigate("/jobs")}
+                          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm"
+                          whileHover={{ scale: 1.05, y: -1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          Browse Jobs
+                        </motion.button>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                </motion.div>
               </div>
-              <span className="text-sm text-slate-500 font-sm">
-                Jobs you've chosen to hide from your feed
-              </span>
             </div>
           </div>
         </div>
-      </motion.div>
-
-      {/* Main Content */}
-      <motion.div className="max-w-7xl mx-auto p-6" variants={itemVariants}>
-        {/* Header Controls */}
-        <motion.div
-          className="flex justify-between items-center mb-8"
-          variants={itemVariants}
-        >
-          <p className="text-sm text-slate-600 font-medium">
-            Showing {hiddenJobs.length} hidden jobs
-          </p>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600 font-medium">Sort by:</span>
-            <select className="text-sm bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-300 cursor-pointer transition-all">
-              <option>Recently Hidden</option>
-              <option>Job Title</option>
-              <option>Company Name</option>
-            </select>
-          </div>
-        </motion.div>
-
-        {/* Jobs List */}
-        <AnimatePresence mode="popLayout">
-          <div className="space-y-4">
-            {hiddenJobs.map((job, index) => (
-              <motion.div
-                key={job._id}
-                variants={itemVariants}
-                initial="initial"
-                animate="animate"
-                exit={{
-                  opacity: 0,
-                  scale: 0.95,
-                  y: -20,
-                  transition: { duration: 0.3 },
-                }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <HiddenJobCard
-                  job={job}
-                  onUnhide={handleUnhideJob}
-                  isUnhiding={unhidingJobId === job._id}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </AnimatePresence>
-
-        {/* Empty State */}
-        {hiddenJobs.length === 0 && (
-          <motion.div className="text-center py-16" variants={itemVariants}>
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-orange-50 rounded-full flex items-center justify-center shadow-sm">
-              <BookLock className="text-slate-400 text-2xl" />
-            </div>
-            <h3 className="text-xl font-semibold text-slate-800 mb-2">
-              No Hidden Jobs
-            </h3>
-            <p className="text-slate-600 mb-6">
-              You haven't hidden any jobs yet. Hidden jobs will appear here.
-            </p>
-            <motion.button
-              onClick={() => navigate("/jobs")}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-sm"
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Browse Jobs
-            </motion.button>
-          </motion.div>
-        )}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

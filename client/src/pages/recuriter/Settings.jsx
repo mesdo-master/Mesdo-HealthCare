@@ -5,13 +5,11 @@ import Privacy from "./settings/components/Privacy";
 import Notification from "./settings/components/Notification";
 import Preferences from "./settings/components/Preferences";
 import Appearance from "./settings/components/Appearance";
-import NotificationApp from "./settings/components/NotificationApp";
 import { useDispatch, useSelector } from "react-redux";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-// import { uploadProfilePic } from "../../store/features/user/profileSlice";
-// import { setCurrentUser } from "../../store/features/authSlice";
-// TODO: Use recruiter-specific upload and update actions
+import { uploadRecuriterProfilePic } from "../../store/features/user/profileSlice";
+import { setBusinessProfile } from "../../store/features/authSlice";
 
 const Tab = ({ label, isActive, onClick }) => (
   <button
@@ -19,7 +17,7 @@ const Tab = ({ label, isActive, onClick }) => (
     className={`px-4 py-2 text-sm font-medium transition-colors duration-200 mr-2
       ${
         isActive
-          ? "text-blue-600 border-b-2 border-blue-600"
+          ? "text-[#434343] border-b-2 border-[#434343]"
           : "text-gray-600 hover:text-gray-900"
       }
     `}
@@ -30,29 +28,42 @@ const Tab = ({ label, isActive, onClick }) => (
 
 const RecruiterSettings = () => {
   const { businessProfile } = useSelector((state) => state.auth);
+  const { currentUser } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("Account");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [formData, setFormData] = useState({
-    orgName: "",
-    phoneNo: "",
-    countryCode: "+91",
-    profilePic: "",
-    bio: "",
+    name: "",
+    email: "",
+    city: "",
+    state: "",
+    orgLogo: "",
+    about: "",
   });
 
   useEffect(() => {
+    console.log("businessProfile in Settings:", businessProfile);
+    console.log("currentUser in Settings:", currentUser);
     setFormData((prev) => ({
       ...prev,
-      orgName: businessProfile?.name || "",
-      phoneNo: businessProfile?.phoneNo || "",
-      profilePic: businessProfile?.profilePicture || "",
-      bio: businessProfile?.about || "",
+      name: businessProfile?.name || "",
+      email:
+        businessProfile?.orgEmail ||
+        businessProfile?.email ||
+        currentUser?.email ||
+        "",
+      city: businessProfile?.locationName || businessProfile?.city || "",
+      state: businessProfile?.locationAddress || businessProfile?.state || "",
+      orgLogo: businessProfile?.orgLogo || "",
+      about: businessProfile?.about || "",
     }));
-  }, [businessProfile]);
+  }, [businessProfile, currentUser]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const fileInputRef = useRef(null);
 
   const handlePhoneChange = (value, data) => {
@@ -72,20 +83,40 @@ const RecruiterSettings = () => {
     "Notification",
     "Preferences",
     "Appearance",
-    "App Notifications",
   ];
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
       // TODO: Call recruiter update API here
-      // await updateRecruiterSettings({ phoneNo: formData.phoneNo, about: formData.bio });
+      // await updateRecruiterSettings({
+      //   name: formData.name,
+      //   locationName: formData.city,
+      //   locationAddress: formData.state,
+      //   about: formData.about
+      // });
       toast.success("Settings saved successfully");
     } catch (error) {
       console.error("Error saving settings:", error);
       toast.error("Failed to save settings");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirmDelete) return;
+
+    try {
+      // Here you would typically call an API to delete the account
+      console.log("Deleting account...");
+      toast.success("Account deleted successfully");
+      setShowDeleteModal(false);
+      setConfirmDelete(false);
+      // Redirect to logout or homepage after deletion
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account");
     }
   };
 
@@ -100,17 +131,25 @@ const RecruiterSettings = () => {
     const file = event.dataTransfer.files[0];
     if (file) {
       try {
-        setIsLoading(true);
-        // TODO: Upload recruiter profile pic
-        // const response = await dispatch(uploadRecruiterProfilePic(file));
-        // const newProfilePicUrl = response.payload;
-        // setFormData((prevData) => ({ ...prevData, profilePic: newProfilePicUrl }));
-        // toast.success("Profile image updated successfully");
+        setIsImageUploading(true);
+        const response = await dispatch(uploadRecuriterProfilePic(file));
+        const newProfilePicUrl = response.payload;
+        setFormData((prevData) => ({ ...prevData, orgLogo: newProfilePicUrl }));
+
+        // Update Redux state to reflect in Profile section
+        dispatch(
+          setBusinessProfile({
+            ...businessProfile,
+            orgLogo: newProfilePicUrl,
+          })
+        );
+
+        toast.success("Profile image updated successfully");
       } catch (error) {
         console.error("Error uploading profile image:", error);
         toast.error("Failed to update profile image");
       } finally {
-        setIsLoading(false);
+        setIsImageUploading(false);
       }
     }
   };
@@ -121,19 +160,35 @@ const RecruiterSettings = () => {
       alert("Please select an image to upload.");
       return;
     }
-    // TODO: Upload recruiter profile pic
-    // const response = await dispatch(uploadRecruiterProfilePic(image));
-    // const newProfilePicUrl = response.payload;
-    // setFormData((prevData) => ({ ...prevData, profilePic: newProfilePicUrl }));
-    // toast.success("Profile image updated");
+    try {
+      setIsImageUploading(true);
+      const response = await dispatch(uploadRecuriterProfilePic(image));
+      const newProfilePicUrl = response.payload;
+      setFormData((prevData) => ({ ...prevData, orgLogo: newProfilePicUrl }));
+
+      // Update Redux state to reflect in Profile section
+      dispatch(
+        setBusinessProfile({
+          ...businessProfile,
+          orgLogo: newProfilePicUrl,
+        })
+      );
+
+      toast.success("Profile image updated");
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      toast.error("Failed to update profile image");
+    } finally {
+      setIsImageUploading(false);
+    }
   };
 
   if (isLoading) {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
-        <div className="flex flex-1 overflow-hidden pt-16">
-          <div className="flex-1 ml-[300px] overflow-y-auto p-8">
-            <div className="max-w-3xl mx-auto">
+        <div className="flex flex-1 overflow-hidden pt-[110px]">
+          <div className="flex-1 ml-[90px] overflow-y-auto p-8">
+            <div className="max-w-5xl mx-auto">
               <div className="animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
                 <div className="h-64 bg-gray-200 rounded"></div>
@@ -147,22 +202,22 @@ const RecruiterSettings = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 overflow-hidden pt-16">
-        <div className="flex-1 ml-[300px] overflow-y-auto p-8">
+      <div className="flex flex-1 overflow-hidden pt-[110px]">
+        <div className="flex-1 ml-[90px] overflow-y-auto px-8">
           <div className="max-w-5xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <div className="relative mr-[-40px]">
                 <input
                   type="text"
                   placeholder="Search settings..."
-                  className="pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent w-64"
+                  className="pl-4 pr-9 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1890FF] focus:border-transparent w-64"
                 />
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#434343] h-4 w-4" />
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-[1064px] pt-[10px]">
               <div className="border-b border-gray-200">
                 <nav className="flex px-6">
                   {tabs.map((tab) => (
@@ -178,11 +233,11 @@ const RecruiterSettings = () => {
 
               <div className="p-6">
                 {activeTab === "Account" && (
-                  <div>
+                  <div className="ml-[67px] mr-[67px] mt-[35px]">
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <h2 className="text-xl font-semibold text-gray-900 mb-1">
-                          Your Team
+                          Your Profile
                         </h2>
                         <p className="text-sm text-gray-500 mb-6">
                           Please update your profile settings here
@@ -214,117 +269,147 @@ const RecruiterSettings = () => {
                     <div className="border-t border-gray-200 pt-6">
                       <div className="space-y-6">
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
-                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm flex items-center">
+                          <label className="w-full md:w-56 text-[#434343] font-bold text-sm">
                             Organisation Name
-                            <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
                           </label>
                           <div className="flex-1">
                             <input
                               type="text"
-                              value={formData.orgName}
-                              disabled
-                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              value={formData.name}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  name: e.target.value,
+                                })
+                              }
+                              className="w-full md:w-[500px] h-10 rounded-full border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#1890FF] focus:border-[#1890FF]"
                             />
                           </div>
                         </div>
 
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
-                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                          <label className="w-full md:w-56 text-[#434343] font-bold text-sm">
                             Organisation Email
                           </label>
                           <div className="flex-1">
                             <input
                               type="email"
-                              value={
-                                businessProfile?.email || "yourexample@.com"
-                              }
+                              value={formData.email}
                               disabled
-                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full md:w-[500px] h-10 rounded-full border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#1890FF] focus:border-[#1890FF]"
                             />
                           </div>
                         </div>
 
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
-                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                          <label className="w-full md:w-56 text-[#434343] font-bold text-sm">
                             City
                           </label>
                           <div className="flex-1">
                             <input
                               type="text"
-                              value={businessProfile?.city || ""}
+                              value={formData.city}
                               onChange={(e) =>
                                 setFormData({
                                   ...formData,
                                   city: e.target.value,
                                 })
                               }
-                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full md:w-[500px] h-10 rounded-full border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#1890FF] focus:border-[#1890FF]"
                               placeholder="Enter city"
                             />
                           </div>
                         </div>
 
                         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
-                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
+                          <label className="w-full md:w-56 text-[#434343] font-bold text-sm">
                             Country
                           </label>
                           <div className="flex-1">
                             <input
                               type="text"
-                              value={businessProfile?.state || ""}
+                              value={formData.state}
                               onChange={(e) =>
                                 setFormData({
                                   ...formData,
                                   state: e.target.value,
                                 })
                               }
-                              className="w-full md:w-[500px] h-10 rounded-lg border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full md:w-[500px] h-10 rounded-full border border-gray-200 px-3 text-gray-700 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#1890FF] focus:border-[#1890FF]"
                               placeholder="Enter country"
                             />
                           </div>
                         </div>
 
                         <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
-                          <label className="w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
+                          <label className="w-full md:w-56 text-[#434343] font-bold text-sm pt-2">
                             Profile Picture
                           </label>
                           <div className="flex-1">
                             <div className="flex items-start gap-4">
-                              <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                              <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 relative">
                                 <img
-                                  src={formData.profilePic}
+                                  src={
+                                    formData.orgLogo ||
+                                    "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                                  }
                                   alt="Profile"
                                   className="h-full w-full object-cover"
                                 />
+                                {isImageUploading && (
+                                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  </div>
+                                )}
                               </div>
                               <div className="flex-1">
                                 <div
-                                  className="border border-dashed border-gray-300 rounded-xl h-[150px] w-[430px] p-4 flex flex-col items-center justify-center text-center hover:border-blue-500 transition-colors cursor-pointer bg-white"
-                                  onClick={() => fileInputRef.current?.click()}
+                                  className={`border border-dashed border-gray-300 rounded-xl h-[150px] w-full md:w-[430px] p-4 flex flex-col items-center justify-center text-center transition-colors bg-white ${
+                                    isImageUploading
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : "hover:border-[#1890FF] cursor-pointer"
+                                  }`}
+                                  onClick={() =>
+                                    !isImageUploading &&
+                                    fileInputRef.current?.click()
+                                  }
                                   onDragOver={handleDragOver}
                                   onDrop={handleDrop}
                                 >
-                                  <FileDown
-                                    className="w-8 h-8 mb-2 bg-gray-200 rounded-full p-1"
-                                    style={{ color: "rgba(24, 144, 255, 1)" }}
-                                  />
-                                  <div className="flex flex-row items-center">
-                                    <span className="text-[#1890FF] text-sm font-medium inline">
-                                      Click here
-                                    </span>
-                                    <span className="text-gray-500 text-xs ml-1 inline">
-                                      to upload your file or drag.
-                                    </span>
-                                  </div>
-                                  <span className="text-gray-500 text-xs mt-0.5">
-                                    Supported Format: SVG, JPG, PNG (10MB each)
-                                  </span>
+                                  {isImageUploading ? (
+                                    <div className="flex flex-col items-center">
+                                      <div className="w-8 h-8 border-2 border-[#1890FF] border-t-transparent rounded-full animate-spin mb-2"></div>
+                                      <span className="text-[#1890FF] text-sm font-medium">
+                                        Uploading...
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <FileDown
+                                        className="w-8 h-8 mb-2 bg-gray-200 rounded-full p-1"
+                                        style={{ color: "#1890FF" }}
+                                      />
+                                      <div className="flex flex-row items-center">
+                                        <span className="text-[#1890FF] text-sm font-medium inline">
+                                          Click here
+                                        </span>
+                                        <span className="text-gray-500 text-xs ml-1 inline">
+                                          to upload your file or drag.
+                                        </span>
+                                      </div>
+                                      <span className="text-gray-500 text-xs mt-0.5">
+                                        Supported Format: SVG, JPG, PNG (10MB
+                                        each)
+                                      </span>
+                                    </>
+                                  )}
                                   <input
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
                                     className="hidden"
                                     onChange={handleImageUpload}
+                                    disabled={isImageUploading}
                                   />
                                 </div>
                               </div>
@@ -333,116 +418,35 @@ const RecruiterSettings = () => {
                         </div>
 
                         <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
-                          <label className="flex items-center w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
+                          <label className="flex items-center w-full md:w-56 text-[#434343] font-bold text-sm pt-2">
                             Description
                             <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
                           </label>
                           <div className="flex-1">
                             <textarea
-                              value={formData.bio}
+                              value={formData.about}
                               onChange={(e) =>
                                 setFormData({
                                   ...formData,
-                                  bio: e.target.value,
+                                  about: e.target.value,
                                 })
                               }
                               rows={4}
-                              className="w-full md:w-[500px] rounded-lg h-[150px] border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                              className="w-full md:w-[500px] rounded-lg h-[150px] border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-[#1890FF] focus:border-[#1890FF] bg-white"
                               placeholder="Tell us about your organization."
                             />
                             <div className="text-xs text-gray-500 mt-1">
-                              {500 - (formData.bio?.length || 0)} characters
+                              {500 - (formData.about?.length || 0)} characters
                               remaining
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Your Team Section */}
-                      <div className="mt-8 pt-6 border-t border-gray-200">
-                        <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
-                          <label className="flex items-center w-full md:w-56 text-gray-600 font-normal text-sm pt-2">
-                            Your Team
-                            <Info className="ml-1.5 h-3.5 w-3.5 text-gray-400" />
-                          </label>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-4">
-                              <button className="text-[#1890FF] text-sm font-medium hover:underline">
-                                Invite Members
-                              </button>
-                            </div>
-
-                            {/* Search and Filter */}
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="relative flex-1 max-w-xs">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                <input
-                                  type="text"
-                                  placeholder="Search"
-                                  className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                />
-                              </div>
-                              <button className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
-                                Filter
-                              </button>
-                            </div>
-
-                            {/* Team Members List */}
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                  <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                                    <img
-                                      src="https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-                                      alt="Profile"
-                                      className="h-full w-full object-cover"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900">
-                                      Dr. Rajeev Bhatia
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      Primary Contact
-                                    </p>
-                                  </div>
-                                </div>
-                                <span className="px-2 py-1 text-xs font-medium text-blue-600 bg-white border border-blue-200 rounded-full">
-                                  Admin
-                                </span>
-                              </div>
-
-                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                  <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                                    <img
-                                      src="https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-                                      alt="Profile"
-                                      className="h-full w-full object-cover"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900">
-                                      Dr. Rajeev Bhatia
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      Recruiter
-                                    </p>
-                                  </div>
-                                </div>
-                                <span className="px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full">
-                                  Member
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Delete Account Section */}
-                      <div className="mt-8 pt-6 border-t border-gray-200">
+                      <div className="mt-10 pt-6 border-t border-gray-200">
                         <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-8">
-                          <label className="w-full md:w-56 text-red-600 font-normal text-sm pt-2">
+                          <label className="w-full md:w-56 text-red-600 font-bold text-sm">
                             Delete Account
                           </label>
                           <div className="flex-1">
@@ -451,7 +455,10 @@ const RecruiterSettings = () => {
                               data, preferences, and activity history will be
                               lost.
                             </p>
-                            <button className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <button
+                              onClick={() => setShowDeleteModal(true)}
+                              className="px-6 py-2 rounded-full bg-white border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                            >
                               Delete Account
                             </button>
                           </div>
@@ -464,12 +471,65 @@ const RecruiterSettings = () => {
                 {activeTab === "Notification" && <Notification />}
                 {activeTab === "Preferences" && <Preferences />}
                 {activeTab === "Appearance" && <Appearance />}
-                {activeTab === "App Notifications" && <NotificationApp />}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg shadow-xl w-[600px] h-[268px] p-[40px] flex flex-col justify-between">
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-[#CF1322]">
+                Delete Account
+              </h2>
+              <p className="text-gray-700">
+                This action is permanent and cannot be undone. All your saved
+                data, preferences, and activity history will be lost.
+              </p>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="confirmDelete"
+                  checked={confirmDelete}
+                  onChange={(e) => setConfirmDelete(e.target.checked)}
+                  className="mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="confirmDelete"
+                  className="text-sm text-gray-700"
+                >
+                  I understand this action is permanent and cannot be undone.
+                </label>
+              </div>
+            </div>
+            <div className="flex justify-between items-center mt-6">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setConfirmDelete(false);
+                }}
+                className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={!confirmDelete}
+                className={`px-6 py-2 rounded-lg text-white font-medium transition-colors ${
+                  confirmDelete
+                    ? "bg-[#CF1322] hover:bg-[#CF1322]"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

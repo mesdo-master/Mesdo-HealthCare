@@ -77,29 +77,33 @@ function AppRoutes() {
   return isAuthenticated ? (
     // Handle onboarding routes
     needsOnboarding ? (
-      <Routes>
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute role="individual">
-              <OnboardingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/onboarding" />} />
-      </Routes>
+      <div data-onboarding="true">
+        <Routes>
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute role="individual">
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/onboarding" />} />
+        </Routes>
+      </div>
     ) : needsRecruiterOnboarding ? (
-      <Routes>
-        <Route
-          path="/onboarding-recruiter"
-          element={
-            <ProtectedRoute role="recruiter">
-              <OnboardingRecruiter />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/onboarding-recruiter" />} />
-      </Routes>
+      <div data-onboarding="true">
+        <Routes>
+          <Route
+            path="/onboarding-recruiter"
+            element={
+              <ProtectedRoute role="recruiter">
+                <OnboardingRecruiter />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/onboarding-recruiter" />} />
+        </Routes>
+      </div>
     ) : (
       <div className="main-layout-wrapper">
         <div className="inner-content-area">

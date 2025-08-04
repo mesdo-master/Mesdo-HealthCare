@@ -11,6 +11,7 @@ import {
 
 const ChatHeader = ({
   selectedUser,
+  otherUserProfile,
   onProfileClick,
   piimage,
   conversation,
@@ -22,8 +23,92 @@ const ChatHeader = ({
   isPinned = false,
   isMuted = false,
 }) => {
-  // console.log(conversation)
+  // Debug logs
+  console.log("🔍 ChatHeader Debug:", {
+    selectedUser,
+    otherUserProfile,
+    conversation,
+    isGroupChat: conversation?.isGroup,
+    conversationOtherParticipant: conversation?.otherParticipant,
+    profilePicture:
+      otherUserProfile?.profilePicture ||
+      otherUserProfile?.profilePic ||
+      conversation?.otherParticipant?.profilePicture ||
+      conversation?.otherParticipant?.profilePic ||
+      selectedUser?.profilePicture ||
+      selectedUser?.profilePic,
+    userName:
+      otherUserProfile?.name ||
+      conversation?.otherParticipant?.name ||
+      selectedUser?.name,
+    piimage,
+    // Additional debug for the user console data
+    rawConversationData: conversation,
+    allAvailableProfilePicFields: {
+      'otherUserProfile?.profilePicture': otherUserProfile?.profilePicture,
+      'otherUserProfile?.profilePic': otherUserProfile?.profilePic,
+      'conversation?.otherParticipant?.profilePicture': conversation?.otherParticipant?.profilePicture,
+      'conversation?.otherParticipant?.profilePic': conversation?.otherParticipant?.profilePic,
+      'conversation?.otherParticipant?.piimage': conversation?.otherParticipant?.piimage,
+      'selectedUser?.profilePicture': selectedUser?.profilePicture,
+      'selectedUser?.profilePic': selectedUser?.profilePic,
+      'selectedUser?.piimage': selectedUser?.piimage,
+      'conversation?.conversationOtherParticipant?.profilePicture': conversation?.conversationOtherParticipant?.profilePicture,
+      'conversation?.piimage': conversation?.piimage,
+      'selectedUser as whole': selectedUser,
+      'conversation?.otherParticipant as whole': conversation?.otherParticipant,
+    }
+  });
+
+  // Additional debug for image source
   const isGroupChat = conversation?.isGroup;
+  // Get the actual profile picture URL with comprehensive fallback chain
+  const getProfilePictureUrl = () => {
+    if (isGroupChat) {
+      return conversation?.avatar || piimage;
+    }
+    
+    // Try all possible sources for the other user's profile picture
+    // Based on the user's console log data structure
+    return (
+      // From fetched other user profile
+      otherUserProfile?.profilePicture ||
+      otherUserProfile?.profilePic ||
+      // From conversation other participant
+      conversation?.otherParticipant?.profilePicture ||
+      conversation?.otherParticipant?.profilePic ||
+      conversation?.otherParticipant?.piimage ||
+      // From conversation level (based on user's data structure)
+      conversation?.piimage ||
+      conversation?.conversationOtherParticipant?.profilePicture ||
+      conversation?.conversationOtherParticipant?.piimage ||
+      // From selected user (if available)
+      selectedUser?.profilePicture ||
+      selectedUser?.profilePic ||
+      selectedUser?.piimage ||
+      // Fallback to default
+      piimage
+    );
+  };
+  
+  const imageSource = getProfilePictureUrl();
+
+  console.log("🔍 Image source debug:", {
+    isGroupChat,
+    finalImageSource: imageSource,
+    otherUserProfilePicture: otherUserProfile?.profilePicture,
+    otherUserProfilePic: otherUserProfile?.profilePic,
+    conversationOtherParticipantPicture:
+      conversation?.otherParticipant?.profilePicture,
+    conversationOtherParticipantPic: conversation?.otherParticipant?.profilePic,
+    conversationOtherParticipantPiimage: conversation?.otherParticipant?.piimage,
+    selectedUserPicture: selectedUser?.profilePicture,
+    selectedUserPic: selectedUser?.profilePic,
+    selectedUserPiimage: selectedUser?.piimage,
+    fallbackImage: piimage,
+  });
+
+  // console.log(conversation)
 
   const formatLastMessageTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -81,15 +166,14 @@ const ChatHeader = ({
         >
           <div className="relative">
             <img
-              src={
-                isGroupChat
-                  ? conversation?.avatar || piimage
-                  : conversation?.otherParticipant?.profilePicture || piimage
-              }
+              src={imageSource}
               alt={
                 isGroupChat
                   ? conversation?.name
-                  : selectedUser?.name || "other user profile pic"
+                  : otherUserProfile?.name ||
+                    conversation?.otherParticipant?.name ||
+                    selectedUser?.name ||
+                    "other user profile pic"
               }
               className="w-12 h-12 rounded-full object-cover"
             />
@@ -102,14 +186,15 @@ const ChatHeader = ({
               <h2 className="font-semibold text-base">
                 {isGroupChat
                   ? conversation?.name || "Unnamed Group"
-                  : conversation?.otherParticipant?.name}
+                  : otherUserProfile?.name ||
+                    conversation?.otherParticipant?.name ||
+                    selectedUser?.name ||
+                    "Unknown User"}
               </h2>
               {isPinned && (
                 <Pin className="w-4 h-4 text-yellow-500 fill-yellow-500" />
               )}
-              {isMuted && (
-                <BellOff className="w-4 h-4 text-gray-500" />
-              )}
+              {isMuted && <BellOff className="w-4 h-4 text-gray-500" />}
             </div>
             <p className="text-sm text-gray-500">
               {isGroupChat
@@ -131,7 +216,7 @@ const ChatHeader = ({
           </button>
           {menuOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 animate-in fade-in-0 zoom-in-95">
-              <button 
+              <button
                 onClick={() => {
                   onCloseChat && onCloseChat();
                   setMenuOpen(false);
@@ -140,16 +225,16 @@ const ChatHeader = ({
               >
                 Close Chat <X className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   onPinConversation && onPinConversation(conversation);
                   setMenuOpen(false);
                 }}
                 className="flex items-center justify-between w-full px-4 py-2 text-[15px] text-gray-700 hover:bg-gray-50 font-normal"
               >
-                {isPinned ? 'Unpin' : 'Pin to top'} <Pin className="w-5 h-5" />
+                {isPinned ? "Unpin" : "Pin to top"} <Pin className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   onProfileClick && onProfileClick();
                   setMenuOpen(false);
@@ -158,16 +243,16 @@ const ChatHeader = ({
               >
                 View Profile <User className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   onMuteConversation && onMuteConversation(conversation);
                   setMenuOpen(false);
                 }}
                 className="flex items-center justify-between w-full px-4 py-2 text-[15px] text-gray-700 hover:bg-gray-50 font-normal"
               >
-                {isMuted ? 'Unmute' : 'Mute'} <BellOff className="w-5 h-5" />
+                {isMuted ? "Unmute" : "Mute"} <BellOff className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   onClearMessages && onClearMessages(conversation);
                   setMenuOpen(false);
@@ -176,7 +261,7 @@ const ChatHeader = ({
               >
                 Clear Messages <Eraser className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => {
                   onDeleteConversation && onDeleteConversation(conversation);
                   setMenuOpen(false);

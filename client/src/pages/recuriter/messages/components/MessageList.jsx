@@ -5,6 +5,7 @@ import CreateGroupModal from "./CreateGroupModal";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../../../context/NotificationContextFinal";
 import axiosInstance from "../../../../lib/axio";
+import MesdoLogo from "../../../../assets/mesdo_logo.png";
 
 const MessageList = ({
   users, // <------ AllConversations
@@ -35,14 +36,18 @@ const MessageList = ({
           // First priority: Unread conversations come first
           const aIsUnread = unreadConversations.has(a._id);
           const bIsUnread = unreadConversations.has(b._id);
-          
+
           if (aIsUnread && !bIsUnread) return -1;
           if (!aIsUnread && bIsUnread) return 1;
-          
+
           // Second priority: Sort by last message time (most recent first)
-          const aTime = new Date(a.lastMessageAt || a.updatedAt || a.createdAt || 0);
-          const bTime = new Date(b.lastMessageAt || b.updatedAt || b.createdAt || 0);
-          
+          const aTime = new Date(
+            a.lastMessageAt || a.updatedAt || a.createdAt || 0
+          );
+          const bTime = new Date(
+            b.lastMessageAt || b.updatedAt || b.createdAt || 0
+          );
+
           return bTime - aTime; // Most recent first
         })
     : [];
@@ -114,30 +119,32 @@ const MessageList = ({
   console.log("Job conversations:", jobConversations);
 
   return (
-    <div className="w-[360px] bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <h1 className="text-xl font-semibold mb-4">Messages</h1>
+    <div className="w-[360px] bg-white flex flex-col">
+      <div className="p-10 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-semibold">Messages</h1>
+        </div>
 
         <div className="flex items-center gap-2 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder={`Search ${activeTab.toLowerCase()}...`}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none"
+              className="w-full pl-9 pr-3 py-3 text-xs bg-gray-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-1 mb-4">
-          <div className="flex">
+        <div className="bg-gray-50 rounded-lg p-1">
+          <div className="flex ml-3">
             {["Personal", "Recruitment"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+                className={`flex-1 py-2 px-4 text-xs font-medium rounded-md transition-all duration-200 ${
                   activeTab === tab
-                    ? "bg-white text-blue-500 shadow-sm"
+                    ? "bg-white text-[#1890FF] shadow-sm"
                     : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                 }`}
               >
@@ -166,179 +173,118 @@ const MessageList = ({
             </div>
           </div>
         ) : activeTab === "Recruitment" && !selectedJob ? (
-          <div className="p-4">
-            <h3 className="text-lg font-semibold mb-4">Select a Job</h3>
+          <div className="px-10">
             {jobs.length === 0 ? (
-              <div className="w-full min-h-0 flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
-                <div className="backdrop-blur-md bg-white/70 border border-blue-100 rounded-2xl shadow-xl max-w-sm w-full mx-auto flex flex-col items-center py-8 px-4 sm:px-8 space-y-6">
-                  <div className="flex justify-center mb-1 animate-bounce-slow">
-                    <div className="w-14 h-14 rounded-xl bg-white border border-blue-100 flex items-center justify-center shadow">
-                      <span className="text-blue-300 text-3xl">💼</span>
-                    </div>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 tracking-tight drop-shadow-sm">
-                    No jobs posted yet
-                  </h2>
-                  <p className="text-sm sm:text-base text-gray-500 font-normal leading-relaxed text-center">
-                    Create a job posting to start receiving applications and
-                    conversations.
-                  </p>
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
+                  <img src={MesdoLogo} alt="Mesdo Logo" className="w-12 h-12" />
                 </div>
-                <style jsx>{`
-                  @keyframes bounce-slow {
-                    0%,
-                    100% {
-                      transform: translateY(0);
-                    }
-                    50% {
-                      transform: translateY(-8px);
-                    }
-                  }
-                  .animate-bounce-slow {
-                    animation: bounce-slow 2.5s infinite;
-                  }
-                `}</style>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  No jobs posted yet
+                </h2>
+                <p className="text-sm text-gray-500 text-center max-w-xs">
+                  Create a job posting to start receiving applications and
+                  conversations.
+                </p>
               </div>
             ) : (
-              jobs.map((job) => (
-                <div
-                  key={job._id}
-                  onClick={() => handleJobClick(job)}
-                  className="cursor-pointer bg-gray-100 hover:bg-gray-200 transition-colors duration-200 p-5 rounded-xl mb-3"
-                >
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {job.jobTitle}
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {job.HospitalName} | {job.location}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Posted {job.timeAgo || "recently"}
-                  </p>
-                </div>
-              ))
+              <div className="space-y-3">
+                {jobs.map((job) => (
+                  <div
+                    key={job._id}
+                    onClick={() => handleJobClick(job)}
+                    className="cursor-pointer bg-gray-100 hover:bg-gray-200 transition-colors duration-200 p-5 rounded-xl shadow-sm"
+                  >
+                    <h3 className="text-gray-800 mb-1 text-sm font-semibold">
+                      {job.jobTitle}
+                    </h3>
+                    <p className="text-gray-600 mb-1 text-xs font-semibold">
+                      {job.HospitalName} | {job.location}
+                    </p>
+                    <p className="text-gray-500 text-xs">
+                      Posted {job.timeAgo || "recently"}
+                    </p>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         ) : activeTab === "Recruitment" && selectedJob ? (
-          <div className="p-4">
+          <div className="px-10">
             <div className="flex items-center mb-4">
               <button
                 onClick={() => setSelectedJob(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition mr-2"
+                className="p-2 hover:bg-gray-100 rounded-lg transition mr-3"
               >
                 <ArrowLeft size={20} />
               </button>
               <div>
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-sm font-semibold text-gray-800">
                   {selectedJob.jobTitle}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs text-gray-600">
                   {selectedJob.HospitalName}
                 </p>
               </div>
             </div>
 
             {jobConversations.length === 0 ? (
-              <div className="w-full min-h-0 flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
-                <div className="backdrop-blur-md bg-white/70 border border-blue-100 rounded-2xl shadow-xl max-w-sm w-full mx-auto flex flex-col items-center py-8 px-4 sm:px-8 space-y-6">
-                  <div className="flex justify-center mb-1 animate-bounce-slow">
-                    <div className="w-14 h-14 rounded-xl bg-white border border-blue-100 flex items-center justify-center shadow">
-                      <span className="text-blue-300 text-3xl">💬</span>
-                    </div>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 tracking-tight drop-shadow-sm">
-                    No conversations yet
-                  </h2>
-                  <p className="text-sm sm:text-base text-gray-500 font-normal leading-relaxed text-center">
-                    Conversations will appear here when applicants message you
-                    about this job.
-                  </p>
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
+                  <img src={MesdoLogo} alt="Mesdo Logo" className="w-12 h-12" />
                 </div>
-                <style jsx>{`
-                  @keyframes bounce-slow {
-                    0%,
-                    100% {
-                      transform: translateY(0);
-                    }
-                    50% {
-                      transform: translateY(-8px);
-                    }
-                  }
-                  .animate-bounce-slow {
-                    animation: bounce-slow 2.5s infinite;
-                  }
-                `}</style>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  No conversations for this job
+                </h2>
+                <p className="text-sm text-gray-500 text-center max-w-xs">
+                  Conversations with applicants will appear here when they start
+                  messaging.
+                </p>
               </div>
             ) : (
-              jobConversations.map((conv) => (
-                <UserListItem
-                  key={conv._id}
-                  user={conv}
-                  selectedId={selectedId}
-                  onClick={() => handleOpenMessage(conv)}
-                />
-              ))
+              <div className="space-y-2">
+                {jobConversations.map((conv) => (
+                  <UserListItem
+                    key={conv._id}
+                    user={conv}
+                    selectedId={selectedId}
+                    onClick={() => handleOpenMessage(conv)}
+                  />
+                ))}
+              </div>
             )}
           </div>
         ) : activeTab === "Personal" && filteredConversations.length === 0 ? (
-          <div className="w-full min-h-0 flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
-            <div className="backdrop-blur-md bg-white/70 border border-blue-100 rounded-2xl shadow-xl max-w-sm w-full mx-auto flex flex-col items-center py-8 px-4 sm:px-8 space-y-6">
-              <div className="flex justify-center mb-1 animate-bounce-slow">
-                <div className="w-14 h-14 rounded-xl bg-white border border-blue-100 flex items-center justify-center shadow">
-                  <span className="text-blue-300 text-3xl">💬</span>
-                </div>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 tracking-tight drop-shadow-sm">
-                No conversations yet
-              </h2>
-              <p className="text-sm sm:text-base text-gray-500 font-normal leading-relaxed text-center">
-                Conversations will appear here when you start chatting.
-              </p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
+              <img src={MesdoLogo} alt="Mesdo Logo" className="w-12 h-12" />
             </div>
-            <style jsx>{`
-              @keyframes bounce-slow {
-                0%,
-                100% {
-                  transform: translateY(0);
-                }
-                50% {
-                  transform: translateY(-8px);
-                }
-              }
-              .animate-bounce-slow {
-                animation: bounce-slow 2.5s infinite;
-              }
-            `}</style>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              No {activeTab.toLowerCase()} conversations
+            </h2>
+            <p className="text-sm text-gray-500 text-center max-w-xs">
+              {activeTab === "Recruitment"
+                ? "No recruitment-related conversations yet. Post jobs to start chatting with applicants!"
+                : activeTab === "Personal"
+                ? "Your personal chats will appear here. Start connecting with people!"
+                : `No ${activeTab.toLowerCase()} messages yet. Start a conversation to get started!`}
+            </p>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="w-full min-h-0 flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
-            <div className="backdrop-blur-md bg-white/70 border border-blue-100 rounded-2xl shadow-xl max-w-sm w-full mx-auto flex flex-col items-center py-8 px-4 sm:px-8 space-y-6">
-              <div className="flex justify-center mb-1 animate-bounce-slow">
-                <div className="w-14 h-14 rounded-xl bg-white border border-blue-100 flex items-center justify-center shadow">
-                  <span className="text-blue-300 text-3xl">💬</span>
-                </div>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 tracking-tight drop-shadow-sm">
-                No conversations yet
-              </h2>
-              <p className="text-sm sm:text-base text-gray-500 font-normal leading-relaxed text-center">
-                Conversations will appear here when you start chatting.
-              </p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
+              <img src={MesdoLogo} alt="Mesdo Logo" className="w-12 h-12" />
             </div>
-            <style jsx>{`
-              @keyframes bounce-slow {
-                0%,
-                100% {
-                  transform: translateY(0);
-                }
-                50% {
-                  transform: translateY(-8px);
-                }
-              }
-              .animate-bounce-slow {
-                animation: bounce-slow 2.5s infinite;
-              }
-            `}</style>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              No {activeTab.toLowerCase()} conversations
+            </h2>
+            <p className="text-sm text-gray-500 text-center max-w-xs">
+              {activeTab === "Recruitment"
+                ? "No recruitment-related conversations yet. Post jobs to start chatting with applicants!"
+                : activeTab === "Personal"
+                ? "Your personal chats will appear here. Start connecting with people!"
+                : `No ${activeTab.toLowerCase()} messages yet. Start a conversation to get started!`}
+            </p>
           </div>
         ) : (
           filteredConversations.map((conv) => (

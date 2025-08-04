@@ -63,6 +63,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 
+// Initialize Passport
+const passport = require("./utils/passport");
+app.use(passport.initialize());
+
 app.use(express.static(path.join(__dirname)));
 
 const authRoutes = require("./routes/authRoutes");
@@ -80,7 +84,7 @@ const searchRoutes = require("./routes/searchRoutes");
 const socketRoutes = require("./routes/socketRoutes");
 
 //Routes
-app.use("/", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/onboarding", onBoardingRoutes);
 app.use("/users", userRoutes);
 app.use("/chats", chatRoutes);

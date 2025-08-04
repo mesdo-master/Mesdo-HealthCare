@@ -77,16 +77,16 @@ export default function Sidebar({ className = "" }) {
     <>
       {(showSwitchLoader || navigating) && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
+          className="fixed inset-0 z-[9999] flex items-center  justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
           aria-busy="true"
           aria-live="polite"
           style={{ pointerEvents: "none" }}
         >
-          <div className="flex flex-col items-center bg-white rounded-2xl shadow-2xl px-10 py-8 animate-fade-in">
+          <div className="flex flex-col items-center bg-white  rounded-2xl shadow-2xl px-10 py-8 animate-fade-in">
             <div className="mb-6">
               <div className="w-14 h-14 border-4 border-blue-100 border-t-[#1890FF] rounded-full animate-spin"></div>
             </div>
-            <div className="text-lg font-semibold text-[#1890FF] animate-pulse">
+            <div className="text-lg font-semibold text-primary-500 animate-pulse">
               Just a moment...
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function Sidebar({ className = "" }) {
         className={`absolute left-0 top-0 h-full w-[210px] bg-white z-40 ${className}`}
       ></div>
       <aside
-        className={`absolute top-0 left-0 h-full w-[210px] md:w-[210px] lg:w-[15vw] ml-[70px] bg-white flex flex-col pt-[12vh] z-50 ${className}`}
+        className={`absolute top-0 left-0 h-full w-[250px] md:w-[250px] lg:w-[250px] ml-[70px] bg-white flex flex-col pt-[150px] z-50 ${className}`}
         style={
           showSwitchLoader || navigating
             ? { pointerEvents: "none", opacity: 0.7 }
@@ -294,11 +294,11 @@ export default function Sidebar({ className = "" }) {
                         >
                           <Power
                             color="currentColor"
-                            className="transition-colors group-hover:text-[#1890FF]"
+                            className="transition-colors group-hover:text-primary-500"
                             strokeWidth={1.8}
                             size={22}
                           />
-                          <span className="transition-colors group-hover:text-[#1890FF]">
+                          <span className="transition-colors group-hover:text-primary-500">
                             Logout
                           </span>
                         </button>
@@ -393,11 +393,11 @@ export default function Sidebar({ className = "" }) {
                         >
                           <Power
                             color="currentColor"
-                            className="transition-colors group-hover:text-[#1890FF]"
+                            className="transition-colors group-hover:text-primary-500"
                             strokeWidth={1.8}
                             size={22}
                           />
-                          <span className="transition-colors group-hover:text-[#1890FF]">
+                          <span className="transition-colors group-hover:text-primary-500">
                             Logout
                           </span>
                         </button>
@@ -441,7 +441,7 @@ const NavItem = ({
         onClick={handleClick}
         className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-all group ${
           isActive
-            ? "bg-[#E6F0FF] text-[#1890FF]"
+            ? "bg-[#E6F0FF] text-primary-500"
             : "text-[#7F7F7F] hover:bg-gray-100"
         }`}
         style={{ position: "relative", overflow: "hidden" }}
@@ -449,8 +449,8 @@ const NavItem = ({
         <div className="relative">
           {React.cloneElement(icon, {
             className: isActive
-              ? "text-[#1890FF]"
-              : "transition-colors group-hover:text-[#1890FF]",
+              ? "text-primary-500"
+              : "transition-colors group-hover:text-primary-500",
             color: "currentColor",
           })}
           {/* Notification indicator */}
@@ -463,8 +463,8 @@ const NavItem = ({
         <span
           className={
             isActive
-              ? "text-[#1890FF]"
-              : "transition-colors group-hover:text-[#1890FF]"
+              ? "text-primary-500"
+              : "transition-colors group-hover:text-primary-500"
           }
         >
           {text}

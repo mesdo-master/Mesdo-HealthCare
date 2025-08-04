@@ -50,7 +50,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
     currentUser,
     currentUserId: currentUser?._id,
     authStateKeys: Object.keys(authState),
-    fullAuthState: authState
+    fullAuthState: authState,
   });
 
   const emptyMessagesText = [
@@ -84,17 +84,20 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
           }
         );
         console.log("Recruiter messages response:", response.data);
-        console.log('🔍 RECRUITER API DEBUG: Detailed response analysis:', {
+        console.log("🔍 RECRUITER API DEBUG: Detailed response analysis:", {
           selectedId,
           orgId: businessProfile._id,
           responseData: response.data,
           otherUser: response.data.otherUser,
-          conversation: response.data.conversation
+          conversation: response.data.conversation,
         });
 
         const { messages, otherUser } = response.data;
         setMessages(messages || []);
-        console.log('📝 RECRUITER: Setting otherUsers from API response:', otherUser);
+        console.log(
+          "📝 RECRUITER: Setting otherUsers from API response:",
+          otherUser
+        );
         setOtherUsers(
           Array.isArray(otherUser) ? otherUser : [otherUser].filter(Boolean)
         );
@@ -117,7 +120,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
   // ✅ Mark conversation as read when opened
   useEffect(() => {
     if (selectedId && selectedId !== "undefined") {
-      console.log('📜 RECRUITER: Marking conversation as read:', selectedId);
+      console.log("📜 RECRUITER: Marking conversation as read:", selectedId);
       markConversationAsRead(selectedId);
     }
   }, [selectedId, markConversationAsRead]);
@@ -269,17 +272,20 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
 
   // ✅ Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    console.log("📊 RECRUITER CHATCONTAINER: Messages changed, count:", messages.length);
+    console.log(
+      "📊 RECRUITER CHATCONTAINER: Messages changed, count:",
+      messages.length
+    );
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       console.log("📊 RECRUITER: Last message:", {
         id: lastMessage._id,
         sender: lastMessage.sender,
         message: lastMessage.message?.substring(0, 30),
-        isImmediate: lastMessage._isImmediate
+        isImmediate: lastMessage._isImmediate,
       });
     }
-    
+
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -360,7 +366,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
 
   const handlePinConversation = (conversation) => {
     const conversationId = selectedId || conversation?.id;
-    setPinnedConversations(prev => {
+    setPinnedConversations((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(conversationId)) {
         newSet.delete(conversationId);
@@ -373,40 +379,45 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
   };
 
   const handleViewProfile = () => {
-    console.log('🔍 RECRUITER DEBUG: View Profile Data:', {
+    console.log("🔍 RECRUITER DEBUG: View Profile Data:", {
       conversation,
       otherUsers,
       selectedId,
       businessProfile: businessProfile?._id,
-      'otherUsers[0]': otherUsers[0]
+      "otherUsers[0]": otherUsers[0],
     });
-    
+
     // Try multiple ways to get the other user ID
     let otherUserId = null;
-    
+
     // Method 1: From otherUsers array
     if (otherUsers && otherUsers.length > 0 && otherUsers[0]?._id) {
       otherUserId = otherUsers[0]._id;
-      console.log('✅ RECRUITER: Using otherUsers[0]._id:', otherUserId);
+      console.log("✅ RECRUITER: Using otherUsers[0]._id:", otherUserId);
     }
     // Method 2: From conversation participants (exclude business profile)
     else if (conversation?.participants) {
       const otherParticipant = conversation.participants.find(
-        p => p.user?._id !== businessProfile?._id && p._id !== businessProfile?._id
+        (p) =>
+          p.user?._id !== businessProfile?._id && p._id !== businessProfile?._id
       );
       if (otherParticipant) {
         otherUserId = otherParticipant.user?._id || otherParticipant._id;
-        console.log('✅ RECRUITER: Using conversation.participants:', otherUserId);
+        console.log(
+          "✅ RECRUITER: Using conversation.participants:",
+          otherUserId
+        );
       }
     }
-    
+
     if (otherUserId && otherUserId !== businessProfile?._id) {
-      console.log('🎯 RECRUITER: Profile viewing temporarily unavailable');
-      
+      console.log("🎯 RECRUITER: Profile viewing temporarily unavailable");
+
       // Show a more professional modal-style alert
       const createModal = () => {
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        const modal = document.createElement("div");
+        modal.className =
+          "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
         modal.innerHTML = `
           <div class="bg-white rounded-xl shadow-lg p-8 text-center max-w-md mx-4">
             <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
@@ -425,24 +436,29 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
           </div>
         `;
         document.body.appendChild(modal);
-        
+
         // Close on background click
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener("click", (e) => {
           if (e.target === modal) modal.remove();
         });
       };
-      
+
       createModal();
     } else {
-      console.error('❌ RECRUITER: No valid other user ID found or it matches business profile');
-      console.error('Available data:', { otherUserId, businessProfileId: businessProfile?._id });
-      alert('Unable to view profile. User information not available.');
+      console.error(
+        "❌ RECRUITER: No valid other user ID found or it matches business profile"
+      );
+      console.error("Available data:", {
+        otherUserId,
+        businessProfileId: businessProfile?._id,
+      });
+      alert("Unable to view profile. User information not available.");
     }
   };
 
   const handleMuteConversation = (conversation) => {
     const conversationId = selectedId || conversation?.id;
-    setMutedConversations(prev => {
+    setMutedConversations((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(conversationId)) {
         newSet.delete(conversationId);
@@ -455,14 +471,15 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
   };
 
   const handleClearMessages = async (conversation) => {
-    if (window.confirm("Are you sure you want to clear all messages in this conversation? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to clear all messages in this conversation? This action cannot be undone."
+      )
+    ) {
       try {
-        await axiosInstance.delete(
-          `/recuriter/clearMessages/${selectedId}`,
-          {
-            params: { orgId: businessProfile._id },
-          }
-        );
+        await axiosInstance.delete(`/recuriter/clearMessages/${selectedId}`, {
+          params: { orgId: businessProfile._id },
+        });
         setMessages([]);
         console.log("Messages cleared for conversation:", conversation.id);
       } catch (error) {
@@ -473,7 +490,11 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
   };
 
   const handleDeleteConversation = async (conversation) => {
-    if (window.confirm("Are you sure you want to delete this conversation? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this conversation? This action cannot be undone."
+      )
+    ) {
       try {
         await axiosInstance.delete(
           `/recuriter/deleteConversation/${selectedId}`,
@@ -530,39 +551,63 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
       senderId,
       senderData,
       businessProfileId: businessProfile?._id,
-      isBusinessProfile: String(senderId) === String(businessProfile?._id)
+      isBusinessProfile: String(senderId) === String(businessProfile?._id),
     });
 
     // If the sender ID matches the business profile, return business profile info
     if (String(senderId) === String(businessProfile?._id)) {
       console.log("✅ RECRUITER getUserById: Returning business profile");
-      
+
       // Use senderData if available, otherwise fallback to businessProfile
-      if (senderData && typeof senderData === 'object') {
+      if (senderData && typeof senderData === "object") {
         return {
           _id: businessProfile._id,
-          name: senderData.name || senderData.companyName || businessProfile.name || "Recruiter",
-          username: senderData.username || senderData.name || businessProfile.name || "Recruiter",
-          profilePicture: senderData.profilePicture || senderData.logo || businessProfile.logo,
+          name:
+            senderData.name ||
+            senderData.companyName ||
+            businessProfile.name ||
+            "Recruiter",
+          username:
+            senderData.username ||
+            senderData.name ||
+            businessProfile.name ||
+            "Recruiter",
+          profilePicture:
+            senderData.profilePicture ||
+            senderData.logo ||
+            businessProfile.logo,
         };
       }
-      
+
       return {
         _id: businessProfile._id,
-        name: businessProfile.name || businessProfile.companyName || "Recruiter",
-        username: businessProfile.name || businessProfile.companyName || "Recruiter",
+        name:
+          businessProfile.name || businessProfile.companyName || "Recruiter",
+        username:
+          businessProfile.name || businessProfile.companyName || "Recruiter",
         profilePicture: businessProfile.logo || businessProfile.profilePicture,
       };
     }
-    
+
     // Otherwise, find from other users or use senderData
-    if (senderData && typeof senderData === 'object') {
+    if (senderData && typeof senderData === "object") {
       return senderData;
     }
-    
+
     const foundUser = otherUsers.find((user) => user._id === senderId);
-    console.log("🔍 RECRUITER getUserById: Found other user:", foundUser ? "Yes" : "No");
+    console.log(
+      "🔍 RECRUITER getUserById: Found other user:",
+      foundUser ? "Yes" : "No"
+    );
     return foundUser || {};
+  };
+
+  const isUserOnline = (userId) => {
+    // This is a placeholder. In a real application, you'd have a WebSocket
+    // connection to track online status or fetch it from a user status API.
+    // For now, we'll assume a simple check based on the current user's ID.
+    // If the other user's ID matches the current user's ID, they are online.
+    return userId === currentUser?._id;
   };
 
   return (
@@ -583,7 +628,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
         isMuted={mutedConversations.has(selectedId)}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-white">
         {isMessageLoading ? (
           <MessageSkeleton />
         ) : messages.length === 0 ? (
@@ -598,7 +643,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
           Object.entries(groupedMessages).map(([dateLabel, msgs]) => (
             <div key={dateLabel} className="space-y-1">
               <div className="flex justify-center my-6">
-                <span className="bg-white text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm border">
+                <span className="bg-blue-500 text-white text-xs px-4 py-2 rounded-full shadow-lg border border-blue-400">
                   {dateLabel}
                 </span>
               </div>
@@ -606,16 +651,19 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
                 // ✅ SIMPLIFIED: Check if this message is from the current business profile
                 const isCurrentUser = (() => {
                   console.log("🔍 RECRUITER ALIGNMENT: Message", message._id);
-                  console.log("📝 Message text:", message.message?.substring(0, 30));
-                  
+                  console.log(
+                    "📝 Message text:",
+                    message.message?.substring(0, 30)
+                  );
+
                   if (!businessProfile?._id) {
                     console.error("🚨 CRITICAL: No business profile available");
                     return false;
                   }
-                  
+
                   // ✅ PRIORITY: Use direct senderId field (standardized server response)
                   let actualSenderId = message.senderId;
-                  
+
                   // Fallback: Extract from sender structure if senderId not available
                   if (!actualSenderId) {
                     if (typeof message.sender === "string") {
@@ -628,15 +676,23 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
                       actualSenderId = message.sender._id;
                     }
                   }
-                  
+
                   if (!actualSenderId) {
-                    console.error("🚨 Could not extract sender ID from:", message.sender);
+                    console.error(
+                      "🚨 Could not extract sender ID from:",
+                      message.sender
+                    );
                     return false;
                   }
-                  
-                  const isMatch = String(actualSenderId) === String(businessProfile._id);
-                  console.log(`🔄 Alignment: ${actualSenderId} === ${businessProfile._id} → ${isMatch ? 'RIGHT' : 'LEFT'}`);
-                  
+
+                  const isMatch =
+                    String(actualSenderId) === String(businessProfile._id);
+                  console.log(
+                    `🔄 Alignment: ${actualSenderId} === ${
+                      businessProfile._id
+                    } → ${isMatch ? "RIGHT" : "LEFT"}`
+                  );
+
                   return isMatch;
                 })();
                 const senderUser = getUserById(message);
@@ -654,26 +710,37 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
                 return (
                   <div
                     key={message._id}
-                    className={`flex mb-1 ${
+                    className={`flex mb-4 ${
                       isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
-                      className={`flex items-end gap-2 ${
+                      className={`flex items-end gap-3 ${
                         isCurrentUser ? "flex-row-reverse" : ""
-                      } max-w-[80%] group`}
+                      } max-w-[70%] group`}
                     >
                       {/* Avatar - only show for last message in group */}
                       <div
-                        className={`w-8 h-8 ${
+                        className={`w-10 h-10 ${
                           !isNextMessageFromSameSender ? "" : "invisible"
                         }`}
                       >
-                        <img
-                          src={senderUser?.profilePicture || piimage}
-                          alt="User avatar"
-                          className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover"
-                        />
+                        <div className="relative">
+                          <img
+                            src={
+                              senderUser?.profilePicture ||
+                              senderUser?.profilePic ||
+                              senderUser?.piimage ||
+                              piimage
+                            }
+                            alt="User avatar"
+                            className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+                          />
+                          {/* Online status indicator */}
+                          {isUserOnline(senderUser?._id) && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                          )}
+                        </div>
                       </div>
 
                       <div
@@ -681,31 +748,45 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
                           isCurrentUser ? "items-end" : "items-start"
                         }`}
                       >
-                        {/* Sender name for group chats */}
-                        {conversation?.isGroup &&
-                          !isCurrentUser &&
-                          index === 0 && (
-                            <p className="text-xs text-gray-500 mb-1 font-medium px-2">
-                              {senderUser?.name}
-                            </p>
-                          )}
-
-                        {/* Image attachment */}
-                        {message.image && (
-                          <div className="mb-2">
-                            <img
-                              src={message.image}
-                              alt="Attachment"
-                              className="max-w-[250px] rounded-lg shadow-md border"
-                            />
+                        {/* Sender name and timestamp */}
+                        {!isNextMessageFromSameSender && (
+                          <div
+                            className={`text-xs text-gray-500 mb-1 ${
+                              isCurrentUser ? "text-right" : "text-left"
+                            }`}
+                          >
+                            <span className="font-medium">
+                              {isCurrentUser ? "You" : senderUser?.name}
+                            </span>
+                            <span className="ml-2">
+                              {(() => {
+                                try {
+                                  const date = new Date(message.createdAt);
+                                  if (isNaN(date.getTime())) {
+                                    return "Invalid time";
+                                  }
+                                  return date.toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  });
+                                } catch (error) {
+                                  return "Invalid time";
+                                }
+                              })()}
+                            </span>
                           </div>
                         )}
 
                         {/* Message bubble */}
                         {message.message && (
                           <div className="relative group">
-                            {/* Three dot menu button - positioned with better spacing */}
-                            <div className="absolute message-menu opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 -top-2 -right-2">
+                            {/* Three dot menu button */}
+                            <div
+                              className={`absolute message-menu transition-opacity duration-200 z-10 top-1/2 transform -translate-y-1/2 ${
+                                isCurrentUser ? "-left-9" : "-right-9"
+                              }`}
+                            >
                               <div className="relative">
                                 <button
                                   className="bg-white/90 hover:bg-white shadow-sm border border-gray-200 p-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
@@ -720,12 +801,12 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
                                 >
                                   <MoreVertical className="w-4 h-4 text-gray-600" />
                                 </button>
-                                {/* Dropdown menu - responsive positioning */}
+                                {/* Dropdown menu */}
                                 {openMenuId === message._id && (
                                   <div
                                     className={`absolute top-6 ${
-                                      isCurrentUser ? "right-0" : "left-0"
-                                    } min-w-[140px] bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 animate-in fade-in-0 zoom-in-95`}
+                                      isCurrentUser ? "left-0" : "right-0"
+                                    } min-w-[140px] bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50`}
                                   >
                                     <button
                                       onClick={() => handleReply(message)}
@@ -750,36 +831,29 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
                                       <Pin className="w-4 h-4" />{" "}
                                       {isPinned(message._id) ? "Unpin" : "Pin"}
                                     </button>
+                                    <button
+                                      onClick={() => handleDelete(message)}
+                                      className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors gap-2"
+                                    >
+                                      <Trash2 className="w-4 h-4" /> Delete
+                                    </button>
                                     {isCurrentUser && (
-                                      <>
-                                        <button
-                                          onClick={() => handleEdit(message)}
-                                          className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors gap-2"
-                                        >
-                                          <Pencil className="w-4 h-4" /> Edit
-                                        </button>
-                                        <div className="border-t border-gray-100 my-1"></div>
-                                        <button
-                                          onClick={() => handleDelete(message)}
-                                          className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors gap-2"
-                                        >
-                                          <Trash2 className="w-4 h-4" /> Delete
-                                        </button>
-                                      </>
+                                      <button
+                                        onClick={() => handleEdit(message)}
+                                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors gap-2"
+                                      >
+                                        <Pencil className="w-4 h-4" /> Edit
+                                      </button>
                                     )}
                                   </div>
                                 )}
                               </div>
                             </div>
                             <div
-                              className={`px-4 py-2 text-sm whitespace-pre-line shadow-sm max-w-full break-words relative ${
+                              className={`px-4 py-3 text-sm whitespace-pre-wrap break-words overflow-hidden ${
                                 isCurrentUser
-                                  ? "bg-gradient-to-r from-[#1890FF] to-[#006ACC] text-white rounded-2xl rounded-br-md"
+                                  ? "text-white rounded-2xl rounded-br-md"
                                   : "bg-white text-gray-900 rounded-2xl rounded-bl-md border border-gray-200"
-                              } ${
-                                isPinned(message._id)
-                                  ? "ring-2 ring-yellow-300 ring-opacity-50"
-                                  : ""
                               }`}
                               style={
                                 isCurrentUser
@@ -790,68 +864,13 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
                                   : {}
                               }
                             >
-                              {/* Pin indicator */}
-                              {isPinned(message._id) && (
-                                <div className="absolute -top-2 -right-2">
-                                  <Pin className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                </div>
-                              )}
-
-                              {/* Reply to indicator */}
-                              {message.replyTo && (
-                                <div className="text-xs opacity-75 mb-2 p-2 bg-black/10 rounded border-l-2 border-white/30">
-                                  <div className="flex items-center gap-1 mb-1">
-                                    <CornerUpLeft className="w-3 h-3" />
-                                    <span className="font-medium">
-                                      Reply to:
-                                    </span>
-                                  </div>
-                                  <div className="truncate">
-                                    {(() => {
-                                      const replyToMessage = messages.find(
-                                        (m) => m._id === message.replyTo
-                                      );
-                                      return (
-                                        replyToMessage?.message ||
-                                        "Original message"
-                                      );
-                                    })()}
-                                  </div>
-                                </div>
-                              )}
-
                               {message.message}
+                              {message.editedAt && (
+                                <span className="text-xs opacity-60 italic ml-2">
+                                  (edited)
+                                </span>
+                              )}
                             </div>
-                          </div>
-                        )}
-
-                        {/* Timestamp - only show for last message in group */}
-                        {!isNextMessageFromSameSender && (
-                          <div
-                            className={`text-xs text-gray-400 mt-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity ${
-                              isCurrentUser ? "text-right" : "text-left"
-                            }`}
-                          >
-                            {(() => {
-                              try {
-                                const date = new Date(message.createdAt);
-                                if (isNaN(date.getTime())) {
-                                  return "Invalid time";
-                                }
-                                return date.toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                  timeZone: "Asia/Kolkata",
-                                });
-                              } catch (error) {
-                                console.error(
-                                  "Error formatting timestamp:",
-                                  error
-                                );
-                                return "Invalid time";
-                              }
-                            })()}
                           </div>
                         )}
                       </div>

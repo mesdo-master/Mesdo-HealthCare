@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   useNavigate,
   useParams,
@@ -24,6 +24,7 @@ const JobPage = () => {
   const dispatch = useDispatch();
 
   const [jobs, setJobs] = useState([]);
+  const [sortBy, setSortBy] = useState("Recommended");
   const navigate = useNavigate();
   const { jobId } = useParams();
 
@@ -32,6 +33,52 @@ const JobPage = () => {
 
   // Profile completion nudge state
   const [showProfileNudge, setShowProfileNudge] = useState(true);
+
+  // Sort jobs based on selected option
+  const sortedJobs = useMemo(() => {
+    const jobsToSort = filteredJobs != null ? filteredJobs : jobs;
+
+    if (!jobsToSort.length) return [];
+
+    const sorted = [...jobsToSort];
+    switch (sortBy) {
+      case "Recommended":
+        // Default order - keep as is
+        return sorted;
+      case "Most Recent":
+        return sorted.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0);
+          const dateB = new Date(b.createdAt || 0);
+          return dateB - dateA;
+        });
+      case "Best Match":
+        return sorted.sort((a, b) => {
+          const matchA = calculateMatchPercentage(a, currentUser);
+          const matchB = calculateMatchPercentage(b, currentUser);
+          return matchB - matchA;
+        });
+      case "Salary (High to Low)":
+        return sorted.sort((a, b) => {
+          const salaryA = a.salaryRangeFrom || 0;
+          const salaryB = b.salaryRangeFrom || 0;
+          return salaryB - salaryA;
+        });
+      case "Job Title":
+        return sorted.sort((a, b) => {
+          const titleA = (a.jobTitle || "").toLowerCase();
+          const titleB = (b.jobTitle || "").toLowerCase();
+          return titleA.localeCompare(titleB);
+        });
+      case "Company Name":
+        return sorted.sort((a, b) => {
+          const companyA = (a.HospitalName || "").toLowerCase();
+          const companyB = (b.HospitalName || "").toLowerCase();
+          return companyA.localeCompare(companyB);
+        });
+      default:
+        return sorted;
+    }
+  }, [filteredJobs, jobs, sortBy, currentUser]);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -97,7 +144,7 @@ const JobPage = () => {
   }, [isClosing, navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen mt-[-40px] ml-[30px] mr-[10px]">
+    <div className="flex flex-col min-h-screen mt-[-40px] ml-[30px] mr-[10px] pt-[50px]">
       {/* Blur sidebar + main content when jobId is present */}
       <div className={jobId ? "blur-sm pointer-events-none select-none" : ""}>
         <div className={"flex flex-1 overflow-hidden pt-16 mb-7 mr-20 ml-18"}>
@@ -106,13 +153,12 @@ const JobPage = () => {
               <JobStats />
               <JobFilters />
               <JobSort
-                totalResults={
-                  filteredJobs != null ? filteredJobs.length : jobs.length
-                }
+                totalResults={sortedJobs.length}
+                onSortChange={setSortBy}
               />
 
               <div className="space-y-4 mt-6">
-                {(filteredJobs != null ? filteredJobs : jobs).map((job) => (
+                {sortedJobs.map((job) => (
                   <JobCard
                     key={job._id}
                     job={{

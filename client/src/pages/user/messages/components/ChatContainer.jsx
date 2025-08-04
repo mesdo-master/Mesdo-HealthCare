@@ -45,6 +45,33 @@ const ChatContainer = ({
   const [pinnedMessages, setPinnedMessages] = useState(new Set());
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
+  const [otherUserProfile, setOtherUserProfile] = useState(null);
+
+  // Function to fetch other user's profile data
+  const fetchOtherUserProfile = async (userId) => {
+    if (!userId) {
+      console.log("❌ No userId provided for profile fetch");
+      return;
+    }
+
+    try {
+      console.log("🔍 Fetching user profile for:", userId);
+      const response = await axiosInstance.get(`/users/profile/${userId}`);
+      console.log("✅ User profile fetched:", response.data);
+      console.log("🔍 Profile data details:", {
+        hasUser: !!response.data.user,
+        userName: response.data.user?.name,
+        profilePicture: response.data.user?.profilePicture,
+        profilePic: response.data.user?.profilePic,
+        allFields: Object.keys(response.data.user || {}),
+      });
+      setOtherUserProfile(response.data.user);
+    } catch (error) {
+      console.error("❌ Error fetching user profile:", error);
+      console.error("❌ Error response:", error.response?.data);
+      setOtherUserProfile(null);
+    }
+  };
 
   // 🔍 DEBUG: Log current user and conversation at component level
   console.log("🔍 USER CHATCONTAINER - CURRENT USER DEBUG:", {
@@ -70,9 +97,20 @@ const ChatContainer = ({
 
   // ✅ Fetch messages when selectedId changes
   useEffect(() => {
+    // ✅ Enhanced debugging for selectedId
+    console.log("🔍 FETCH MESSAGES DEBUG:", {
+      selectedId,
+      selectedIdType: typeof selectedId,
+      selectedIdValid: !!(selectedId && selectedId !== "undefined"),
+      conversationProp: conversation,
+      conversationId: conversation?._id || conversation?.id,
+      activeTab,
+      timestamp: new Date().toISOString(),
+    });
+
     // ✅ Validate selectedId before making API calls
     if (!selectedId || selectedId === "undefined") {
-      console.log("No valid selectedId, skipping message fetch");
+      console.log("❌ No valid selectedId, skipping message fetch");
       setMessages([]);
       setOtherUsers([]);
       return;
@@ -106,35 +144,164 @@ const ChatContainer = ({
       const getMessages = async () => {
         setIsMessageLoading(true);
         try {
+          console.log("🚀 Making API call to fetch messages:", {
+            endpoint: `/chats/${selectedId}`,
+            selectedId,
+            timestamp: new Date().toISOString(),
+          });
+
           const response = await axiosInstance.get(`/chats/${selectedId}`);
-          console.log("Chat messages response:", response.data);
-          console.log('🔍 USER API DEBUG: Detailed response analysis:', {
+          console.log("✅ Chat messages response:", {
+            endpoint: `/chats/${selectedId}`,
+            selectedId,
+            messagesCount: response.data.messages?.length || 0,
+            responseData: response.data,
+            timestamp: new Date().toISOString(),
+          });
+          console.log("🔍 USER API DEBUG: Detailed response analysis:", {
             selectedId,
             responseData: response.data,
             otherUser: response.data.otherUser,
             otherUsers: response.data.otherUsers,
-            conversation: response.data.conversation
+            conversation: response.data.conversation,
           });
 
           const { messages, otherUser, otherUsers } = response.data;
           setMessages(messages || []);
 
+          console.log("🔍 API Response Analysis:", {
+            hasOtherUsers: !!otherUsers,
+            hasOtherUser: !!otherUser,
+            otherUsersType: typeof otherUsers,
+            otherUserType: typeof otherUser,
+            otherUsersIsArray: Array.isArray(otherUsers),
+            otherUserIsArray: Array.isArray(otherUser),
+            otherUsersLength: otherUsers?.length,
+            otherUserLength: otherUser?.length,
+            otherUsersFirst: otherUsers?.[0],
+            otherUserFirst: otherUser?.[0],
+          });
+
           // Handle both single otherUser and multiple otherUsers
           if (otherUsers) {
-            console.log('📝 USER: Setting otherUsers from otherUsers field:', otherUsers);
-          console.log('🔍 USER: Raw conversation data:', response.data.conversation);
-          console.log('🔍 USER: Current user from Redux:', currentUser);
+            console.log(
+              "📝 USER: Setting otherUsers from otherUsers field:",
+              otherUsers
+            );
+            console.log(
+              "🔍 USER: Raw conversation data:",
+              response.data.conversation
+            );
+            console.log("🔍 USER: Current user from Redux:", currentUser);
             setOtherUsers(
               Array.isArray(otherUsers) ? otherUsers : [otherUsers]
             );
+
+            // Fetch other user's profile data
+            if (Array.isArray(otherUsers) && otherUsers.length > 0) {
+              const otherUserId = otherUsers[0]._id || otherUsers[0].user;
+              console.log("🔍 Extracting user ID from otherUsers[0]:", {
+                otherUsersFirst: otherUsers[0],
+                extractedId: otherUserId,
+                currentUserId: currentUser?._id,
+              });
+              if (otherUserId && otherUserId !== currentUser?._id) {
+                console.log(
+                  "✅ Calling fetchOtherUserProfile with:",
+                  otherUserId
+                );
+                fetchOtherUserProfile(otherUserId);
+              } else {
+                console.log("❌ Skipping profile fetch - same user or no ID");
+              }
+            } else if (otherUsers._id || otherUsers.user) {
+              const otherUserId = otherUsers._id || otherUsers.user;
+              console.log("🔍 Extracting user ID from otherUsers object:", {
+                otherUsers,
+                extractedId: otherUserId,
+                currentUserId: currentUser?._id,
+              });
+              if (otherUserId && otherUserId !== currentUser?._id) {
+                console.log(
+                  "✅ Calling fetchOtherUserProfile with:",
+                  otherUserId
+                );
+                fetchOtherUserProfile(otherUserId);
+              } else {
+                console.log("❌ Skipping profile fetch - same user or no ID");
+              }
+            } else {
+              console.log("❌ No valid user ID found in otherUsers");
+            }
           } else if (otherUser) {
-            console.log('📝 USER: Setting otherUsers from otherUser field:', otherUser);
-          console.log('🔍 USER: Raw conversation data:', response.data.conversation);
-          console.log('🔍 USER: Current user from Redux:', currentUser);
+            console.log(
+              "📝 USER: Setting otherUsers from otherUser field:",
+              otherUser
+            );
+            console.log(
+              "🔍 USER: Raw conversation data:",
+              response.data.conversation
+            );
+            console.log("🔍 USER: Current user from Redux:", currentUser);
             setOtherUsers(Array.isArray(otherUser) ? otherUser : [otherUser]);
+
+            // Fetch other user's profile data
+            if (Array.isArray(otherUser) && otherUser.length > 0) {
+              const otherUserId = otherUser[0]._id || otherUser[0].user;
+              console.log("🔍 Extracting user ID from otherUser[0]:", {
+                otherUserFirst: otherUser[0],
+                extractedId: otherUserId,
+                currentUserId: currentUser?._id,
+              });
+              if (otherUserId && otherUserId !== currentUser?._id) {
+                console.log(
+                  "✅ Calling fetchOtherUserProfile with:",
+                  otherUserId
+                );
+                fetchOtherUserProfile(otherUserId);
+              } else {
+                console.log("❌ Skipping profile fetch - same user or no ID");
+              }
+            } else if (otherUser._id || otherUser.user) {
+              const otherUserId = otherUser._id || otherUser.user;
+              console.log("🔍 Extracting user ID from otherUser object:", {
+                otherUser,
+                extractedId: otherUserId,
+                currentUserId: currentUser?._id,
+              });
+              if (otherUserId && otherUserId !== currentUser?._id) {
+                console.log(
+                  "✅ Calling fetchOtherUserProfile with:",
+                  otherUserId
+                );
+                fetchOtherUserProfile(otherUserId);
+              } else {
+                console.log("❌ Skipping profile fetch - same user or no ID");
+              }
+            } else {
+              console.log("❌ No valid user ID found in otherUser");
+            }
           } else {
-            console.log('⚠️ USER: No otherUser or otherUsers found in response');
+            console.log(
+              "⚠️ USER: No otherUser or otherUsers found in response"
+            );
             setOtherUsers([]);
+          }
+
+          // Fallback: Try to get user ID from conversationOtherParticipant
+          if (!otherUserProfile && conversation?.otherParticipant?._id) {
+            const fallbackUserId = conversation.otherParticipant._id;
+            console.log(
+              "🔄 Fallback: Using conversationOtherParticipant ID:",
+              fallbackUserId
+            );
+            if (fallbackUserId && fallbackUserId !== currentUser?._id) {
+              console.log(
+                "✅ Calling fetchOtherUserProfile with fallback ID:",
+                fallbackUserId
+              );
+              fetchOtherUserProfile(fallbackUserId);
+            }
           }
         } catch (error) {
           console.error("Error fetching chat messages:", error);
@@ -156,7 +323,7 @@ const ChatContainer = ({
   // ✅ Mark conversation as read when opened
   useEffect(() => {
     if (selectedId && selectedId !== "undefined") {
-      console.log('📜 USER: Marking conversation as read:', selectedId);
+      console.log("📜 USER: Marking conversation as read:", selectedId);
       markConversationAsRead(selectedId);
     }
   }, [selectedId, markConversationAsRead]);
@@ -201,6 +368,11 @@ const ChatContainer = ({
       console.log("🔔 USER: Message conversation ID:", messageConversationId);
       console.log("🔔 USER: Selected conversation ID:", selectedId);
       console.log("🔔 USER: IDs match:", messageConversationId === selectedId);
+      console.log("🔔 USER: ID types:", {
+        messageConversationIdType: typeof messageConversationId,
+        selectedIdType: typeof selectedId,
+        stringComparison: String(messageConversationId) === String(selectedId),
+      });
 
       if (messageConversationId === selectedId) {
         console.log(
@@ -284,18 +456,20 @@ const ChatContainer = ({
     const handleMessageDeleted = (data) => {
       console.log("🗑️ USER: Message deleted:", data);
       if (data.conversationId === selectedId) {
-        setMessages(prev => prev.filter(msg => msg._id !== data.messageId));
+        setMessages((prev) => prev.filter((msg) => msg._id !== data.messageId));
       }
     };
 
     const handleMessageEdited = (data) => {
       console.log("✏️ USER: Message edited:", data);
       if (data.conversationId === selectedId) {
-        setMessages(prev => prev.map(msg => 
-          msg._id === data.messageId 
-            ? { ...msg, message: data.newMessage, editedAt: data.editedAt }
-            : msg
-        ));
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === data.messageId
+              ? { ...msg, message: data.newMessage, editedAt: data.editedAt }
+              : msg
+          )
+        );
       }
     };
 
@@ -349,6 +523,20 @@ const ChatContainer = ({
     }
     return () => document.removeEventListener("click", handleClick);
   }, [openMenuId]);
+
+  // ✅ Fetch other user's profile when conversation loads
+  useEffect(() => {
+    if (conversation?.otherParticipant?._id && !otherUserProfile) {
+      const otherUserId = conversation.otherParticipant._id;
+      console.log(
+        "🔄 useEffect: Fetching profile for conversation participant:",
+        otherUserId
+      );
+      if (otherUserId !== currentUser?._id) {
+        fetchOtherUserProfile(otherUserId);
+      }
+    }
+  }, [conversation, otherUserProfile, currentUser?._id]);
 
   // ✅ Early return with proper validation
   if (!selectedId || selectedId === "undefined") {
@@ -439,7 +627,7 @@ const ChatContainer = ({
 
   const handlePinConversation = (conversation) => {
     const conversationId = selectedId || conversation?.id;
-    setPinnedConversations(prev => {
+    setPinnedConversations((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(conversationId)) {
         newSet.delete(conversationId);
@@ -452,110 +640,128 @@ const ChatContainer = ({
   };
 
   const handleViewProfile = () => {
-    console.log('🔍=== VIEW PROFILE DEBUG START ===');
-    console.log('🔍 DEBUG: View Profile Data:', {
+    console.log("🔍=== VIEW PROFILE DEBUG START ===");
+    console.log("🔍 DEBUG: View Profile Data:", {
       conversation,
       otherUsers,
       selectedId,
       currentUser: currentUser?._id,
-      'conversation.otherParticipant': conversation?.otherParticipant,
-      'otherUsers[0]': otherUsers[0]
+      "conversation.otherParticipant": conversation?.otherParticipant,
+      "otherUsers[0]": otherUsers[0],
     });
-    
+
     // FORCE: Extract other user ID with extensive debugging
     let otherUserId = null;
-    let method = '';
-    
+    let method = "";
+
     // Method 1: From otherUsers array (most reliable)
     if (otherUsers && otherUsers.length > 0) {
       const firstOtherUser = otherUsers[0];
-      console.log('🔍 Method 1 - First other user:', firstOtherUser);
-      
+      console.log("🔍 Method 1 - First other user:", firstOtherUser);
+
       if (firstOtherUser?._id && firstOtherUser._id !== currentUser?._id) {
         otherUserId = firstOtherUser._id;
-        method = 'otherUsers[0]._id';
-        console.log('✅ Method 1 SUCCESS:', otherUserId);
+        method = "otherUsers[0]._id";
+        console.log("✅ Method 1 SUCCESS:", otherUserId);
       } else {
-        console.log('⚠️ Method 1 FAILED: Invalid or matching current user');
+        console.log("⚠️ Method 1 FAILED: Invalid or matching current user");
       }
     }
-    
+
     // Method 2: From conversation.otherParticipant
     if (!otherUserId && conversation?.otherParticipant?._id) {
       if (conversation.otherParticipant._id !== currentUser?._id) {
         otherUserId = conversation.otherParticipant._id;
-        method = 'conversation.otherParticipant._id';
-        console.log('✅ Method 2 SUCCESS:', otherUserId);
+        method = "conversation.otherParticipant._id";
+        console.log("✅ Method 2 SUCCESS:", otherUserId);
       } else {
-        console.log('⚠️ Method 2 FAILED: Matches current user');
+        console.log("⚠️ Method 2 FAILED: Matches current user");
       }
     }
-    
+
     // Method 3: From conversation participants (manual search)
-    if (!otherUserId && conversation?.participants && Array.isArray(conversation.participants)) {
-      console.log('🔍 Method 3 - Searching participants:', conversation.participants);
-      
+    if (
+      !otherUserId &&
+      conversation?.participants &&
+      Array.isArray(conversation.participants)
+    ) {
+      console.log(
+        "🔍 Method 3 - Searching participants:",
+        conversation.participants
+      );
+
       for (const participant of conversation.participants) {
-        console.log('🔍 Checking participant:', participant);
-        
+        console.log("🔍 Checking participant:", participant);
+
         let participantId = null;
         if (participant.user?._id) {
           participantId = participant.user._id;
         } else if (participant._id) {
           participantId = participant._id;
         }
-        
-        console.log('🔍 Participant ID:', participantId, 'Current User ID:', currentUser?._id);
-        
-        if (participantId && String(participantId) !== String(currentUser?._id)) {
+
+        console.log(
+          "🔍 Participant ID:",
+          participantId,
+          "Current User ID:",
+          currentUser?._id
+        );
+
+        if (
+          participantId &&
+          String(participantId) !== String(currentUser?._id)
+        ) {
           otherUserId = participantId;
-          method = 'conversation.participants manual search';
-          console.log('✅ Method 3 SUCCESS:', otherUserId);
+          method = "conversation.participants manual search";
+          console.log("✅ Method 3 SUCCESS:", otherUserId);
           break;
         }
       }
-      
+
       if (!otherUserId) {
-        console.log('⚠️ Method 3 FAILED: No valid other participant found');
+        console.log("⚠️ Method 3 FAILED: No valid other participant found");
       }
     }
-    
+
     // Method 4: FORCE - Use a hardcoded different ID if we're still getting the same user
-    if (!otherUserId && currentUser?._id === '683e8ab57761da530587c477') {
+    if (!otherUserId && currentUser?._id === "683e8ab57761da530587c477") {
       // This is a temporary debugging measure
-      console.log('🚑 EMERGENCY: Using fallback user ID for debugging');
-      console.log('🚑 If this works, it means the data structure is wrong');
-      otherUserId = '000000000000000000000000'; // Temporary fallback
-      method = 'emergency fallback';
+      console.log("🚑 EMERGENCY: Using fallback user ID for debugging");
+      console.log("🚑 If this works, it means the data structure is wrong");
+      otherUserId = "000000000000000000000000"; // Temporary fallback
+      method = "emergency fallback";
     }
-    
-    console.log('🔍 FINAL RESULT:', {
+
+    console.log("🔍 FINAL RESULT:", {
       otherUserId,
       method,
       currentUserId: currentUser?._id,
-      willNavigate: otherUserId && otherUserId !== currentUser?._id
+      willNavigate: otherUserId && otherUserId !== currentUser?._id,
     });
-    
+
     if (otherUserId && String(otherUserId) !== String(currentUser?._id)) {
-      console.log('🎯 SUCCESS: Navigating to profile:', otherUserId);
-      console.log('🔍=== VIEW PROFILE DEBUG END ===');
+      console.log("🎯 SUCCESS: Navigating to profile:", otherUserId);
+      console.log("🔍=== VIEW PROFILE DEBUG END ===");
       navigate(`/profile/${otherUserId}`);
     } else {
-      console.error('❌ FAILED: No valid other user ID found');
-      console.error('🚑 This suggests the conversation data structure is not as expected');
-      console.error('Debug data dump:', {
+      console.error("❌ FAILED: No valid other user ID found");
+      console.error(
+        "🚑 This suggests the conversation data structure is not as expected"
+      );
+      console.error("Debug data dump:", {
         otherUserId,
         currentUserId: currentUser?._id,
         conversation,
         otherUsers,
-        selectedId
+        selectedId,
       });
-      console.log('🔍=== VIEW PROFILE DEBUG END ===');
-      
+      console.log("🔍=== VIEW PROFILE DEBUG END ===");
+
       // Show a professional modal instead of basic alert
       const createModal = () => {
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        const modal = document.createElement("div");
+        modal.className =
+          "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
         modal.innerHTML = `
           <div class="bg-white rounded-xl shadow-lg p-8 text-center max-w-md mx-4">
             <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
@@ -574,20 +780,20 @@ const ChatContainer = ({
           </div>
         `;
         document.body.appendChild(modal);
-        
+
         // Close on background click
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener("click", (e) => {
           if (e.target === modal) modal.remove();
         });
       };
-      
+
       createModal();
     }
   };
 
   const handleMuteConversation = (conversation) => {
     const conversationId = selectedId || conversation?.id;
-    setMutedConversations(prev => {
+    setMutedConversations((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(conversationId)) {
         newSet.delete(conversationId);
@@ -600,7 +806,11 @@ const ChatContainer = ({
   };
 
   const handleClearMessages = async (conversation) => {
-    if (window.confirm("Are you sure you want to clear all messages in this conversation? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to clear all messages in this conversation? This action cannot be undone."
+      )
+    ) {
       try {
         const conversationId = selectedId || conversation?.id;
         await axiosInstance.delete(`/chats/clear/${conversationId}`);
@@ -614,7 +824,11 @@ const ChatContainer = ({
   };
 
   const handleDeleteConversation = async (conversation) => {
-    if (window.confirm("Are you sure you want to delete this conversation? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this conversation? This action cannot be undone."
+      )
+    ) {
       try {
         const conversationId = selectedId || conversation?.id;
         await axiosInstance.delete(`/chats/${conversationId}`);
@@ -635,17 +849,20 @@ const ChatContainer = ({
   };
 
   const handleCopyMessage = (message) => {
-    navigator.clipboard.writeText(message.message).then(() => {
-      console.log("Message copied to clipboard");
-      // You could add a toast notification here
-    }).catch(err => {
-      console.error("Failed to copy message:", err);
-    });
+    navigator.clipboard
+      .writeText(message.message)
+      .then(() => {
+        console.log("Message copied to clipboard");
+        // You could add a toast notification here
+      })
+      .catch((err) => {
+        console.error("Failed to copy message:", err);
+      });
     setOpenMenuId(null);
   };
 
   const handlePinMessage = (message) => {
-    setPinnedMessages(prev => {
+    setPinnedMessages((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(message._id)) {
         newSet.delete(message._id);
@@ -660,13 +877,17 @@ const ChatContainer = ({
   };
 
   const handleDeleteMessage = async (message) => {
-    if (window.confirm("Are you sure you want to delete this message? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this message? This action cannot be undone."
+      )
+    ) {
       try {
         // Call API to delete message
         await axiosInstance.delete(`/chats/messages/${message._id}`);
-        
+
         // Remove message from local state
-        setMessages(prev => prev.filter(msg => msg._id !== message._id));
+        setMessages((prev) => prev.filter((msg) => msg._id !== message._id));
         console.log("Message deleted:", message._id);
       } catch (error) {
         console.error("Error deleting message:", error);
@@ -691,11 +912,50 @@ const ChatContainer = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white shadow-md rounded-lg">
+    <div className="flex-1 flex flex-col overflow-hidden bg-white rounded-lg">
+      {/* Debug logs */}
+      {(() => {
+        console.log("🔍 ChatContainer Debug:", {
+          selectedId,
+          conversation,
+          otherUsers,
+          otherUsersDetails: otherUsers.map((user) => ({
+            _id: user._id,
+            name: user.name,
+            profilePicture: user.profilePicture,
+            profilePic: user.profilePic,
+            piimage: user.piimage,
+            userType: user.userType,
+          })),
+          selectedUser:
+            conversation?.category === "group" ? otherUsers : otherUsers[0],
+          conversationOtherParticipant: conversation?.otherParticipant,
+          otherUserProfile,
+          currentUser: currentUser?._id,
+          // Additional debug for profile picture fields
+          allProfilePictureFields: {
+            "conversation?.piimage": conversation?.piimage,
+            "conversation?.otherParticipant?.profilePicture":
+              conversation?.otherParticipant?.profilePicture,
+            "conversation?.otherParticipant?.piimage":
+              conversation?.otherParticipant?.piimage,
+            "conversation?.conversationOtherParticipant?.piimage":
+              conversation?.conversationOtherParticipant?.piimage,
+            "otherUserProfile?.profilePicture":
+              otherUserProfile?.profilePicture,
+            "otherUserProfile?.piimage": otherUserProfile?.piimage,
+            "otherUsers[0]?.profilePicture": otherUsers[0]?.profilePicture,
+            "otherUsers[0]?.piimage": otherUsers[0]?.piimage,
+          },
+        });
+        return null;
+      })()}
+
       <ChatHeader
         selectedUser={
           conversation?.category === "group" ? otherUsers : otherUsers[0]
         }
+        otherUserProfile={otherUserProfile}
         piimage={piimage}
         conversation={conversation}
         onProfileClick={handleViewProfile}
@@ -708,7 +968,7 @@ const ChatContainer = ({
         isMuted={mutedConversations.has(selectedId)}
       />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-white">
         {isMessageLoading ? (
           <MessageSkeleton />
         ) : messages.length === 0 ? (
@@ -721,62 +981,31 @@ const ChatContainer = ({
           </div>
         ) : (
           Object.entries(groupedMessages).map(([dateLabel, msgs]) => (
-            <div key={dateLabel} className="space-y-1">
+            <div key={dateLabel} className="space-y-4">
               <div className="flex justify-center my-6">
-                <span className="bg-white text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm border">
+                <span className="bg-blue-500 text-white text-xs px-4 py-2 rounded-full shadow-lg border border-blue-400">
                   {dateLabel}
                 </span>
               </div>
               {msgs.map((message, index) => {
-                // ✅ USER: Proper alignment logic - my messages = RIGHT, others = LEFT
                 const isCurrentUser = (() => {
-                  console.group("🔍 USER ALIGNMENT: Message", message._id);
-                  console.log(
-                    "📝 Message text:",
-                    message.message?.substring(0, 50)
-                  );
-                  console.log("👤 Message sender field:", message.sender);
-                  console.log("🆔 Current user ID:", currentUser?._id);
-
                   let actualSenderId = null;
 
-                  // Extract sender ID from various message structures
                   if (typeof message.sender === "string") {
-                    // Direct ID string (socket messages)
                     actualSenderId = message.sender;
                   } else if (message.sender?.user) {
-                    // Nested structure (API messages)
                     if (typeof message.sender.user === "string") {
                       actualSenderId = message.sender.user;
                     } else if (message.sender.user._id) {
                       actualSenderId = message.sender.user._id;
                     }
                   } else if (message.sender?._id) {
-                    // Direct object with _id
                     actualSenderId = message.sender._id;
                   }
 
-                  console.log("🔄 Extracted sender ID:", actualSenderId);
-                  console.log("🔄 Current user ID:", currentUser?._id);
-
-                  // Convert both to strings for reliable comparison
                   const senderIdStr = String(actualSenderId);
                   const currentUserIdStr = String(currentUser?._id);
-
-                  const isMatch = senderIdStr === currentUserIdStr;
-
-                  if (isMatch) {
-                    console.log(
-                      "✅ MATCH: This is MY message (RIGHT alignment)"
-                    );
-                  } else {
-                    console.log(
-                      "❌ NO MATCH: This is RECEIVED message (LEFT alignment)"
-                    );
-                  }
-
-                  console.groupEnd();
-                  return isMatch;
+                  return senderIdStr === currentUserIdStr;
                 })();
                 const senderUser = getUserById(message);
 
@@ -793,30 +1022,46 @@ const ChatContainer = ({
                 return (
                   <div
                     key={message._id}
-                    className={`flex mb-1 ${
+                    className={`flex mb-4 ${
                       isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
-                      className={`flex items-end gap-2 ${
+                      className={`flex items-end gap-3 ${
                         isCurrentUser ? "flex-row-reverse" : ""
-                      } max-w-[80%] group`}
+                      } max-w-[70%] group`}
                     >
                       {/* Avatar - only show for last message in group */}
                       <div
-                        className={`w-8 h-8 ${
+                        className={`w-10 h-10 ${
                           !isNextMessageFromSameSender ? "" : "invisible"
                         }`}
                       >
                         <div className="relative">
                           <img
-                            src={senderUser?.profilePicture || piimage}
+                            src={
+                              senderUser?.profilePicture ||
+                              senderUser?.profilePic ||
+                              senderUser?.piimage ||
+                              otherUserProfile?.profilePicture ||
+                              otherUserProfile?.profilePic ||
+                              otherUserProfile?.piimage ||
+                              conversation?.otherParticipant?.profilePicture ||
+                              conversation?.otherParticipant?.profilePic ||
+                              conversation?.otherParticipant?.piimage ||
+                              conversation?.piimage ||
+                              conversation?.conversationOtherParticipant
+                                ?.profilePicture ||
+                              conversation?.conversationOtherParticipant
+                                ?.piimage ||
+                              piimage
+                            }
                             alt="User avatar"
-                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover"
+                            className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
                           />
                           {/* Online status indicator */}
-                          {!isCurrentUser && isUserOnline(senderUser?._id) && (
-                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-white"></div>
+                          {isUserOnline(senderUser?._id) && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
                           )}
                         </div>
                       </div>
@@ -826,38 +1071,45 @@ const ChatContainer = ({
                           isCurrentUser ? "items-end" : "items-start"
                         }`}
                       >
-                        {/* Sender name for group chats */}
-                        {conversation?.category === "group" &&
-                          !isCurrentUser &&
-                          index === 0 && (
-                            <p className="text-xs text-gray-500 mb-1 font-medium px-2">
-                              {senderUser?.name}
-                            </p>
-                          )}
-
-                        {/* Image attachment */}
-                        {message.image && (
-                          <div className="mb-2">
-                            <img
-                              src={message.image}
-                              alt="Attachment"
-                              className="max-w-[250px] rounded-lg shadow-md border"
-                            />
+                        {/* Sender name and timestamp */}
+                        {!isNextMessageFromSameSender && (
+                          <div
+                            className={`text-xs text-gray-500 mb-1 ${
+                              isCurrentUser ? "text-right" : "text-left"
+                            }`}
+                          >
+                            <span className="font-medium">
+                              {isCurrentUser ? "You" : senderUser?.name}
+                            </span>
+                            <span className="ml-2">
+                              {(() => {
+                                try {
+                                  const date = new Date(message.createdAt);
+                                  if (isNaN(date.getTime())) {
+                                    return "Invalid time";
+                                  }
+                                  return date.toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  });
+                                } catch (error) {
+                                  return "Invalid time";
+                                }
+                              })()}
+                            </span>
                           </div>
                         )}
 
-                        {/* Message bubble with three-dot menu */}
+                        {/* Message bubble */}
                         {message.message && (
                           <div className="relative group">
-                            {/* Pinned indicator */}
-                            {pinnedMessages.has(message._id) && (
-                              <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center z-20">
-                                <Pin className="w-2.5 h-2.5 text-white" />
-                              </div>
-                            )}
-                            
-                            {/* Three dot menu button - positioned with better spacing */}
-                            <div className="absolute message-menu opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 -top-2 -right-2">
+                            {/* Three dot menu button */}
+                            <div
+                              className={`absolute message-menu transition-opacity duration-200 z-10 top-1/2 transform -translate-y-1/2 ${
+                                isCurrentUser ? "-left-9" : "-right-9"
+                              }`}
+                            >
                               <div className="relative">
                                 <button
                                   className="bg-white/90 hover:bg-white shadow-sm border border-gray-200 p-1.5 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
@@ -872,44 +1124,53 @@ const ChatContainer = ({
                                 >
                                   <MoreVertical className="w-4 h-4 text-gray-600" />
                                 </button>
-                                {/* Dropdown menu - responsive positioning */}
+                                {/* Dropdown menu */}
                                 {openMenuId === message._id && (
                                   <div
                                     className={`absolute top-6 ${
-                                      isCurrentUser ? "right-0" : "left-0"
-                                    } min-w-[140px] bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 animate-in fade-in-0 zoom-in-95`}
+                                      isCurrentUser ? "left-0" : "right-0"
+                                    } min-w-[140px] bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50`}
                                   >
-                                    <button 
-                                      onClick={() => handleReplyMessage(message)}
+                                    <button
+                                      onClick={() =>
+                                        handleReplyMessage(message)
+                                      }
                                       className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors gap-2"
                                     >
                                       <CornerUpLeft className="w-4 h-4" /> Reply
                                     </button>
-                                    <button 
+                                    <button
                                       onClick={() => handleCopyMessage(message)}
                                       className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors gap-2"
                                     >
                                       <Copy className="w-4 h-4" /> Copy
                                     </button>
-                                    <button 
+                                    <button
                                       onClick={() => handlePinMessage(message)}
                                       className={`flex items-center w-full px-3 py-2 text-sm transition-colors gap-2 ${
-                                        pinnedMessages.has(message._id) 
-                                          ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
-                                          : 'text-gray-700 hover:bg-gray-50'
+                                        pinnedMessages.has(message._id)
+                                          ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                                          : "text-gray-700 hover:bg-gray-50"
                                       }`}
                                     >
-                                      <Pin className="w-4 h-4" /> {pinnedMessages.has(message._id) ? 'Unpin' : 'Pin'}
+                                      <Pin className="w-4 h-4" />{" "}
+                                      {pinnedMessages.has(message._id)
+                                        ? "Unpin"
+                                        : "Pin"}
                                     </button>
-                                    <button 
-                                      onClick={() => handleDeleteMessage(message)}
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteMessage(message)
+                                      }
                                       className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors gap-2"
                                     >
                                       <Trash2 className="w-4 h-4" /> Delete
                                     </button>
                                     {isCurrentUser && (
-                                      <button 
-                                        onClick={() => handleEditMessage(message)}
+                                      <button
+                                        onClick={() =>
+                                          handleEditMessage(message)
+                                        }
                                         className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors gap-2"
                                       >
                                         <Pencil className="w-4 h-4" /> Edit
@@ -920,9 +1181,9 @@ const ChatContainer = ({
                               </div>
                             </div>
                             <div
-                              className={`px-4 py-2 text-sm whitespace-pre-line shadow-sm max-w-full break-words ${
+                              className={`px-4 py-3 text-sm whitespace-pre-line max-w-full break-words ${
                                 isCurrentUser
-                                  ? "bg-gradient-to-r from-[#1890FF] to-[#006ACC] text-white rounded-2xl rounded-br-md"
+                                  ? "text-white rounded-2xl rounded-br-md"
                                   : "bg-white text-gray-900 rounded-2xl rounded-bl-md border border-gray-200"
                               }`}
                               style={
@@ -941,36 +1202,6 @@ const ChatContainer = ({
                                 </span>
                               )}
                             </div>
-                          </div>
-                        )}
-
-                        {/* Timestamp - only show for last message in group */}
-                        {!isNextMessageFromSameSender && (
-                          <div
-                            className={`text-xs text-gray-400 mt-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity ${
-                              isCurrentUser ? "text-right" : "text-left"
-                            }`}
-                          >
-                            {(() => {
-                              try {
-                                const date = new Date(message.createdAt);
-                                if (isNaN(date.getTime())) {
-                                  return "Invalid time";
-                                }
-                                return date.toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                  timeZone: "Asia/Kolkata",
-                                });
-                              } catch (error) {
-                                console.error(
-                                  "Error formatting timestamp:",
-                                  error
-                                );
-                                return "Invalid time";
-                              }
-                            })()}
                           </div>
                         )}
                       </div>
@@ -1029,12 +1260,12 @@ const ChatContainer = ({
               <div className="flex items-center gap-2 mb-1">
                 <CornerUpLeft className="w-4 h-4 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">
-                  Replying to {getUserById(replyingTo)?.name || 'Unknown User'}
+                  Replying to {getUserById(replyingTo)?.name || "Unknown User"}
                 </span>
               </div>
               <div className="text-sm text-gray-600 bg-white rounded px-3 py-2 border-l-4 border-blue-500">
-                {replyingTo.message?.length > 100 
-                  ? replyingTo.message.substring(0, 100) + '...' 
+                {replyingTo.message?.length > 100
+                  ? replyingTo.message.substring(0, 100) + "..."
                   : replyingTo.message}
               </div>
             </div>

@@ -83,7 +83,10 @@ const SignUpPage = () => {
   // Handle Google Signup
   const handleGoogleSignup = () => {
     // Redirect to backend Google auth route
-    window.location.href = "http://localhost:5000/auth/google";
+    const apiUrl =
+      process.env.REACT_APP_API_URL ||
+      "http://localhost:5020";
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   return (
@@ -167,20 +170,22 @@ const SignUpPage = () => {
             )}
 
             <button
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-sm shadow-sm text-white bg-[#1890FF] hover:bg-blue-700 disabled:bg-gray-400"
               type="submit"
               disabled={isLoading}
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-sm shadow-sm text-white bg-[#1890FF] hover:bg-primary-600 disabled:bg-gray-400"
             >
-              {isLoading ? "Signing Up..." : "Sign Up"}
+              {isLoading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
-          <p className="mt-3 text-sm text-gray-600 text-center">
-            Already a Member?{" "}
-            <Link className="text-blue-500 font-semibold" to={"/login"}>
-              Login
-            </Link>
-          </p>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link className="text-primary-500 font-semibold" to={"/login"}>
+                Sign in
+              </Link>
+            </p>
+          </div>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">

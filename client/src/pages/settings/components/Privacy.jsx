@@ -103,7 +103,7 @@ const Privacy = () => {
   // Dropdown component
   const Dropdown = ({ value, setValue, options }) => (
     <select
-      className="w-full md:w-[320px] border border-gray-100 rounded-xl px-4 py-2 bg-[#F8FAFC] text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm"
+      className="w-full md:w-[450px] border border-gray-100 rounded-xl px-4 py-2 bg-[#F8FAFC] text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm"
       value={value}
       onChange={(e) => setValue(e.target.value)}
       disabled={isSaving}
@@ -120,8 +120,10 @@ const Privacy = () => {
   const Toggle = ({ enabled, setEnabled }) => (
     <button
       type="button"
-      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shadow-sm ${
-        enabled ? "bg-blue-400" : "bg-gray-200"
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none shadow-sm border ${
+        enabled
+          ? "bg-[#1890FF] border-[#1890FF]"
+          : "bg-gray-200 border-gray-200"
       }`}
       onClick={() => setEnabled(!enabled)}
       aria-pressed={enabled}
@@ -152,7 +154,7 @@ const Privacy = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg px-8 py-6 shadow-sm">
+    <div className="ml-[67px] mr-[67px] mt-[35px]">
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1">
@@ -162,107 +164,153 @@ const Privacy = () => {
             Please update your privacy settings preferences here
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center disabled:opacity-50"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(24,144,255,1) 0%, rgba(0,106,204,1) 100%)",
-          }}
-        >
-          {isSaving ? "Saving..." : "Save Changes"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            disabled={isSaving}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-3 py-1.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(24,144,255,1) 0%, rgba(0,106,204,1) 100%)",
+            }}
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
       </div>
 
       <div className="border-t border-gray-200 pt-6">
-        {/* Who can reach you */}
-        <div className="mb-6">
-          <h3 className="text-base font-medium text-gray-900 mb-3">
-            Who can reach you
-          </h3>
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
-              <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
-                Invitations to Connect
-              </label>
-              <Dropdown
-                value={invitesConnect}
-                setValue={setInvitesConnect}
-                options={dropdownOptions.invitationsToConnect}
-              />
-            </div>
-            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
-              <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
-                Invitations to Connect from Network
-              </label>
-              <Dropdown
-                value={invitesFromNetwork}
-                setValue={setInvitesFromNetwork}
-                options={dropdownOptions.invitationsFromNetwork}
-              />
-            </div>
-            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
-              <label className="w-full md:w-56 text-gray-600 font-normal text-sm">
-                Messages
-              </label>
-              <Dropdown
-                value={messages}
-                setValue={setMessages}
-                options={dropdownOptions.messages}
-              />
-            </div>
-          </div>
-        </div>
-
-        <hr className="my-6 border-gray-100" />
-
-        {/* Job Seeking Permissions */}
-        <div className="mb-6">
-          <h3 className="text-base font-medium text-gray-900 mb-3">
-            Job Seeking Permissions
-          </h3>
-          <div className="flex flex-col gap-3 ml-[0] md:ml-[235px] w-full md:w-[450px]">
-            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
-              <span className="text-gray-700 text-sm">
-                Share your profile when you click Apply for a job
-              </span>
-              <Toggle enabled={shareProfile} setEnabled={setShareProfile} />
-            </div>
-            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
-              <span className="text-gray-700 text-sm">
-                Signal your interest to recruiters in the company you are
-                interested in
-              </span>
-              <Toggle enabled={signalInterest} setEnabled={setSignalInterest} />
+        <div className="space-y-6">
+          {/* Who can reach you */}
+          <div>
+            <h3 className="text-md font-semibold text-gray-900 mb-4">
+              Who can reach you
+            </h3>
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                <label className="w-full md:w-56 text-[#434343] font-bold text-sm">
+                  Invitations to Connect
+                </label>
+                <div className="flex-1 pl-[10px]">
+                  <Dropdown
+                    value={invitesConnect}
+                    setValue={setInvitesConnect}
+                    options={dropdownOptions.invitationsToConnect}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                <label className="w-full md:w-56 text-[#434343] font-bold text-sm">
+                  Invitations to Connect from Network
+                </label>
+                <div className="flex-1 pl-[10px]">
+                  <Dropdown
+                    value={invitesFromNetwork}
+                    setValue={setInvitesFromNetwork}
+                    options={dropdownOptions.invitationsFromNetwork}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                <label className="w-full md:w-56 text-[#434343] font-bold text-sm">
+                  Messages
+                </label>
+                <div className="flex-1 pl-[10px]">
+                  <Dropdown
+                    value={messages}
+                    setValue={setMessages}
+                    options={dropdownOptions.messages}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <hr className="my-6 border-gray-100" />
+          {/* Job Seeking Permissions */}
+          <div className="pt-9">
+            <h3 className="text-md font-semibold text-gray-900 mb-[-20px]">
+              Job Seeking Permissions
+            </h3>
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-col md:items-center gap-2 md:gap-8">
+                <div className="flex-1 pl-[100px]">
+                  <div className="flex items-center w-[450px] justify-between bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                    <span className="text-gray-700 text-sm">
+                      Share your profile when you click Apply for a job
+                    </span>
+                    <Toggle
+                      enabled={shareProfile}
+                      setEnabled={setShareProfile}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-col md:items-center gap-2 md:gap-8">
+                <div className="flex-1 pl-[100px]">
+                  <div className="flex items-center w-[450px] justify-between bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                    <span className="text-gray-700 text-sm">
+                      Signal your interest to recruiters in the company you are
+                      interested in
+                    </span>
+                    <Toggle
+                      enabled={signalInterest}
+                      setEnabled={setSignalInterest}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {/* Messages */}
-        <div>
-          <h3 className="text-base font-medium text-gray-900 mb-3">Messages</h3>
-          <div className="flex flex-col gap-3 ml-[0] md:ml-[235px] w-full md:w-[450px]">
-            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
-              <span className="text-gray-700 text-sm">Focused Inbox</span>
-              <Toggle enabled={focusedInbox} setEnabled={setFocusedInbox} />
-            </div>
-            <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm">
-              <span className="text-gray-700 text-sm">
-                Read receipts and typing indicator
-              </span>
-              <Toggle enabled={readReceipts} setEnabled={setReadReceipts} />
-            </div>
-            <div className="flex items-center justify-between bg-[#F8FAFC] rounded-xl px-4 py-3 shadow-sm">
-              <span className="text-gray-700 text-sm">
-                Automatic detection of harmful content
-              </span>
-              <Toggle
-                enabled={harmfulDetection}
-                setEnabled={setHarmfulDetection}
-              />
+          {/* Messages */}
+          <div className="pt-9">
+            <h3 className="text-md font-semibold text-gray-900 mb-[-20px]">
+              Messages
+            </h3>
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-col md:items-center gap-2 md:gap-8">
+                <div className="flex-1 pl-[100px]">
+                  <div className="flex items-center w-[450px] justify-between bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                    <span className="text-gray-700 text-sm">Focused Inbox</span>
+                    <Toggle
+                      enabled={focusedInbox}
+                      setEnabled={setFocusedInbox}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-col md:items-center gap-2 md:gap-8">
+                <div className="flex-1 pl-[100px]">
+                  <div className="flex items-center w-[450px] justify-between bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                    <span className="text-gray-700 text-sm">
+                      Read receipts and typing indicator
+                    </span>
+                    <Toggle
+                      enabled={readReceipts}
+                      setEnabled={setReadReceipts}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-col md:items-center gap-2 md:gap-8">
+                <div className="flex-1 pl-[100px]">
+                  <div className="flex items-center w-[450px] justify-between bg-[#F8FAFC] rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                    <span className="text-gray-700 text-sm">
+                      Automatic detection of harmful content
+                    </span>
+                    <Toggle
+                      enabled={harmfulDetection}
+                      setEnabled={setHarmfulDetection}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

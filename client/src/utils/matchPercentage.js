@@ -1,6 +1,14 @@
 // Utility function to calculate match percentage between a job and a user
 export function calculateMatchPercentage(job, user) {
-  if (!user || !job) return 0;
+  if (!user || !job) {
+    console.log("Missing user or job data:", { user: !!user, job: !!job });
+    return 75; // Default fallback
+  }
+
+  console.log("Calculating match for:", {
+    jobTitle: job.jobTitle,
+    userName: user.name,
+  });
 
   // --- Skills ---
   const jobSkills = Array.isArray(job.skills)
@@ -9,10 +17,16 @@ export function calculateMatchPercentage(job, user) {
   const userSkills = Array.isArray(user.skills)
     ? user.skills.map((s) => s.toLowerCase())
     : [];
+
+  console.log("Skills comparison:", { jobSkills, userSkills });
+
   let skillScore = 0;
   if (jobSkills.length > 0 && userSkills.length > 0) {
     const matchedSkills = userSkills.filter((s) => jobSkills.includes(s));
     skillScore = matchedSkills.length / jobSkills.length;
+    console.log("Skill score:", skillScore, "matched:", matchedSkills);
+  } else {
+    skillScore = 0.5; // Default if no skills data
   }
 
   // --- Experience ---
@@ -39,8 +53,10 @@ export function calculateMatchPercentage(job, user) {
   if (jobExp > 0) {
     expScore = Math.min(userExp / jobExp, 1);
   } else {
-    expScore = 1; // If job doesn't specify, full score
+    expScore = 0.8; // Default if no experience requirement
   }
+
+  console.log("Experience comparison:", { userExp, jobExp, expScore });
 
   // --- Location ---
   let locationScore = 0;
@@ -66,7 +82,17 @@ export function calculateMatchPercentage(job, user) {
   // --- Weighted sum ---
   const match =
     skillScore * 65 + expScore * 20 + locationScore * 10 + salaryScore * 5;
-  return Math.round(match);
+
+  const finalMatch = Math.round(match);
+  console.log("Final match calculation:", {
+    skillScore,
+    expScore,
+    locationScore,
+    salaryScore,
+    finalMatch,
+  });
+
+  return finalMatch;
 }
 
 // Function to get detailed match breakdown for display

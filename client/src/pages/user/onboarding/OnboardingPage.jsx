@@ -208,7 +208,7 @@ const Onboarding = () => {
   const CurrentStep = steps[step - 1].component;
 
   return (
-    <div>
+    <div className="onboarding-container" data-onboarding="true">
       {step === 4 ? (
         <Qualification
           formData={formData}

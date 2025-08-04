@@ -1,12 +1,42 @@
 import { Link } from "react-router-dom";
 
-export default function Topbar() {
-  // Status indicators data
+export default function Topbar({ jobs = [] }) {
+  // Calculate real status counts from jobs data
+  const getStatusCounts = () => {
+    const counts = {
+      Active: 0,
+      "On Hold": 0,
+      Closed: 0,
+      Draft: 0,
+    };
+
+    jobs.forEach((job) => {
+      if (job.jobStatus === "Active") {
+        counts.Active++;
+      } else if (job.jobStatus === "On Hold" || job.jobStatus === "Pending") {
+        counts["On Hold"]++;
+      } else if (job.jobStatus === "Closed" || job.jobStatus === "Inactive") {
+        counts.Closed++;
+      } else if (job.jobStatus === "Draft" || job.jobStatus === "Draft Hold") {
+        counts.Draft++;
+      }
+    });
+
+    return counts;
+  };
+
+  const statusCounts = getStatusCounts();
+
+  // Status indicators data with real counts
   const statuses = [
-    { label: "Active", count: 2, color: "bg-green-500" },
-    { label: "On Hold", count: 0, color: "bg-yellow-400" },
-    { label: "Closed", count: 4, color: "bg-red-500" },
-    { label: "Drafts Hold", count: 1, color: "bg-gray-400" },
+    { label: "Active", count: statusCounts.Active, color: "bg-green-500" },
+    {
+      label: "On Hold",
+      count: statusCounts["On Hold"],
+      color: "bg-yellow-400",
+    },
+    { label: "Closed", count: statusCounts.Closed, color: "bg-red-500" },
+    { label: "Draft", count: statusCounts.Draft, color: "bg-gray-400" },
   ];
 
   return (

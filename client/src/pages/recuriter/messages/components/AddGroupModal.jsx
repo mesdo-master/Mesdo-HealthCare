@@ -52,7 +52,7 @@ const AddGroupModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex shadow-lg overflow-hidden">
         <GroupDetails />
 

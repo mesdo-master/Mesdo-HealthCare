@@ -38,7 +38,7 @@ const NewGroupModal = ({
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl w-full max-w-md">
         {/* Header */}
         <div className="p-4 flex items-center gap-4">

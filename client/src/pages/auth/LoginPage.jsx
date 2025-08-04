@@ -64,10 +64,17 @@ const Login = () => {
 
   // Handle Google Login
   const handleGoogleLogin = () => {
-    // Redirect to backend Google auth route
-    window.location.href = `${
-      process.env.REACT_APP_API_URL || "https://mesdo-healthcare-4.onrender.com"
-    }/auth/google`;
+    try {
+      // Redirect to backend Google auth route
+      const apiUrl =
+        process.env.REACT_APP_API_URL ||
+        "https://mesdo-healthcare-4.onrender.com";
+      console.log("Redirecting to Google auth:", `${apiUrl}/auth/google`);
+      window.location.href = `${apiUrl}/auth/google`;
+    } catch (error) {
+      console.error("Google login error:", error);
+      alert("Google login failed. Please try again.");
+    }
   };
 
   return (
@@ -128,8 +135,8 @@ const Login = () => {
 
             {/* Login Button */}
             <button
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-sm shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white bg-[#1890FF] hover:bg-blue-700"
               type="submit"
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-sm shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-white bg-[#1890FF] hover:bg-primary-600"
             >
               Log in
             </button>
@@ -142,7 +149,7 @@ const Login = () => {
             </Link>
             <Link className="text-gray-600 font-small" to="/signup">
               Don't have an account?{" "}
-              <span className="text-blue-500 text-small">Sign up</span>
+              <span className="text-primary-500 text-small">Sign up</span>
             </Link>
           </div>
 

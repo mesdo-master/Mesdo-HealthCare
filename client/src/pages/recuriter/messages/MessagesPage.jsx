@@ -271,34 +271,40 @@ function MessagesRecuriter() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-1 overflow-hidden pt-9 mb-7 mr-20 ml-18">
-          <div className="flex flex-1 ml-[100px] mt-1 mb-5">
-            <MessageList
-              users={allConversations}
-              selectedId={selectedConversation}
-              setSelectedId={setSelectedConversation}
-              setSelectedUser={setSelectedUser}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              onCreateGroup={() => {
-                setShowGroupModal(true);
-                setGroupName("");
-                setGroupDescription("");
-              }}
-              loading={loadingConversations}
-              error={fetchError}
-            />
+        <div className="flex flex-1 overflow-hidden pt-[140px]">
+          <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
+            <div className="max-w-5xl mx-auto w-full">
+              <div className="bg-[#E4E5E8] rounded-lg border border-gray-200 w-full">
+                <div className="flex h-[calc(100vh-200px)] gap-4 bg-[#F5F7FA] p-4">
+                  <MessageList
+                    users={allConversations}
+                    selectedId={selectedConversation}
+                    setSelectedId={setSelectedConversation}
+                    setSelectedUser={setSelectedUser}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    onCreateGroup={() => {
+                      setShowGroupModal(true);
+                      setGroupName("");
+                      setGroupDescription("");
+                    }}
+                    loading={loadingConversations}
+                    error={fetchError}
+                  />
 
-            {!selectedConversation ? (
-              <NoChatSelected />
-            ) : (
-              <ChatContainer
-                selectedId={selectedConversation}
-                conversation={selectedConversationObj}
-                setSelectedId={setSelectedConversation}
-                toggleFetch={toggleFetch}
-              />
-            )}
+                  {!selectedConversation ? (
+                    <NoChatSelected />
+                  ) : (
+                    <ChatContainer
+                      selectedId={selectedConversation}
+                      conversation={selectedConversationObj}
+                      setSelectedId={setSelectedConversation}
+                      toggleFetch={toggleFetch}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

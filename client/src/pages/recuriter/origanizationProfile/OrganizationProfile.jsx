@@ -1512,111 +1512,121 @@ const OrganizationProfile = () => {
   };
 
   return (
-    <div className="flex min-h-screen mt-[10px] mr-[80px]">
-      {/* Sidebar is rendered by parent layout */}
-      <div className="flex-1" style={{ marginLeft: SIDEBAR_WIDTH }}>
-        <Header />
-        <div className="flex flex-col px-7 py-8 mt-10">
-          {/* Profile Section */}
-          <ProfileSection
-            userData={userData}
-            isOwnProfile={isOwnProfile}
-            openModal={openModal}
-          />
-          {/* Tabs and Content */}
-          <div className="flex gap-4">
-            <div className="w-2/3">
-              <TabsSection
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                userData={userData}
-                isOwnProfile={isOwnProfile}
-                editData={editData}
-                setEditData={setEditData}
-                handleChange={handleChange}
-                handleSave={handleSave}
-                userSkills={userSkills}
-                setUserSkills={setUserSkills}
-                experiences={orgJobs} // <-- Pass real jobs here
-                setExperiences={setExperiences} // (not used for jobs now)
-                editingExperience={editingExperience}
-                setEditingExperience={setEditingExperience}
-                handleSaveExperience={handleSaveExperience}
-                setIsEditing={setIsEditing}
-                setActiveModalTab={setActiveModalTab}
-                isEditing={isEditing}
-                activeModalTab={activeModalTab}
-                handleDeleteExperience={handleDeleteExperience}
-              />
-            </div>
-            {/* Right Sidebar */}
-            <div className="w-1/3 py-6">
-              {/* More Information */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-[16px] font-medium text-gray-900">
-                    More Information
-                  </h2>
-                  {isOwnProfile && (
-                    <button
-                      onClick={() => {
-                        setIsEditing(true);
-                        setActiveModalTab("More Information");
-                      }}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <InfoItem
-                    label="Website"
-                    value={moreInfo.website}
-                    isLink={true}
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden pt-[140px]">
+        <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
+          <div className="max-w-5xl mx-auto w-full">
+            <div className="bg-white rounded-lg border border-gray-200 w-full mt-[-40px]">
+              <div className="p-10">
+                <Header />
+                <div className="flex flex-col mt-6">
+                  {/* Profile Section */}
+                  <ProfileSection
+                    userData={userData}
+                    isOwnProfile={isOwnProfile}
+                    openModal={openModal}
                   />
-                  <InfoItem
-                    label="Organization Size"
-                    value={moreInfo.organizationSize}
-                  />
-                  <InfoItem label="Type" value={moreInfo.type} />
-                  <InfoItem label="Founded" value={moreInfo.founded} />
-                  <InfoItem label="Industry" value={moreInfo.industry} />
-                  <InfoItem label="Socials" value={moreInfo.socials} />
-                </div>
-              </div>
+                  {/* Tabs and Content */}
+                  <div className="flex gap-4 mt-6">
+                    <div className="w-2/3">
+                      <TabsSection
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        userData={userData}
+                        isOwnProfile={isOwnProfile}
+                        editData={editData}
+                        setEditData={setEditData}
+                        handleChange={handleChange}
+                        handleSave={handleSave}
+                        userSkills={userSkills}
+                        setUserSkills={setUserSkills}
+                        experiences={orgJobs} // <-- Pass real jobs here
+                        setExperiences={setExperiences} // (not used for jobs now)
+                        editingExperience={editingExperience}
+                        setEditingExperience={setEditingExperience}
+                        handleSaveExperience={handleSaveExperience}
+                        setIsEditing={setIsEditing}
+                        setActiveModalTab={setActiveModalTab}
+                        isEditing={isEditing}
+                        activeModalTab={activeModalTab}
+                        handleDeleteExperience={handleDeleteExperience}
+                      />
+                    </div>
+                    {/* Right Sidebar */}
+                    <div className="w-1/3 py-6">
+                      {/* More Information */}
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h2 className="text-[16px] font-medium text-gray-900">
+                            More Information
+                          </h2>
+                          {isOwnProfile && (
+                            <button
+                              onClick={() => {
+                                setIsEditing(true);
+                                setActiveModalTab("More Information");
+                              }}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-3">
+                          <InfoItem
+                            label="Website"
+                            value={moreInfo.website}
+                            isLink={true}
+                          />
+                          <InfoItem
+                            label="Organization Size"
+                            value={moreInfo.organizationSize}
+                          />
+                          <InfoItem label="Type" value={moreInfo.type} />
+                          <InfoItem label="Founded" value={moreInfo.founded} />
+                          <InfoItem
+                            label="Industry"
+                            value={moreInfo.industry}
+                          />
+                          <InfoItem label="Socials" value={moreInfo.socials} />
+                        </div>
+                      </div>
 
-              {/* Map with realistic location */}
-              <div className="bg-white rounded-lg shadow-sm p-0 mt-6 overflow-hidden">
-                <div className="h-48 bg-gray-200 relative">
-                  <img
-                    src="https://maps.googleapis.com/maps/api/staticmap?center=17.4065,78.4772&zoom=13&size=400x200&maptype=roadmap&markers=color:blue%7Clabel:A%7C17.4065,78.4772&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dg0A1c0Xjr0b2Y"
-                    alt="Apollo Hospitals Location"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&h=200&fit=crop&crop=center";
-                    }}
-                  />
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="bg-blue-500 w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      {/* Map with realistic location */}
+                      <div className="bg-white rounded-lg shadow-sm p-0 mt-6 overflow-hidden">
+                        <div className="h-48 bg-gray-200 relative">
+                          <img
+                            src="https://maps.googleapis.com/maps/api/staticmap?center=17.4065,78.4772&zoom=13&size=400x200&maptype=roadmap&markers=color:blue%7Clabel:A%7C17.4065,78.4772&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dg0A1c0Xjr0b2Y"
+                            alt="Apollo Hospitals Location"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src =
+                                "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&h=200&fit=crop&crop=center";
+                            }}
+                          />
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <div className="bg-blue-500 w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
+                          </div>
+                          <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-gray-600">
+                            Hyderabad, India
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Address Section */}
+                      <AddressSection
+                        addresses={addresses}
+                        onEdit={() => {
+                          setIsEditing(true);
+                          setActiveModalTab("Addresses");
+                        }}
+                      />
                     </div>
                   </div>
-                  <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-gray-600">
-                    Hyderabad, India
-                  </div>
                 </div>
               </div>
-
-              {/* Address Section */}
-              <AddressSection
-                addresses={addresses}
-                onEdit={() => {
-                  setIsEditing(true);
-                  setActiveModalTab("Addresses");
-                }}
-              />
             </div>
           </div>
         </div>

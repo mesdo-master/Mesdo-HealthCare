@@ -200,6 +200,9 @@ const authSlice = createSlice({
     setCurrentUser: (state, action) => {
       state.currentUser = action.payload;
     },
+    setBusinessProfile: (state, action) => {
+      state.businessProfile = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -415,6 +418,7 @@ export const {
   updateFormDataFunc,
   setCurrentUser,
   setFilteredJobs,
+  setBusinessProfile,
 } = authSlice.actions;
 
 export default authSlice.reducer;

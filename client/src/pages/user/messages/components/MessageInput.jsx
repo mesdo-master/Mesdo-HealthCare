@@ -29,14 +29,18 @@ const MessageInput = ({
   // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target)
+      ) {
         setShowEmojiPicker(false);
       }
     };
 
     if (showEmojiPicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showEmojiPicker]);
 
@@ -80,7 +84,10 @@ const MessageInput = ({
       // ✅ Immediately add the sent message to local state for instant feedback
       if (res.data?.message && setMessages) {
         const messageToAdd = res.data.message;
-        console.log("📨 USER JOB: Adding sent message to local state:", messageToAdd);
+        console.log(
+          "📨 USER JOB: Adding sent message to local state:",
+          messageToAdd
+        );
         setMessages((prevMessages) => {
           // Avoid duplicate messages using the correct message object
           const messageExists = prevMessages.some(
@@ -94,7 +101,9 @@ const MessageInput = ({
           return prevMessages;
         });
       } else {
-        console.warn("❌ USER JOB: No message in response data or setMessages function missing");
+        console.warn(
+          "❌ USER JOB: No message in response data or setMessages function missing"
+        );
       }
 
       // Clear input immediately for better UX
@@ -102,7 +111,9 @@ const MessageInput = ({
       setSelectedFile(null);
 
       // ✅ Socket emission is handled by server, no need for client-side emission
-      console.log("✅ CLIENT: Job message sent, server will handle socket broadcasting");
+      console.log(
+        "✅ CLIENT: Job message sent, server will handle socket broadcasting"
+      );
 
       // Trigger refresh if needed
       if (toggleFetch) {
@@ -162,7 +173,10 @@ const MessageInput = ({
       // ✅ Immediately add the sent message to local state for instant feedback
       if (res.data?.message && setMessages) {
         const messageToAdd = res.data.message;
-        console.log("📨 USER: Adding sent message to local state:", messageToAdd);
+        console.log(
+          "📨 USER: Adding sent message to local state:",
+          messageToAdd
+        );
         setMessages((prevMessages) => {
           // Avoid duplicate messages using the correct message object
           const messageExists = prevMessages.some(
@@ -177,12 +191,15 @@ const MessageInput = ({
           return prevMessages;
         });
       } else {
-        console.warn("❌ USER: No message in response data or setMessages function missing:", {
-          hasResponseData: !!res.data,
-          hasMessage: !!res.data?.message,
-          hasSetMessages: !!setMessages,
-          responseData: res.data
-        });
+        console.warn(
+          "❌ USER: No message in response data or setMessages function missing:",
+          {
+            hasResponseData: !!res.data,
+            hasMessage: !!res.data?.message,
+            hasSetMessages: !!setMessages,
+            responseData: res.data,
+          }
+        );
       }
 
       // Clear input immediately for better UX
@@ -191,7 +208,9 @@ const MessageInput = ({
 
       // ✅ Socket emission is handled by server, no need for client-side emission
       // The server will broadcast the message to all participants after saving
-      console.log("✅ CLIENT: Message sent, server will handle socket broadcasting");
+      console.log(
+        "✅ CLIENT: Message sent, server will handle socket broadcasting"
+      );
 
       // Trigger refresh if needed
       if (toggleFetch) {
@@ -293,7 +312,8 @@ const MessageInput = ({
 
       // Test socket sending
       if (isConnected) {
-        const receiverType = selectedUser?.role === 'recruiter' ? 'BusinessProfile' : 'User';
+        const receiverType =
+          selectedUser?.role === "recruiter" ? "BusinessProfile" : "User";
         socketSendMessage({
           conversationId: selectedConveresationId,
           message: "Test socket message",
@@ -349,38 +369,10 @@ const MessageInput = ({
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="flex items-center gap-2 w-full">
-        {/* File Upload */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
-          aria-label="Attach file"
-          disabled={isLoading}
-        >
-          <Paperclip size={20} />
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-        />
-
-        {/* Emoji Button */}
-        <button
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
-          aria-label="Add emoji"
-          disabled={isLoading || !selectedConveresationId || selectedConveresationId === "undefined"}
-        >
-          <Smile size={20} />
-        </button>
-
+      {/* Main Input Container */}
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-3 relative">
         {/* Text Input */}
-        <input
-          type="text"
+        <textarea
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -389,42 +381,69 @@ const MessageInput = ({
               ? "Select a conversation to start messaging..."
               : "Type a message..."
           }
-          className="flex-1 bg-gray-50 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="w-full bg-transparent border-none outline-none resize-none text-sm placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed min-h-[20px] max-h-[100px] pr-28 pl-20"
           disabled={
             isLoading ||
             !selectedConveresationId ||
             selectedConveresationId === "undefined"
           }
+          rows={1}
         />
 
-        {/* Send Button */}
+        {/* Action Icons - Positioned at left side with more space */}
+        <div className="absolute left-5 top-1/2 transform -translate-y-1/2 flex items-center gap-3">
+          {/* File Upload */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Attach file"
+            disabled={isLoading}
+          >
+            <Paperclip size={16} />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+          />
+
+          {/* Emoji Button */}
+          <button
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Add emoji"
+            disabled={
+              isLoading ||
+              !selectedConveresationId ||
+              selectedConveresationId === "undefined"
+            }
+          >
+            <Smile size={16} />
+          </button>
+        </div>
+
+        {/* Send Button - Positioned at right side with more space */}
         <button
           onClick={handleSendClick}
           disabled={isDisabled}
-          className={`p-2 rounded-full transition shadow-md ml-1 ${
+          className={`absolute right-5 top-1/2 transform -translate-y-1/2 px-4 py-1.5 rounded-lg transition-colors font-medium text-sm flex items-center gap-1 ${
             !isDisabled
-              ? "bg-blue-500 text-white hover:bg-blue-600"
+              ? "bg-[#1890FF] text-white hover:bg-[#006ACC]"
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
           aria-label="Send message"
         >
           {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Send size={20} />
+            <>
+              <span>Send</span>
+              <Send size={14} />
+            </>
           )}
         </button>
-
-        {/* Test Button - Remove this in production */}
-        {/* {process.env.NODE_ENV === "development" && (
-          <button
-            onClick={testSendMessage}
-            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-            aria-label="Test send"
-          >
-            T
-          </button>
-        )} */}
       </div>
     </div>
   );

@@ -146,7 +146,11 @@ const OnboardingRecruiter = () => {
     }
   };
 
-  return <div>{renderStep()}</div>;
+  return (
+    <div className="onboarding-container" data-onboarding="true">
+      {renderStep()}
+    </div>
+  );
 };
 
 export default OnboardingRecruiter;

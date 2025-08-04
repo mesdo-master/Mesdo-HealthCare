@@ -17,14 +17,14 @@ import { setCurrentUser } from "../../../../store/features/authSlice";
 const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.auth);
-  
+
   // Simple logic: trust the isOwnProfile prop from parent
   const showEditButtons = isOwnProfile;
-  
+
   // Show Follow/Connect buttons only when viewing someone else's profile
   const showFollowButtons = !isOwnProfile;
-  
-  console.log('🔒 PROFILE BUTTON LOGIC:', {
+
+  console.log("🔒 PROFILE BUTTON LOGIC:", {
     isOwnProfile,
     showEditButtons,
     showFollowButtons,
@@ -33,10 +33,9 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     userDataName: userData?.name,
     currentUserName: currentUser?.name,
     idsMatch: String(userData?._id) === String(currentUser?._id),
-    'URL should show edit buttons?': isOwnProfile,
-    'Actual showing edit buttons?': showEditButtons
+    "URL should show edit buttons?": isOwnProfile,
+    "Actual showing edit buttons?": showEditButtons,
   });
-  
 
   const [profileImage, setProfileImage] = useState(
     userData?.profilePicture || "/default-avatar.png"
@@ -47,6 +46,8 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
   );
   const [connectionStatus, setConnectionStatus] = useState("none"); // none, pending, connected, received
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   // File input refs for direct upload
   const profileImageInputRef = useRef(null);
@@ -66,40 +67,93 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    setIsUploadingProfile(true);
+
     try {
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => setProfileImage(e.target.result);
       reader.readAsDataURL(file);
 
-      // Upload to server
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResponse = await axiosInstance.post("users/upload", formData);
-      const imageUrl = uploadResponse.data.url;
-
-      // Update profile
-      await axiosInstance.put("/users/updateProfile", {
-        profilePicture: imageUrl,
+      // Convert image to base64 for direct storage
+      const base64Image = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
       });
 
-      setProfileImage(imageUrl);
+      console.log("Uploading profile picture...");
 
-      // Update Redux store if this is the current user's profile
-      if (showEditButtons && currentUser) {
-        const updatedUser = {
-          ...currentUser,
-          profilePicture: imageUrl,
-        };
-        dispatch(setCurrentUser(updatedUser));
+      // Try to update profile directly with base64 image
+      let updateResponse;
+      try {
+        updateResponse = await axiosInstance.put("/users/updateProfile", {
+          profilePicture: base64Image,
+        });
+        console.log("Profile update response:", updateResponse.data);
+      } catch (error) {
+        console.log("updateProfile failed, trying update-profile...");
+        try {
+          updateResponse = await axiosInstance.put("/users/update-profile", {
+            profilePicture: base64Image,
+          });
+          console.log("Profile update response:", updateResponse.data);
+        } catch (secondError) {
+          console.log("Both update endpoints failed, trying /me endpoint...");
+          // Try updating via /me endpoint
+          updateResponse = await axiosInstance.put("/me", {
+            profilePicture: base64Image,
+          });
+          console.log("Profile update via /me response:", updateResponse.data);
+        }
       }
 
-      if (onDataUpdate) onDataUpdate();
+      if (updateResponse.data.success || updateResponse.status === 200) {
+        setProfileImage(base64Image);
+
+        // Update Redux store if this is the current user's profile
+        if (showEditButtons && currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            profilePicture: base64Image,
+          };
+          dispatch(setCurrentUser(updatedUser));
+        }
+
+        if (onDataUpdate) onDataUpdate();
+
+        // Show success message
+        console.log("Profile picture updated successfully!");
+      } else {
+        throw new Error(
+          updateResponse.data.message || "Failed to update profile"
+        );
+      }
     } catch (error) {
       console.error("Error uploading profile image:", error);
       // Revert preview on error
       setProfileImage(userData?.profilePicture || "/default-avatar.png");
+
+      // Show error message to user
+      alert(
+        `Failed to upload profile picture: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setIsUploadingProfile(false);
     }
   };
 
@@ -108,36 +162,80 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Validate file size (max 10MB for banner)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size must be less than 10MB");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    setIsUploadingBanner(true);
+
     try {
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => setBannerImage(e.target.result);
       reader.readAsDataURL(file);
 
-      // Upload to server
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResponse = await axiosInstance.post("users/upload", formData);
-      const imageUrl = uploadResponse.data.url;
-
-      // Update profile
-      await axiosInstance.put("/users/updateProfile", {
-        Banner: imageUrl,
+      // Convert image to base64 for direct storage
+      const base64Image = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
       });
 
-      setBannerImage(imageUrl);
+      console.log("Uploading banner image...");
 
-      // Update Redux store if this is the current user's profile
-      if (showEditButtons && currentUser) {
-        const updatedUser = {
-          ...currentUser,
-          Banner: imageUrl,
-        };
-        dispatch(setCurrentUser(updatedUser));
+      // Try to update profile directly with base64 image
+      let updateResponse;
+      try {
+        updateResponse = await axiosInstance.put("/users/updateProfile", {
+          Banner: base64Image,
+        });
+        console.log("Banner update response:", updateResponse.data);
+      } catch (error) {
+        console.log("updateProfile failed, trying update-profile...");
+        try {
+          updateResponse = await axiosInstance.put("/users/update-profile", {
+            Banner: base64Image,
+          });
+          console.log("Banner update response:", updateResponse.data);
+        } catch (secondError) {
+          console.log("Both update endpoints failed, trying /me endpoint...");
+          // Try updating via /me endpoint
+          updateResponse = await axiosInstance.put("/me", {
+            Banner: base64Image,
+          });
+          console.log("Banner update via /me response:", updateResponse.data);
+        }
       }
 
-      if (onDataUpdate) onDataUpdate();
+      if (updateResponse.data.success || updateResponse.status === 200) {
+        setBannerImage(base64Image);
+
+        // Update Redux store if this is the current user's profile
+        if (showEditButtons && currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            Banner: base64Image,
+          };
+          dispatch(setCurrentUser(updatedUser));
+        }
+
+        if (onDataUpdate) onDataUpdate();
+
+        // Show success message
+        console.log("Banner image updated successfully!");
+      } else {
+        throw new Error(
+          updateResponse.data.message || "Failed to update profile"
+        );
+      }
     } catch (error) {
       console.error("Error uploading banner image:", error);
       // Revert preview on error
@@ -145,6 +243,15 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
         userData?.Banner ||
           "https://images.unsplash.com/photo-1579546929518-9e396f3cc809"
       );
+
+      // Show error message to user
+      alert(
+        `Failed to upload banner image: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setIsUploadingBanner(false);
     }
   };
 
@@ -267,9 +374,15 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
         {showEditButtons && (
           <button
             onClick={() => bannerImageInputRef.current?.click()}
-            className="absolute top-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer flex items-center justify-center hover:bg-gray-50 transition-colors"
+            disabled={isUploadingBanner}
+            className="absolute top-3 right-3 w-8 h-8 p-1 border-2 rounded-full border-white bg-white/90 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:scale-110 transition-all duration-200 shadow-lg"
+            title="Change cover photo"
           >
-            <Camera className="w-4 h-4 text-gray-600" />
+            {isUploadingBanner ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+            ) : (
+              <Camera className="w-4 h-4 text-gray-600" />
+            )}
           </button>
         )}
       </div>
@@ -290,9 +403,15 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
               {showEditButtons && (
                 <button
                   onClick={() => profileImageInputRef.current?.click()}
-                  className="absolute bottom-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  disabled={isUploadingProfile}
+                  className="absolute bottom-3 right-3 w-8 h-8 p-1 border-2 rounded-full border-white bg-white/90 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:scale-110 transition-all duration-200 shadow-lg"
+                  title="Change profile photo"
                 >
-                  <Camera className="w-4 h-4 text-gray-600" />
+                  {isUploadingProfile ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                  ) : (
+                    <Camera className="w-4 h-4 text-gray-600" />
+                  )}
                 </button>
               )}
             </div>

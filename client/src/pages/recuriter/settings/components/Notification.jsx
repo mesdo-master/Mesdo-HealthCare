@@ -1,24 +1,26 @@
-import { useState, useEffect } from "react";
-import { Switch } from "@headlessui/react";
+// Recruiter Notification Settings - based on user Notification.jsx
+import React, { useEffect, useState } from "react";
 import { getRecruiterSettings, saveRecruiterSettings } from "./settingsService";
+import { Check, X } from "lucide-react";
+import { Switch } from "@headlessui/react";
 
 const Notification = () => {
+  // Notification states
+  const [quietHours, setQuietHours] = useState(true);
+  const [fromTime, setFromTime] = useState("22:00");
+  const [toTime, setToTime] = useState("08:00");
+  const [weekendOnly, setWeekendOnly] = useState(true);
+
+  const [notifications, setNotifications] = useState({
+    groupNotifications: true,
+    emailNotifications: true,
+    soundNotifications: true,
+    jobPostNotifications: true,
+    pageNotifications: true,
+  });
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Notification states (from screenshot)
-  const [notifications, setNotifications] = useState({
-    directMessages: false,
-    email: false,
-    sound: true,
-    candidateApplies: false,
-    followUpReminder: true,
-    feedbackRequests: true,
-  });
-  const [quietHours, setQuietHours] = useState(true);
-  const [fromTime, setFromTime] = useState("");
-  const [toTime, setToTime] = useState("");
-  const [weekendOnly, setWeekendOnly] = useState(true);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -31,13 +33,6 @@ const Notification = () => {
     fetchSettings();
   }, []);
 
-  const handleNotificationChange = (key) => {
-    setNotifications((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     // await saveRecruiterSettings({ ... });
@@ -46,15 +41,46 @@ const Notification = () => {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const handleNotificationChange = (key) => {
+    setNotifications((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   const NotificationItem = ({ label, description, checked, onChange }) => (
     <div className="flex items-start gap-3 mb-4 ml-60">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        disabled={isSaving}
-        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-      />
+      <div className="relative">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          disabled={isSaving}
+          className="mt-1 h-4 w-4 border-gray-300 rounded focus:ring-[#1890FF] opacity-0 absolute"
+          style={{ accentColor: "#1890FF" }}
+        />
+        <div
+          className={`mt-1 h-4 w-4 border rounded flex items-center justify-center ${
+            checked
+              ? "bg-[#1890FF] border-[#1890FF]"
+              : "bg-white border-gray-300"
+          }`}
+        >
+          {checked && (
+            <svg
+              className="w-3 h-3 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          )}
+        </div>
+      </div>
       <div>
         <p className="font-medium text-gray-900">{label}</p>
         <p className="text-sm text-gray-500">{description}</p>
@@ -64,7 +90,7 @@ const Notification = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg px-8 py-6 shadow-sm">
+      <div className="ml-[67px] mr-[67px] mt-[35px]">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
@@ -79,7 +105,7 @@ const Notification = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg px-8 py-6 shadow-sm">
+    <div className="ml-[67px] mr-[67px] mt-[35px]">
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1">
@@ -89,59 +115,67 @@ const Notification = () => {
             Please update your notification preferences here
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center disabled:opacity-50"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(24,144,255,1) 0%, rgba(0,106,204,1) 100%)",
-          }}
-        >
-          {isSaving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            disabled={isSaving}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+          >
+            Cancel
+            <X className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-3 py-1.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(24,144,255,1) 0%, rgba(0,106,204,1) 100%)",
+            }}
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+            <Check className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-md font-semibold text-gray-900 mb-4">
+        <h3 className="text-md font-semibold text-gray-900 mb-[-20px]">
           Notifications
         </h3>
 
         <NotificationItem
-          label="Direct messages from candidates"
-          description="You will be notified when a new candidate messages you."
-          checked={notifications.directMessages}
-          onChange={() => handleNotificationChange("directMessages")}
+          label="Allow Group Notifications"
+          description="You will be notified when a new group arrives."
+          checked={notifications?.groupNotifications}
+          onChange={() => handleNotificationChange("groupNotifications")}
         />
+
         <NotificationItem
           label="Email Notification"
           description="You will be notified when a new email arrives."
-          checked={notifications.email}
-          onChange={() => handleNotificationChange("email")}
+          checked={notifications?.emailNotifications}
+          onChange={() => handleNotificationChange("emailNotifications")}
         />
+
         <NotificationItem
           label="Sound Notification"
           description="You will be notified with sound when someone messages you."
-          checked={notifications.sound}
-          onChange={() => handleNotificationChange("sound")}
+          checked={notifications?.soundNotifications}
+          onChange={() => handleNotificationChange("soundNotifications")}
         />
+
         <NotificationItem
-          label="Candidate applies to a posted job"
-          description="You will be notified when a candidate applies to a posted job."
-          checked={notifications.candidateApplies}
-          onChange={() => handleNotificationChange("candidateApplies")}
-        />
-        <NotificationItem
-          label="Reminder to follow-up on your active conversations with candidates"
-          description="You will be notified with sound to follow up on active conversations."
-          checked={notifications.followUpReminder}
-          onChange={() => handleNotificationChange("followUpReminder")}
-        />
-        <NotificationItem
-          label="Feedback requests for candidates you've talked to"
+          label="Allow Job Post Notifications"
           description="You will be notified with sound when any job opening alerts."
-          checked={notifications.feedbackRequests}
-          onChange={() => handleNotificationChange("feedbackRequests")}
+          checked={notifications?.jobPostNotifications}
+          onChange={() => handleNotificationChange("jobPostNotifications")}
+        />
+
+        <NotificationItem
+          label="Allow Page Notifications"
+          description="You will be notified with sound when any job opening alerts."
+          checked={notifications?.pageNotifications}
+          onChange={() => handleNotificationChange("pageNotifications")}
         />
 
         <div className="mt-6 ml-[235px]">
@@ -152,12 +186,14 @@ const Notification = () => {
                   checked={quietHours}
                   onChange={setQuietHours}
                   disabled={isSaving}
-                  className={`$${
-                    quietHours ? "bg-blue-600" : "bg-gray-300"
-                  } relative inline-flex h-[20px] w-[40px] items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50`}
+                  className={`${
+                    quietHours
+                      ? "bg-[#1890FF] border-[#1890FF]"
+                      : "bg-gray-300 border-gray-300"
+                  } relative inline-flex h-[20px] w-[40px] items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 border`}
                 >
                   <span
-                    className={`$${
+                    className={`${
                       quietHours ? "translate-x-5" : "translate-x-1"
                     } inline-block h-[16px] w-[16px] transform rounded-full bg-white transition-transform`}
                   />
@@ -179,7 +215,7 @@ const Notification = () => {
                 value={fromTime}
                 onChange={(e) => setFromTime(e.target.value)}
                 disabled={isSaving}
-                className="rounded-full border border-gray-300 px-4 py-1 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white text-gray-700 appearance-none"
+                className="rounded-full border border-gray-300 px-4 py-1 text-sm focus:ring-1 focus:ring-[#1890FF] focus:outline-none bg-white text-gray-700 appearance-none"
               >
                 <option value="">From</option>
                 <option value="22:00">22:00</option>
@@ -211,7 +247,7 @@ const Notification = () => {
                 value={toTime}
                 onChange={(e) => setToTime(e.target.value)}
                 disabled={isSaving}
-                className="rounded-full border border-gray-300 px-4 py-1 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white text-gray-700 appearance-none"
+                className="rounded-full border border-gray-300 px-4 py-1 text-sm focus:ring-1 focus:ring-[#1890FF] focus:outline-none bg-white text-gray-700 appearance-none"
               >
                 <option value="">To</option>
                 <option value="08:00">08:00</option>
@@ -236,10 +272,10 @@ const Notification = () => {
                 type="button"
                 onClick={() => setWeekendOnly(!weekendOnly)}
                 disabled={isSaving}
-                className={`px-4 py-1 rounded-md text-sm font-medium focus:outline-none transition-colors duration-150 ${
+                className={`px-4 py-1 rounded-md h-[32px] text-sm font-medium focus:outline-none transition-colors duration-150 border ${
                   weekendOnly
-                    ? "bg-[#1890FF] text-white"
-                    : "bg-gray-100 text-gray-500 border border-gray-200"
+                    ? "bg-[#1890FF] border-[#1890FF] text-white"
+                    : "bg-gray-100 text-gray-500 border-gray-200"
                 }`}
               >
                 Weekends
