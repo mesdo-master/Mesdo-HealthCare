@@ -87,9 +87,20 @@ const WorkExperienceDisplay = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <div className="bg-white rounded-2xl shadow-sm p-8 mt-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-gray-900">Work Experience</h2>
+        <h2
+          className="text-[18px] font-medium text-gray-900"
+          style={{
+            fontFamily: "Inter",
+            fontWeight: 500,
+            fontStyle: "Medium",
+            lineHeight: "130%",
+            letterSpacing: "0.025em",
+          }}
+        >
+          Work Experience ({experiences.length})
+        </h2>
         {isOwnProfile && (
           <button
             className="text-gray-400 hover:text-gray-600"
@@ -104,14 +115,24 @@ const WorkExperienceDisplay = ({
           experiences.map((exp, index) => (
             <div
               key={exp.id || index}
-              className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg"
+              className="flex items-start space-x-4 p-4 rounded-xl"
             >
-              <div className="bg-blue-100 w-10 h-10 flex justify-center items-center rounded-lg">
+              <div className="bg-blue-100 w-10 h-10 flex justify-center items-center rounded-xl">
                 <Briefcase className="text-blue-600 w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h3 className="text-[14px] font-medium text-gray-900 mr-2">
+                  <h3
+                    className="text-[14px] font-medium text-gray-900 mr-2"
+                    style={{
+                      fontFamily: "Inter",
+                      fontWeight: 400,
+                      fontStyle: "Regular",
+                      fontSize: "14px",
+                      lineHeight: "180%",
+                      letterSpacing: "0px",
+                    }}
+                  >
                     {exp.title}
                   </h3>
                   {exp.type && (
@@ -119,13 +140,33 @@ const WorkExperienceDisplay = ({
                       <span className="text-[12px] text-gray-400 font-medium">
                         |
                       </span>
-                      <span className="text-[12px] text-gray-600">
+                      <span
+                        className="text-[12px] text-gray-600"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "14px",
+                          lineHeight: "180%",
+                          letterSpacing: "0px",
+                        }}
+                      >
                         {exp.type}
                       </span>
                     </>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2 text-[12px] text-gray-600 mb-1">
+                <div
+                  className="flex flex-wrap gap-2 text-[12px] text-gray-600 mb-1"
+                  style={{
+                    fontFamily: "Inter",
+                    fontWeight: 400,
+                    fontStyle: "Regular",
+                    fontSize: "14px",
+                    lineHeight: "180%",
+                    letterSpacing: "0px",
+                  }}
+                >
                   {exp.institution && <span>{exp.institution}</span>}
                   {exp.institution && exp.location && <span>·</span>}
                   {exp.location && <span>{exp.location}</span>}
@@ -138,7 +179,17 @@ const WorkExperienceDisplay = ({
                   )}
                 </div>
                 {exp.description && (
-                  <div className="mt-2 text-[14px] text-gray-600">
+                  <div
+                    className="mt-2 text-[14px] text-gray-600"
+                    style={{
+                      fontFamily: "Inter",
+                      fontWeight: 400,
+                      fontStyle: "Regular",
+                      fontSize: "14px",
+                      lineHeight: "180%",
+                      letterSpacing: "0px",
+                    }}
+                  >
                     {exp.description.split("\n").map((line, i) => {
                       // Remove HTML tags and render as plain text
                       const cleanLine = line.replace(/<[^>]*>/g, "").trim();
@@ -156,6 +207,14 @@ const WorkExperienceDisplay = ({
                       <span
                         key={i}
                         className="bg-gray-100 text-gray-700 rounded-full px-3 py-1 text-[12px] font-medium"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "14px",
+                          lineHeight: "180%",
+                          letterSpacing: "0px",
+                        }}
                       >
                         {tag}
                       </span>
@@ -163,9 +222,6 @@ const WorkExperienceDisplay = ({
                   </div>
                 )}
               </div>
-              {isOwnProfile && (
-                <div className="flex flex-col md:flex-row items-center justify-center gap-2 ml-4"></div>
-              )}
             </div>
           ))
         ) : (

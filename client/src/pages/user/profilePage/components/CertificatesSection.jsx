@@ -57,9 +57,11 @@ const CertificatesSection = ({ isOwnProfile, userData, openModal }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <div className="bg-white rounded-2xl shadow-sm p-8 mt-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium text-gray-900">Certifications</h2>
+        <h2 className="text-[18px] font-medium text-gray-900">
+          Certifications
+        </h2>
         {isOwnProfile && (
           <button
             className="text-gray-400 hover:text-gray-600"
@@ -73,7 +75,7 @@ const CertificatesSection = ({ isOwnProfile, userData, openModal }) => {
         {certificates.map((cert, index) => (
           <div
             key={cert.id || index}
-            className="flex items-start space-x-4 bg-gray-50 p-4 rounded-lg border border-gray-200"
+            className="flex items-start space-x-4 bg-gray-50 p-4 rounded-xl"
           >
             <img
               src={Certificate}

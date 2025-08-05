@@ -912,7 +912,7 @@ const ChatContainer = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white rounded-lg">
+    <div className="flex-1 flex flex-col overflow-hidden bg-white rounded-xl shadow-sm">
       {/* Debug logs */}
       {(() => {
         console.log("🔍 ChatContainer Debug:", {

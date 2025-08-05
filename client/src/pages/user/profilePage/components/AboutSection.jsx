@@ -23,9 +23,9 @@ const AboutSection = ({ isOwnProfile, userData, openModal }) => {
   }, [userData]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-2xl shadow-sm p-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-gray-900">About</h2>
+        <h2 className="text-[18px] font-medium text-gray-900">About</h2>
         {isOwnProfile && (
           <button
             onClick={() => openModal("About")}

@@ -8,7 +8,7 @@ const LandingPage = () => {
     const apiUrl =
       process.env.REACT_APP_API_URL ||
       "https://mesdo-healthcare-4.onrender.com";
-    window.location.href = `${apiUrl}/auth/google`;
+    window.location.href = `${apiUrl}/google`;
   };
 
   return (

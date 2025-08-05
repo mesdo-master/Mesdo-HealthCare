@@ -611,7 +611,7 @@ const ChatContainer = ({ selectedId, toggleFetch, conversation }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm">
       <ChatHeader
         selectedUser={otherUsers[0]}
         piimage={piimage}

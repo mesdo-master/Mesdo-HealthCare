@@ -119,8 +119,8 @@ const MessageList = ({
   console.log("Job conversations:", jobConversations);
 
   return (
-    <div className="w-[360px] bg-white flex flex-col">
-      <div className="p-10 border-b border-gray-200">
+    <div className="w-[340px] bg-white/90 flex flex-col rounded-l-2xl h-full">
+      <div className="p-4 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-semibold">Messages</h1>
         </div>
@@ -131,20 +131,20 @@ const MessageList = ({
             <input
               type="text"
               placeholder={`Search ${activeTab.toLowerCase()}...`}
-              className="w-full pl-9 pr-3 py-3 text-xs bg-gray-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-1.5 bg-gray-50 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-100 border border-gray-200 text-xs"
             />
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-1">
-          <div className="flex ml-3">
+        <div className="bg-gray-50 rounded-xl p-1 mb-2">
+          <div className="flex">
             {["Personal", "Recruitment"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 px-4 text-xs font-medium rounded-md transition-all duration-200 ${
+                className={`flex-1 py-2 px-4 text-xs font-medium rounded-lg transition-all duration-200 ${
                   activeTab === tab
-                    ? "bg-white text-[#1890FF] shadow-sm"
+                    ? "bg-white text-blue-500"
                     : "text-gray-600 hover:text-gray-800 hover:bg-white/50"
                 }`}
               >
@@ -155,7 +155,7 @@ const MessageList = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2 py-1">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Loading conversations...</div>
@@ -173,7 +173,7 @@ const MessageList = ({
             </div>
           </div>
         ) : activeTab === "Recruitment" && !selectedJob ? (
-          <div className="px-10">
+          <div className="px-6 pt-2">
             {jobs.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
@@ -210,7 +210,7 @@ const MessageList = ({
             )}
           </div>
         ) : activeTab === "Recruitment" && selectedJob ? (
-          <div className="px-10">
+          <div className="px-6 pt-2">
             <div className="flex items-center mb-4">
               <button
                 onClick={() => setSelectedJob(null)}

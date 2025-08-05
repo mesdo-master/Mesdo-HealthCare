@@ -9,9 +9,9 @@ const PublicationsSection = ({ isOwnProfile, userData, openModal }) => {
   }, [userData?.publications]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <div className="bg-white rounded-2xl shadow-sm p-8 mt-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium text-gray-900">Publications</h2>
+        <h2 className="text-[18px] font-medium text-gray-900">Publications</h2>
         {isOwnProfile && (
           <button
             className="text-gray-400 hover:text-gray-600"
@@ -26,9 +26,9 @@ const PublicationsSection = ({ isOwnProfile, userData, openModal }) => {
           publications.map((pub, index) => (
             <div
               key={index}
-              className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg"
+              className="flex items-start space-x-4 p-4 rounded-xl"
             >
-              <div className="bg-blue-100 w-10 h-10 flex justify-center items-center rounded-lg">
+              <div className="bg-blue-100 w-10 h-10 flex justify-center items-center rounded-xl">
                 <BookOpen className="text-blue-600 w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">

@@ -1516,7 +1516,7 @@ const OrganizationProfile = () => {
       <div className="flex flex-1 overflow-hidden pt-[140px]">
         <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
           <div className="max-w-5xl mx-auto w-full">
-            <div className="bg-white rounded-lg border border-gray-200 w-full mt-[-40px]">
+            <div className="bg-white rounded-2xl shadow-sm w-full mt-[-50px]">
               <div className="p-10">
                 <Header />
                 <div className="flex flex-col mt-6">
@@ -1555,7 +1555,7 @@ const OrganizationProfile = () => {
                     {/* Right Sidebar */}
                     <div className="w-1/3 py-6">
                       {/* More Information */}
-                      <div className="bg-white rounded-lg shadow-sm p-6">
+                      <div className="bg-white rounded-xl shadow-sm p-6">
                         <div className="flex justify-between items-center mb-4">
                           <h2 className="text-[16px] font-medium text-gray-900">
                             More Information
@@ -1593,7 +1593,7 @@ const OrganizationProfile = () => {
                       </div>
 
                       {/* Map with realistic location */}
-                      <div className="bg-white rounded-lg shadow-sm p-0 mt-6 overflow-hidden">
+                      <div className="bg-white rounded-2xl shadow-sm p-0 mt-6 overflow-hidden">
                         <div className="h-48 bg-gray-200 relative">
                           <img
                             src="https://maps.googleapis.com/maps/api/staticmap?center=17.4065,78.4772&zoom=13&size=400x200&maptype=roadmap&markers=color:blue%7Clabel:A%7C17.4065,78.4772&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dg0A1c0Xjr0b2Y"

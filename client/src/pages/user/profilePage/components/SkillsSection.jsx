@@ -40,9 +40,9 @@ const SkillsSection = ({ isOwnProfile, userData, openModal }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <div className="bg-white rounded-2xl shadow-sm p-8 mt-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium text-gray-900">
+        <h2 className="text-[18px] font-medium text-gray-900">
           Skills / Specialization
         </h2>
         {isOwnProfile && (

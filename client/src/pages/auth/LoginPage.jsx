@@ -69,8 +69,8 @@ const Login = () => {
       const apiUrl =
         process.env.REACT_APP_API_URL ||
         "https://mesdo-healthcare-4.onrender.com";
-      console.log("Redirecting to Google auth:", `${apiUrl}/auth/google`);
-      window.location.href = `${apiUrl}/auth/google`;
+      console.log("Redirecting to Google auth:", `${apiUrl}/google`);
+      window.location.href = `${apiUrl}/google`;
     } catch (error) {
       console.error("Google login error:", error);
       alert("Google login failed. Please try again.");

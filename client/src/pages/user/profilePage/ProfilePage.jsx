@@ -296,7 +296,7 @@ const ProfilePage = () => {
         <div className="flex flex-1 overflow-hidden pt-[140px]">
           <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
             <div className="max-w-5xl mx-auto w-full">
-              <div className="bg-white rounded-lg border border-gray-200 w-full mt-[-50px]">
+              <div className="bg-white rounded-2xl shadow-sm w-full mt-[-50px]">
                 <div className="p-10">
                   <Header />
                   <div className="flex flex-col mt-6">
@@ -329,9 +329,9 @@ const ProfilePage = () => {
                       {/* Right Sidebar */}
                       <div className="w-1/3 py-6 ">
                         {/* Profile Completion */}
-                        <div className="bg-white rounded-lg shadow-sm p-6 mt-[55px]">
+                        <div className="bg-white rounded-2xl shadow-sm p-6 mt-[55px]">
                           <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-mb font-semibold text-gray-900">
+                            <h3 className="text-[16px] font-medium text-gray-900">
                               Complete your Profile to get hired
                             </h3>
                           </div>
@@ -409,7 +409,7 @@ const ProfilePage = () => {
                             </div>
 
                             <div className="flex-1">
-                              <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                              <h4 className="text-sm font-medium text-gray-900 mb-2">
                                 GET DISCOVERED
                               </h4>
                               <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
@@ -515,12 +515,12 @@ const ProfilePage = () => {
                           <div className="space-y-3 max-h-60 overflow-y-auto">
                             {/* Basic Information */}
                             <div
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                                 userData?.name &&
                                 userData?.email &&
                                 userData?.phoneNo
-                                  ? "bg-gray-50 border-gray-200"
-                                  : "hover:bg-gray-50 cursor-pointer border-gray-200"
+                                  ? "bg-gray-50"
+                                  : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               onClick={() => {
                                 if (
@@ -593,10 +593,10 @@ const ProfilePage = () => {
 
                             {/* Profile Photo */}
                             <div
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                                 userData?.profilePicture
-                                  ? "bg-gray-50 border-gray-200"
-                                  : "hover:bg-gray-50 cursor-pointer border-gray-200"
+                                  ? "bg-gray-50"
+                                  : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               onClick={() => {
                                 if (!userData?.profilePicture) {
@@ -663,11 +663,11 @@ const ProfilePage = () => {
 
                             {/* About Section */}
                             <div
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                                 userData?.about &&
                                 userData?.about.trim().length > 0
-                                  ? "bg-gray-50 border-gray-200"
-                                  : "hover:bg-gray-50 cursor-pointer border-gray-200"
+                                  ? "bg-gray-50"
+                                  : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               onClick={() => {
                                 if (
@@ -736,11 +736,11 @@ const ProfilePage = () => {
 
                             {/* Experience */}
                             <div
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                                 userData?.experience &&
                                 userData?.experience.length > 0
-                                  ? "bg-gray-50 border-gray-200"
-                                  : "hover:bg-gray-50 cursor-pointer border-gray-200"
+                                  ? "bg-gray-50"
+                                  : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               onClick={() => {
                                 if (
@@ -809,11 +809,11 @@ const ProfilePage = () => {
 
                             {/* Education */}
                             <div
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                                 userData?.education &&
                                 userData?.education.length > 0
-                                  ? "bg-gray-50 border-gray-200"
-                                  : "hover:bg-gray-50 cursor-pointer border-gray-200"
+                                  ? "bg-gray-50"
+                                  : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               onClick={() => {
                                 if (
@@ -882,10 +882,10 @@ const ProfilePage = () => {
 
                             {/* Skills */}
                             <div
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                                 userData?.skills && userData?.skills.length > 0
-                                  ? "bg-gray-50 border-gray-200"
-                                  : "hover:bg-gray-50 cursor-pointer border-gray-200"
+                                  ? "bg-gray-50"
+                                  : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               onClick={() => {
                                 if (
@@ -954,12 +954,12 @@ const ProfilePage = () => {
 
                             {/* Location */}
                             <div
-                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                                 userData?.location ||
                                 userData?.city ||
                                 userData?.state
-                                  ? "bg-gray-50 border-gray-200"
-                                  : "hover:bg-gray-50 cursor-pointer border-gray-200"
+                                  ? "bg-gray-50"
+                                  : "hover:bg-gray-50 cursor-pointer"
                               }`}
                               onClick={() => {
                                 if (
@@ -1034,7 +1034,7 @@ const ProfilePage = () => {
 
                         {/* Suggested Users */}
                         {!isOwnProfile && (
-                          <div className="bg-white rounded-lg shadow-sm p-6 mt-4">
+                          <div className="bg-white rounded-2xl shadow-sm p-6 mt-4">
                             <h3 className="text-[16px] font-medium text-gray-900 mb-4">
                               Suggested Users
                             </h3>
@@ -1047,7 +1047,7 @@ const ProfilePage = () => {
                                 {suggestedUsers.slice(0, 3).map((user) => (
                                   <div
                                     key={user._id}
-                                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
                                   >
                                     <img
                                       src={
@@ -1078,7 +1078,7 @@ const ProfilePage = () => {
 
                         {/* People You Might Know - for own profile */}
                         {isOwnProfile && (
-                          <div className="bg-white rounded-lg shadow-sm p-6 mt-4">
+                          <div className="bg-white rounded-2xl shadow-sm p-6 mt-4">
                             <h3 className="text-[16px] font-medium text-gray-900 mb-4">
                               People You Might Know
                             </h3>

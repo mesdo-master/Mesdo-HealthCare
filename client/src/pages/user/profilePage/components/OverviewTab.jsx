@@ -42,12 +42,12 @@ const OverviewTab = ({
     <div className="space-y-6">
       {/* Tabs Section */}
       <div className="mt-6">
-        <div className="border border-gray-200 rounded-lg p-2 bg-white">
+        <div className="border border-gray-200 rounded-2xl p-2 bg-white">
           <div className="grid grid-cols-4 gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-300
+                className={`px-4 py-2 text-sm font-medium rounded-xl transition duration-300
                   ${
                     activeTab === tab
                       ? "bg-blue-500 text-white"
@@ -125,7 +125,7 @@ const OverviewTab = ({
           )}
 
           {activeTab === "Social activity" && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <svg
@@ -154,7 +154,7 @@ const OverviewTab = ({
           )}
 
           {activeTab === "Saved" && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <svg

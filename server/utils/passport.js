@@ -9,8 +9,8 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.NODE_ENV === 'production' 
-        ? "https://mesdo-healthcare-4.onrender.com/auth/google/callback"
-        : "http://localhost:5020/auth/google/callback",
+        ? "https://mesdo-healthcare-4.onrender.com/google/callback"
+        : "http://localhost:5020/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
