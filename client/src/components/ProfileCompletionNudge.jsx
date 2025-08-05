@@ -162,7 +162,7 @@ const ProfileCompletionNudge = ({ onClose }) => {
       {/* Collapsed State */}
       {!isExpanded && (
         <div
-          className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 cursor-pointer hover:shadow-xl transition-all duration-300 max-w-sm animate-bounce"
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-all duration-300 max-w-sm"
           onClick={() => setIsExpanded(true)}
         >
           <div className="flex items-center gap-3">
@@ -188,7 +188,7 @@ const ProfileCompletionNudge = ({ onClose }) => {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-sm font-semibold text-[#1890FF]">
+                <span className="text-sm font-semibold text-gray-700">
                   {completionData.percentage}%
                 </span>
               </div>
@@ -218,14 +218,14 @@ const ProfileCompletionNudge = ({ onClose }) => {
 
       {/* Expanded State */}
       {isExpanded && (
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-w-md animate-in slide-in-from-bottom-4 duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 max-w-md animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-mb font-semibold text-gray-900">
+            <h3 className="text-[16px] font-medium text-gray-900">
               Complete your Profile to get hired
             </h3>
             <button
               onClick={() => setIsExpanded(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1  ml-5 rounded-full hover:bg-gray-100"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 ml-5 rounded-full hover:bg-gray-100"
             >
               <X size={20} />
             </button>
@@ -271,16 +271,16 @@ const ProfileCompletionNudge = ({ onClose }) => {
             </div>
 
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">
                 GET DISCOVERED
               </h4>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                 <div
                   className="bg-[#1890FF] h-2 rounded-full transition-all duration-700"
                   style={{ width: `${completionData.percentage}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500">
                 {completionData.percentage}% complete
               </p>
             </div>
@@ -292,9 +292,9 @@ const ProfileCompletionNudge = ({ onClose }) => {
             {completionData.completedSections.map((section, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 p-2 rounded-lg bg-green-50 border border-green-200"
+                className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-200"
               >
-                <div className="w-6 h-6 bg-[#595959] rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"
@@ -309,24 +309,9 @@ const ProfileCompletionNudge = ({ onClose }) => {
                     />
                   </svg>
                 </div>
-                <span className="text-sm font-inter text-[#BFBFBF] line-through">
+                <span className="text-sm font-medium text-gray-500 line-through">
                   {section.name}
                 </span>
-                <div className="ml-auto">
-                  <svg
-                    className="w-4 h-4 text-[#595959] transform rotate-180"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
               </div>
             ))}
 
@@ -337,26 +322,11 @@ const ProfileCompletionNudge = ({ onClose }) => {
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border border-gray-200"
               >
                 <div className="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-xs">{section.icon}</span>
+                  <span className="text-xs text-gray-500">{index + 1}</span>
                 </div>
                 <span className="text-sm font-medium text-gray-700">
                   {section.name}
                 </span>
-                <div className="ml-auto">
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
               </div>
             ))}
           </div>

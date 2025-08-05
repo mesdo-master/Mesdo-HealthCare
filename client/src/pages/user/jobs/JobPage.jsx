@@ -159,18 +159,19 @@ const JobPage = () => {
 
               <div className="space-y-4 mt-6">
                 {sortedJobs.map((job) => (
-                  <JobCard
-                    key={job._id}
-                    job={{
-                      ...job,
-                      matchPercentage: calculateMatchPercentage(
-                        job,
-                        currentUser
-                      ),
-                    }}
-                    onClick={() => handleJobSelect(job._id)}
-                    onJobHidden={handleJobHidden}
-                  />
+                  <div key={job._id} className="w-full">
+                    <JobCard
+                      job={{
+                        ...job,
+                        matchPercentage: calculateMatchPercentage(
+                          job,
+                          currentUser
+                        ),
+                      }}
+                      onClick={() => handleJobSelect(job._id)}
+                      onJobHidden={handleJobHidden}
+                    />
+                  </div>
                 ))}
               </div>
             </div>

@@ -186,7 +186,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             ? "w-full h-auto"
             : fullWidth
             ? "w-full h-[180px] min-h-[100px]"
-            : "w-full h-[180px] min-h-[100px]"
+            : "w-full max-w-[900px] lg:max-w-[900px] xl:max-w-[1005px] h-[180px] min-h-[100px] ml-[10px]"
         } rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-[#E4E5E8] relative flex ${
           small ? "flex-col" : "items-center"
         } cursor-pointer ${isHiding ? "opacity-50 pointer-events-none" : ""}`}
@@ -225,7 +225,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
         {!small && (
           <>
             {/* Divider - only for large cards */}
-            <div className="h-16 w-px bg-gray-200 mx-2" />
+            <div className="h-16 w-px bg-gray-200 ml-[20px] mr-[33px]" />
             {/* Main Content - only for large cards */}
             <div className="flex-1 min-w-0">
               {/* Top Row: Status and Actions */}
@@ -314,7 +314,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                 {job.location}
               </p>
               {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-1 ml-[-10px]">
+              <div className="flex flex-wrap gap-2 mb-1 gap-1">
                 {tags.map((tag, index) => (
                   <div
                     key={index}
