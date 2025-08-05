@@ -7,6 +7,7 @@ import axiosInstance from "../../../lib/axio";
 import JobCard from "./components/JobCard";
 import { calculateMatchPercentage } from "../../../utils/matchPercentage";
 import { useSelector } from "react-redux";
+import Loader from "../../../components/Loader";
 
 // Animation variants
 const containerVariants = {
@@ -478,7 +479,7 @@ const HiddenJobs = () => {
       <div className="ml-[5vw] pt-[10vh] h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="flex justify-center items-center h-64">
           <div className="relative">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-400"></div>
+            <Loader />
             <div className="absolute inset-0 rounded-full border-2 border-orange-100"></div>
           </div>
         </div>

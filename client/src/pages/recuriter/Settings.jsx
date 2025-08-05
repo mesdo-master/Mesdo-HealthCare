@@ -10,6 +10,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { uploadRecuriterProfilePic } from "../../store/features/user/profileSlice";
 import { setBusinessProfile } from "../../store/features/authSlice";
+import Loader from "../../components/Loader";
 
 const Tab = ({ label, isActive, onClick }) => (
   <button
@@ -358,7 +359,7 @@ const RecruiterSettings = () => {
                                 />
                                 {isImageUploading && (
                                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <Loader />
                                   </div>
                                 )}
                               </div>
@@ -378,7 +379,7 @@ const RecruiterSettings = () => {
                                 >
                                   {isImageUploading ? (
                                     <div className="flex flex-col items-center">
-                                      <div className="w-8 h-8 border-2 border-[#1890FF] border-t-transparent rounded-full animate-spin mb-2"></div>
+                                      <Loader />
                                       <span className="text-[#1890FF] text-sm font-medium">
                                         Uploading...
                                       </span>

@@ -13,6 +13,7 @@ import {
 import axiosInstance from "../../../../lib/axio";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentUser } from "../../../../store/features/authSlice";
+import Loader from "../../../../components/Loader";
 
 const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
   const dispatch = useDispatch();
@@ -67,9 +68,9 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB");
+    // Validate file size (max 1MB for profile picture to prevent 413 errors)
+    if (file.size > 1 * 1024 * 1024) {
+      alert("File size must be less than 1MB. Please choose a smaller image.");
       return;
     }
 
@@ -87,47 +88,43 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       reader.onload = (e) => setProfileImage(e.target.result);
       reader.readAsDataURL(file);
 
-      // Convert image to base64 for direct storage
-      const base64Image = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
+      // Compress image before converting to base64
+      const compressedImage = await compressImage(file, 0.8, 400); // 80% quality, max width 400px for profile
 
       console.log("Uploading profile picture...");
 
-      // Try to update profile directly with base64 image
+      // Try to update profile directly with compressed base64 image
       let updateResponse;
       try {
         updateResponse = await axiosInstance.put("/users/updateProfile", {
-          profilePicture: base64Image,
+          profilePicture: compressedImage,
         });
         console.log("Profile update response:", updateResponse.data);
       } catch (error) {
         console.log("updateProfile failed, trying update-profile...");
         try {
           updateResponse = await axiosInstance.put("/users/update-profile", {
-            profilePicture: base64Image,
+            profilePicture: compressedImage,
           });
           console.log("Profile update response:", updateResponse.data);
         } catch (secondError) {
           console.log("Both update endpoints failed, trying /me endpoint...");
           // Try updating via /me endpoint
           updateResponse = await axiosInstance.put("/me", {
-            profilePicture: base64Image,
+            profilePicture: compressedImage,
           });
           console.log("Profile update via /me response:", updateResponse.data);
         }
       }
 
       if (updateResponse.data.success || updateResponse.status === 200) {
-        setProfileImage(base64Image);
+        setProfileImage(compressedImage);
 
         // Update Redux store if this is the current user's profile
         if (showEditButtons && currentUser) {
           const updatedUser = {
             ...currentUser,
-            profilePicture: base64Image,
+            profilePicture: compressedImage,
           };
           dispatch(setCurrentUser(updatedUser));
         }
@@ -162,9 +159,9 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file size (max 10MB for banner)
-    if (file.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB");
+    // Validate file size (max 2MB for banner to prevent 413 errors)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File size must be less than 2MB. Please choose a smaller image.");
       return;
     }
 
@@ -182,47 +179,43 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       reader.onload = (e) => setBannerImage(e.target.result);
       reader.readAsDataURL(file);
 
-      // Convert image to base64 for direct storage
-      const base64Image = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
+      // Compress image before converting to base64
+      const compressedImage = await compressImage(file, 0.7, 1200); // 70% quality, max width 1200px
 
       console.log("Uploading banner image...");
 
-      // Try to update profile directly with base64 image
+      // Try to update profile directly with compressed base64 image
       let updateResponse;
       try {
         updateResponse = await axiosInstance.put("/users/updateProfile", {
-          Banner: base64Image,
+          Banner: compressedImage,
         });
         console.log("Banner update response:", updateResponse.data);
       } catch (error) {
         console.log("updateProfile failed, trying update-profile...");
         try {
           updateResponse = await axiosInstance.put("/users/update-profile", {
-            Banner: base64Image,
+            Banner: compressedImage,
           });
           console.log("Banner update response:", updateResponse.data);
         } catch (secondError) {
           console.log("Both update endpoints failed, trying /me endpoint...");
           // Try updating via /me endpoint
           updateResponse = await axiosInstance.put("/me", {
-            Banner: base64Image,
+            Banner: compressedImage,
           });
           console.log("Banner update via /me response:", updateResponse.data);
         }
       }
 
       if (updateResponse.data.success || updateResponse.status === 200) {
-        setBannerImage(base64Image);
+        setBannerImage(compressedImage);
 
         // Update Redux store if this is the current user's profile
         if (showEditButtons && currentUser) {
           const updatedUser = {
             ...currentUser,
-            Banner: base64Image,
+            Banner: compressedImage,
           };
           dispatch(setCurrentUser(updatedUser));
         }
@@ -253,6 +246,34 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     } finally {
       setIsUploadingBanner(false);
     }
+  };
+
+  // Image compression function
+  const compressImage = (file, quality = 0.7, maxWidth = 1200) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressedDataUrl);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   const handleConnect = () => {
@@ -365,11 +386,11 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       />
 
       {/* Cover Photo */}
-      <div className="h-[200px] relative">
+      <div className="h-[200px] relative rounded-t-2xl overflow-hidden">
         <img
           src={bannerImage}
           alt="Profile Banner"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-t-2xl"
         />
         {showEditButtons && (
           <button
@@ -379,7 +400,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
             title="Change cover photo"
           >
             {isUploadingBanner ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+              <Loader />
             ) : (
               <Camera className="w-4 h-4 text-gray-600" />
             )}
@@ -408,7 +429,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
                   title="Change profile photo"
                 >
                   {isUploadingProfile ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                    <Loader />
                   ) : (
                     <Camera className="w-4 h-4 text-gray-600" />
                   )}
@@ -418,11 +439,46 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
 
             {/* Name and Title */}
             <div>
-              <h1 className="text-2xl font-medium text-gray-900">
+              <h1
+                className="text-gray-900"
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 500,
+                  fontStyle: "Medium",
+                  fontSize: "24px",
+                  lineHeight: "100%",
+                  letterSpacing: "0.5px",
+                  verticalAlign: "middle",
+                }}
+              >
                 {userData?.name}
               </h1>
-              <p className="text-gray-600 mt-1">{userData?.headline}</p>
-              <p className="text-blue-500 mt-2 text-sm font-medium cursor-pointer hover:underline">
+              <p
+                className="text-gray-600 mt-1 pt-[8px]"
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 300,
+                  fontStyle: "Light",
+                  fontSize: "16px",
+                  lineHeight: "100%",
+                  letterSpacing: "0.5px",
+                  verticalAlign: "middle",
+                }}
+              >
+                {userData?.headline}
+              </p>
+              <p
+                className="text-blue-500 mt-2 cursor-pointer hover:underline"
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 600,
+                  fontStyle: "Semi Bold",
+                  fontSize: "14px",
+                  lineHeight: "100%",
+                  letterSpacing: "0px",
+                  verticalAlign: "middle",
+                }}
+              >
                 {userData?.connections?.length || 0} connections
               </p>
             </div>

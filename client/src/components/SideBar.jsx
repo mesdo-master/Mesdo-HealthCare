@@ -8,6 +8,7 @@ import { useNotifications } from "../context/NotificationContextFinal";
 import hospitalicon from "../assets/hospitalicon.png";
 import axiosInstance from "../lib/axio";
 import SettingsIcon from "../assets/Settings.png";
+import Loader from "./Loader";
 import {
   Briefcase,
   MessageCircle,
@@ -83,12 +84,14 @@ export default function Sidebar({ className = "" }) {
           style={{ pointerEvents: "none" }}
         >
           <div className="flex flex-col items-center bg-white  rounded-2xl shadow-2xl px-10 py-8 animate-fade-in">
-            <div className="mb-6">
-              <div className="w-14 h-14 border-4 border-blue-100 border-t-[#1890FF] rounded-full animate-spin"></div>
-            </div>
-            <div className="text-lg font-semibold text-primary-500 animate-pulse">
-              Just a moment...
-            </div>
+            <Loader
+              size="large"
+              text={
+                navigating
+                  ? `Navigating to ${targetRoute}...`
+                  : "Switching mode..."
+              }
+            />
           </div>
           <style jsx>{`
             @keyframes fade-in {
@@ -100,7 +103,7 @@ export default function Sidebar({ className = "" }) {
               }
             }
             .animate-fade-in {
-              animation: fade-in 0.4s;
+              animation: fade-in 0.3s ease-out;
             }
           `}</style>
         </div>
@@ -145,7 +148,17 @@ export default function Sidebar({ className = "" }) {
               className="cursor-pointer hover:bg-gray-100 mx-3 p-3 bg-[#F5F5F5] rounded-lg shadow-sm flex items-center justify-between mb-5 border-none"
             >
               <div className="flex items-center space-x-3">
-                <img src={hospitalicon} alt="Switch Icon" className="h-8 w-8" />
+                <img
+                  src={
+                    mode === "recruiter"
+                      ? businessProfile?.orgLogo ||
+                        "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                      : currentUser?.profilePicture ||
+                        "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                  }
+                  alt="Profile"
+                  className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                />
                 <div>
                   <h2 className="text-sm font-medium text-gray-800">
                     {mode === "recruiter" ? "Hospital" : "Personal"}
@@ -188,6 +201,7 @@ export default function Sidebar({ className = "" }) {
                         }
                         navTo={"/recruitment"}
                         text="Recruitment"
+                        onNavigate={handleNavigation}
                         isActive={location.pathname.startsWith("/recruitment")}
                       />
 
@@ -211,6 +225,7 @@ export default function Sidebar({ className = "" }) {
                         }
                         navTo={"/organization/messages"}
                         text="Messages"
+                        onNavigate={handleNavigation}
                         notificationCount={unreadMessageCount}
                         isActive={location.pathname.startsWith(
                           "/organization/messages"
@@ -226,6 +241,7 @@ export default function Sidebar({ className = "" }) {
                         }
                         text="Profile"
                         navTo={`/organization/${businessProfile?._id}`}
+                        onNavigate={handleNavigation}
                         isActive={location.pathname.startsWith(
                           `/organization/${businessProfile?._id}`
                         )}

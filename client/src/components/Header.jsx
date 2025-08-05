@@ -1,9 +1,11 @@
-import { Bell, Search, ChevronDown, X, Loader2, Clock } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import { NotificationPopup } from "../pages/notification/NotificationsPopup";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { Bell, Search, X, Clock, Loader2, ChevronDown } from "lucide-react";
+import { setCurrentUser } from "../store/features/authSlice";
 import axiosInstance from "../lib/axio";
+import Loader from "./Loader";
+import { NotificationPopup } from "../pages/notification/NotificationsPopup";
 import { useSocket } from "../context/SocketProvider";
 import NotificationIcon from "../../src/assets/Notification.png";
 const Header = ({ className = "" }) => {
@@ -292,10 +294,9 @@ const Header = ({ className = "" }) => {
               />
               {/* Loading spinner */}
               {isLoading && (
-                <Loader2
-                  className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-blue-500"
-                  size={18}
-                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                </div>
               )}
               {/* Clear button */}
               {searchInput && !isLoading && (

@@ -41,6 +41,7 @@ import { useParams } from "react-router-dom";
 import WorkExperienceForm from "../../user/profilePage/components/WorkExperienceForm";
 import WorkExperienceSection from "../../user/profilePage/components/WorkExperienceSection";
 import { motion, AnimatePresence } from "framer-motion";
+import Loader from "../../../components/Loader";
 
 // Custom JobCard component for Organization Profile with single-line title truncation
 const ProfileJobCard = ({ job, onEdit, onDelete }) => {
@@ -1399,16 +1400,8 @@ const OrganizationProfile = () => {
   // Loader while orgData is being fetched
   if (!orgData) {
     return (
-      <div className="flex flex-col items-center justify-center w-full min-h-screen">
-        <div className="flex flex-col items-center bg-white rounded-xl shadow-lg px-8 py-10">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-[#1890FF] rounded-full animate-spin mb-6"></div>
-          <div className="text-lg font-semibold text-[#1890FF]">
-            Loading organization profile...
-          </div>
-          <div className="text-sm text-gray-400 mt-2">
-            Please wait while we fetch the organization data.
-          </div>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <Loader />
       </div>
     );
   }

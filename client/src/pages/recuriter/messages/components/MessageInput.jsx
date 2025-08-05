@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { Paperclip, Smile, Send, X } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Send, Paperclip, Smile, MoreVertical, X } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import axiosInstance from "../../../../lib/axio";
 import { useSocket } from "../../../../context/SocketProvider";
 import { useSelector } from "react-redux";
+import Loader from "../../../../components/Loader";
 
 const MessageInput = ({
   selectedUser,
@@ -28,14 +29,18 @@ const MessageInput = ({
   // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target)
+      ) {
         setShowEmojiPicker(false);
       }
     };
 
     if (showEmojiPicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showEmojiPicker]);
 
@@ -56,9 +61,9 @@ const MessageInput = ({
       inputMessage: inputMessage.trim(),
       hasSelectedFile: !!selectedFile,
       isLoading,
-      conversationId: selectedConveresationId
+      conversationId: selectedConveresationId,
     });
-    
+
     if (!inputMessage.trim() && !selectedFile) {
       console.log("❌ RECRUITER: No message or file to send");
       return;
@@ -70,7 +75,9 @@ const MessageInput = ({
 
     // ✅ Enhanced validation
     if (!selectedConveresationId || selectedConveresationId === "undefined") {
-      console.error("❌ RECRUITER: Cannot send message: Invalid conversation ID");
+      console.error(
+        "❌ RECRUITER: Cannot send message: Invalid conversation ID"
+      );
       return;
     }
 
@@ -98,7 +105,10 @@ const MessageInput = ({
       console.log("🎯 Sender ID being sent:", messageData.senderId);
       console.log("🎯 Business Profile ID:", businessProfile._id);
       console.log("📨 Conversation ID:", selectedConveresationId);
-      console.log("📥 Receiver ID:", selectedUser?._id || selectedUser?.id || selectedUser);
+      console.log(
+        "📥 Receiver ID:",
+        selectedUser?._id || selectedUser?.id || selectedUser
+      );
       console.groupEnd();
 
       console.log("📡 RECRUITER: Making API call to /recuriter/sendMessage");
@@ -136,30 +146,33 @@ const MessageInput = ({
         console.log("🔄 String comparison:", {
           senderStr: String(messageToAdd.sender),
           businessStr: String(businessProfile._id),
-          matches: String(messageToAdd.sender) === String(businessProfile._id)
+          matches: String(messageToAdd.sender) === String(businessProfile._id),
         });
         console.log("📦 Full message:", messageToAdd);
         console.groupEnd();
         setMessages((prevMessages) => {
           // Enhanced duplicate checking for immediate message addition
-          const messageExists = prevMessages.some(
-            (msg) => {
-              // Check by _id (most reliable)
-              if (msg._id === messageToAdd._id) return true;
-              
-              // Check by content, timestamp, and conversation (fallback)
-              const timeDiff = Math.abs(new Date(msg.createdAt) - new Date(messageToAdd.createdAt));
-              if (msg.message === messageToAdd.message && 
-                  (msg.conversationId === messageToAdd.conversationId || 
-                   msg.conversationId === selectedConveresationId) &&
-                  timeDiff < 2000) { // 2 second window for immediate additions
-                return true;
-              }
-              
-              return false;
+          const messageExists = prevMessages.some((msg) => {
+            // Check by _id (most reliable)
+            if (msg._id === messageToAdd._id) return true;
+
+            // Check by content, timestamp, and conversation (fallback)
+            const timeDiff = Math.abs(
+              new Date(msg.createdAt) - new Date(messageToAdd.createdAt)
+            );
+            if (
+              msg.message === messageToAdd.message &&
+              (msg.conversationId === messageToAdd.conversationId ||
+                msg.conversationId === selectedConveresationId) &&
+              timeDiff < 2000
+            ) {
+              // 2 second window for immediate additions
+              return true;
             }
-          );
-          
+
+            return false;
+          });
+
           if (!messageExists) {
             console.log("✅ RECRUITER: Adding new message immediately");
             console.log("✅ RECRUITER: Pre-addition message check:", {
@@ -168,21 +181,27 @@ const MessageInput = ({
               senderType: typeof messageToAdd.sender,
               businessId: businessProfile._id,
               businessIdType: typeof businessProfile._id,
-              shouldAlignRight: String(messageToAdd.sender) === String(businessProfile._id)
+              shouldAlignRight:
+                String(messageToAdd.sender) === String(businessProfile._id),
             });
             // Add a temporary flag to identify immediate messages
             const messageWithFlag = { ...messageToAdd, _isImmediate: true };
             return [...prevMessages, messageWithFlag];
           }
-          console.log("⚠️ RECRUITER: Duplicate message detected, skipping immediate add");
+          console.log(
+            "⚠️ RECRUITER: Duplicate message detected, skipping immediate add"
+          );
           return prevMessages;
         });
       } else {
-        console.warn("📨 RECRUITER: No message data received or setMessages not available:", {
-          messageExists: !!res.data?.message,
-          setMessagesExists: !!setMessages,
-          responseData: res.data
-        });
+        console.warn(
+          "📨 RECRUITER: No message data received or setMessages not available:",
+          {
+            messageExists: !!res.data?.message,
+            setMessagesExists: !!setMessages,
+            responseData: res.data,
+          }
+        );
       }
 
       // Clear input immediately for better UX
@@ -191,7 +210,9 @@ const MessageInput = ({
       setReplyingTo(null); // Clear reply
 
       // ✅ Socket emission is handled by server, no need for client-side emission
-      console.log("✅ CLIENT: Recruiter message sent, server will handle socket broadcasting");
+      console.log(
+        "✅ CLIENT: Recruiter message sent, server will handle socket broadcasting"
+      );
 
       // ✅ No need to trigger fetch since we're adding message immediately to local state
       // toggleFetch() was causing unwanted reloads - removed for better UX
@@ -240,7 +261,10 @@ const MessageInput = ({
   console.log("Recruiter MessageInput - isSendDisabled:", isSendDisabled);
   console.log("Recruiter MessageInput - inputMessage:", inputMessage);
   console.log("Recruiter MessageInput - isLoading:", isLoading);
-  console.log("Recruiter MessageInput - setMessages function:", typeof setMessages);
+  console.log(
+    "Recruiter MessageInput - setMessages function:",
+    typeof setMessages
+  );
 
   return (
     <div className="relative border-t bg-white p-4">
@@ -249,7 +273,9 @@ const MessageInput = ({
         <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-medium text-blue-600">Replying to:</span>
+              <span className="text-xs font-medium text-blue-600">
+                Replying to:
+              </span>
             </div>
             <p className="text-sm text-gray-700 truncate max-w-xs">
               {replyingTo.message}
@@ -346,11 +372,7 @@ const MessageInput = ({
           }`}
           aria-label="Send message"
         >
-          {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Send size={20} />
-          )}
+          {isLoading ? <Loader /> : <Send size={20} />}
         </button>
       </div>
     </div>

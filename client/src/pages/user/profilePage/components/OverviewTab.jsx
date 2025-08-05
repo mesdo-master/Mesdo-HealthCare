@@ -42,17 +42,28 @@ const OverviewTab = ({
     <div className="space-y-6">
       {/* Tabs Section */}
       <div className="mt-6">
-        <div className="border border-gray-200 rounded-2xl p-2 bg-white">
+        <div className="border border-gray-200 rounded-2xl p-3 bg-white">
           <div className="grid grid-cols-4 gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab}
-                className={`px-4 py-2 text-sm font-medium rounded-xl transition duration-300
+                className={`px-4 py-3 transition duration-300 rounded-lg
                   ${
                     activeTab === tab
-                      ? "bg-blue-500 text-white"
+                      ? "text-white"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 400,
+                  fontStyle: "Regular",
+                  fontSize: "14px",
+                  lineHeight: "130%",
+                  letterSpacing: "0.5px",
+                  verticalAlign: "middle",
+                  backgroundColor:
+                    activeTab === tab ? "#1890FF" : "transparent",
+                }}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab}

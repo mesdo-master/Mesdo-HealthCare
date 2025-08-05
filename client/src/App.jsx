@@ -13,6 +13,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useRoleSwitch } from "./hooks/useSocket";
 import { Toaster } from "react-hot-toast";
 import NotificationDebug from "./components/NotificationDebug";
+import Loader from "./components/Loader";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -330,13 +331,7 @@ function App() {
   }, [dispatch]);
 
   if (!authChecked) {
-    return (
-      <div className="flex flex-row gap-2 h-screen w-full justify-center items-center">
-        <div className="w-4 h-4 rounded-full bg-[#198FFF] animate-bounce [animation-delay:.7s]" />
-        <div className="w-4 h-4 rounded-full bg-[#198FFF] animate-bounce [animation-delay:.3s]" />
-        <div className="w-4 h-4 rounded-full bg-[#198FFF] animate-bounce [animation-delay:.7s]" />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

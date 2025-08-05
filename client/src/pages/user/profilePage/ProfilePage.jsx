@@ -6,6 +6,7 @@ import ProfileHeader from "./components/ProfileHeader";
 import OverviewTab from "./components/OverviewTab";
 import EditModal from "./components/EditModal";
 import Header from "../../../components/Header";
+import Loader from "../../../components/Loader";
 
 const ProfilePage = () => {
   const params = useParams();
@@ -309,7 +310,7 @@ const ProfilePage = () => {
                     />
 
                     {/* Tabs and Content */}
-                    <div className="flex gap-4 mt-6">
+                    <div className="flex gap-4 mt-4">
                       <div className="w-2/3">
                         <OverviewTab
                           userData={userData}
@@ -327,9 +328,9 @@ const ProfilePage = () => {
                       </div>
 
                       {/* Right Sidebar */}
-                      <div className="w-1/3 py-6 ">
+                      <div className="w-1/3">
                         {/* Profile Completion */}
-                        <div className="bg-white rounded-2xl shadow-sm p-6 mt-[55px]">
+                        <div className="bg-white rounded-2xl shadow-sm p-6">
                           <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[16px] font-medium text-gray-900">
                               Complete your Profile to get hired
@@ -1040,7 +1041,7 @@ const ProfilePage = () => {
                             </h3>
                             {suggestedUsersLoading ? (
                               <div className="text-center py-4">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                                <Loader />
                               </div>
                             ) : suggestedUsers.length > 0 ? (
                               <div className="space-y-3">
@@ -1084,7 +1085,7 @@ const ProfilePage = () => {
                             </h3>
                             {suggestedUsersLoading ? (
                               <div className="text-center py-4">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                                <Loader />
                               </div>
                             ) : suggestedUsers.length > 0 ? (
                               <div className="space-y-4">

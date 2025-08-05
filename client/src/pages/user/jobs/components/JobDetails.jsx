@@ -33,6 +33,7 @@ import { useSocket } from "../../../../context/SocketProvider";
 import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
+import Loader from "../../../../components/Loader";
 
 const BLUE = "#1890FF";
 
@@ -171,23 +172,155 @@ const itemVariants = {
 const MatchPercentage = ({ job, user, calculateMatchPercentage }) => {
   const percentage = calculateMatchPercentage(job, user);
 
-  const skills = [
-    { name: "Communication", matched: true },
-    { name: "Manual Dexterity", matched: false },
-  ];
-  const languages = [
-    { name: "Hindi", matched: true },
-    { name: "English", matched: false },
-  ];
-  const specializations = [
-    { name: "Orthodontics", matched: true },
-    { name: "Periodontics", matched: false },
-  ];
+  // Real data from job and user with fallbacks - ensure arrays
+  const jobSkills = Array.isArray(job?.skills) ? job.skills : [];
+  const userSkills = Array.isArray(user?.skills) ? user.skills : [];
+
+  // Handle different possible field names for languages - ensure arrays
+  const jobLanguages = Array.isArray(job?.languages)
+    ? job.languages
+    : Array.isArray(job?.preferredLanguages)
+    ? job.preferredLanguages
+    : Array.isArray(job?.requiredLanguages)
+    ? job.requiredLanguages
+    : [];
+  const userLanguages = Array.isArray(user?.languages)
+    ? user.languages
+    : Array.isArray(user?.spokenLanguages)
+    ? user.spokenLanguages
+    : [];
+
+  // Handle different possible field names for specializations - ensure arrays
+  const jobSpecializations = Array.isArray(job?.specializations)
+    ? job.specializations
+    : Array.isArray(job?.specialization)
+    ? job.specialization
+    : Array.isArray(job?.requiredSpecializations)
+    ? job.requiredSpecializations
+    : [];
+  const userSpecializations = Array.isArray(user?.specializations)
+    ? user.specializations
+    : Array.isArray(user?.specialization)
+    ? user.specialization
+    : [];
+
+  // Calculate matched skills
+  const matchedSkills =
+    jobSkills.length > 0
+      ? jobSkills.map((skill) => ({
+          name: skill,
+          matched: userSkills.some(
+            (userSkill) =>
+              userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+              skill.toLowerCase().includes(userSkill.toLowerCase())
+          ),
+        }))
+      : [
+          {
+            name: "Communication",
+            matched: userSkills.some((s) =>
+              s.toLowerCase().includes("communication")
+            ),
+          },
+          {
+            name: "Manual Dexterity",
+            matched: userSkills.some((s) =>
+              s.toLowerCase().includes("dexterity")
+            ),
+          },
+        ];
+
+  // Calculate matched languages with fallback
+  const matchedLanguages =
+    jobLanguages.length > 0
+      ? jobLanguages.map((language) => ({
+          name: language,
+          matched: userLanguages.some(
+            (userLang) =>
+              userLang.toLowerCase().includes(language.toLowerCase()) ||
+              language.toLowerCase().includes(userLang.toLowerCase())
+          ),
+        }))
+      : [
+          {
+            name: "Hindi",
+            matched: userLanguages.some((l) =>
+              l.toLowerCase().includes("hindi")
+            ),
+          },
+          {
+            name: "English",
+            matched: userLanguages.some((l) =>
+              l.toLowerCase().includes("english")
+            ),
+          },
+        ];
+
+  // Calculate matched specializations with fallback
+  const matchedSpecializations =
+    jobSpecializations.length > 0
+      ? jobSpecializations.map((specialization) => ({
+          name: specialization,
+          matched: userSpecializations.some(
+            (userSpec) =>
+              userSpec.toLowerCase().includes(specialization.toLowerCase()) ||
+              specialization.toLowerCase().includes(userSpec.toLowerCase())
+          ),
+        }))
+      : [
+          {
+            name: "Orthodontics",
+            matched: userSpecializations.some((s) =>
+              s.toLowerCase().includes("orthodontics")
+            ),
+          },
+          {
+            name: "Periodontics",
+            matched: userSpecializations.some((s) =>
+              s.toLowerCase().includes("periodontics")
+            ),
+          },
+        ];
+
+  // Get user's qualification
+  const userQualification =
+    user?.education?.length > 0
+      ? user.education[0]?.degree ||
+        user.education[0]?.qualification ||
+        "Not specified"
+      : "Not specified";
+
+  // Get job's required qualification
+  const jobQualification =
+    job?.qualification || job?.requiredQualification || "Not specified";
+
+  // Get user's experience
+  const userExperience =
+    user?.workExperience?.length > 0
+      ? Math.max(
+          ...user.workExperience.map((exp) => {
+            if (exp.startDate && exp.endDate) {
+              return (
+                (new Date(exp.endDate) - new Date(exp.startDate)) /
+                (1000 * 60 * 60 * 24 * 365)
+              );
+            } else if (exp.startDate && exp.currentlyWorking) {
+              return (
+                (Date.now() - new Date(exp.startDate)) /
+                (1000 * 60 * 60 * 24 * 365)
+              );
+            }
+            return 0;
+          })
+        )
+      : 0;
+
+  const jobExperience = Number(job?.experience) || 0;
 
   return (
     <motion.div
       variants={itemVariants}
-      className="bg-white rounded-xl shadow-sm p-6 text-center border border-gray-100 mt-[-10px]"
+      className="bg-white rounded-xl shadow-sm p-6 text-center border border-gray-100 "
     >
       <h3 className="text-base font-medium text-gray-800 mb-1 text-start">
         Match Percentage
@@ -213,11 +346,26 @@ const MatchPercentage = ({ job, user, calculateMatchPercentage }) => {
       <p className="text-sm text-gray-500 mb-4">Match Score</p>
       <hr className="mb-4" />
 
-      <DetailSection title="Qualification" items={["MBBS"]} matched />
-      <DetailSection title="Experience" items={["6 Year"]} matched={false} />
-      <DetailSection title="Skills" items={skills} />
-      <DetailSection title="Language" items={languages} />
-      <DetailSection title="Specialization" items={specializations} />
+      <DetailSection
+        title="Qualification"
+        items={[jobQualification]}
+        matched={
+          userQualification
+            .toLowerCase()
+            .includes(jobQualification.toLowerCase()) ||
+          jobQualification
+            .toLowerCase()
+            .includes(userQualification.toLowerCase())
+        }
+      />
+      <DetailSection
+        title="Experience"
+        items={[`${jobExperience} Year${jobExperience !== 1 ? "s" : ""}`]}
+        matched={userExperience >= jobExperience}
+      />
+      <DetailSection title="Skills" items={matchedSkills} />
+      <DetailSection title="Language" items={matchedLanguages} />
+      <DetailSection title="Specialization" items={matchedSpecializations} />
     </motion.div>
   );
 };
@@ -273,8 +421,17 @@ const DetailSection = ({ title, items, matched = true }) => (
 
 const ReviewRow = ({ label, value }) => (
   <div className="flex justify-between gap-4 mb-3 text-sm">
-    <span className="text-gray-600">{label}</span>
-    <span className="font-medium text-right text-gray-800">{value}</span>
+    <span className="text-gray-600 flex-shrink-0 min-w-0">{label}</span>
+    <span
+      className="font-medium text-right text-gray-800 break-words overflow-hidden"
+      style={{
+        maxWidth: "60%",
+        wordWrap: "break-word",
+        overflowWrap: "break-word",
+      }}
+    >
+      {value}
+    </span>
   </div>
 );
 
@@ -603,7 +760,7 @@ const JobDetails = ({ onClose }) => {
         animate="animate"
         className="flex justify-center items-center h-64"
       >
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <Loader />
       </motion.div>
     );
   }
@@ -974,22 +1131,29 @@ const JobDetails = ({ onClose }) => {
                 ].map((item, idx) => (
                   <motion.div
                     key={idx}
-                    className="bg-white rounded-xl shadow-sm flex flex-col items-start justify-center h-[120px] px-4 font-inter text-sm"
+                    className="bg-white rounded-xl shadow-sm flex flex-col items-start justify-start h-[120px] px-4 py-4 font-inter text-sm"
                     style={{ fontFamily: "Inter, sans-serif" }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    <item.icon className="w-5 h-5 text-[#1890FF] mb-2" />
+                    <item.icon className="w-5 h-5 text-[#1890FF] mb-2 flex-shrink-0" />
                     <div
-                      className="text-base font-medium text-gray-900 text-left mb-1 font-inter text-mb"
-                      style={{ fontFamily: "Inter, sans-serif" }}
+                      className="text-base font-medium text-gray-900 text-left mb-1 font-inter text-mb break-words overflow-hidden"
+                      style={{
+                        fontFamily: "Inter, sans-serif",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        lineHeight: "1.2",
+                        maxHeight: "3.6em",
+                      }}
                     >
                       {item.value}
                     </div>
                     <div
-                      className="text-xs text-gray-400 text-left font-inter"
+                      className="text-xs text-gray-400 text-left font-inter mt-auto"
                       style={{ fontFamily: "Inter, sans-serif" }}
                     >
                       {item.label}
@@ -1004,13 +1168,19 @@ const JobDetails = ({ onClose }) => {
               variants={itemVariants}
             >
               <Section title="Job Description">
-                <p className="text-gray-700 text-sm">
+                <div className="text-gray-700 text-sm leading-relaxed">
                   <div
+                    className="prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{
                       __html: job.jobDescription,
                     }}
+                    style={{
+                      wordWrap: "break-word",
+                      overflowWrap: "break-word",
+                      hyphens: "auto",
+                    }}
                   />
-                </p>
+                </div>
               </Section>
             </motion.div>
 

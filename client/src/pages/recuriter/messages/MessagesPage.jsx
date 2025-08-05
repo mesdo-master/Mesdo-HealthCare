@@ -1,9 +1,21 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import MessageList from "./components/MessageList";
-import NoChatSelected from "../../user/messages/components/NoChatSelected";
-import ChatContainer from "./components/ChatContainer";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { motion } from "framer-motion";
+import {
+  Send,
+  Paperclip,
+  Smile,
+  MoreVertical,
+  Phone,
+  Video,
+} from "lucide-react";
 import axiosInstance from "../../../lib/axio";
+import MessageList from "./components/MessageList";
+import ChatContainer from "./components/ChatContainer";
+import MessageInput from "./components/MessageInput";
+import Loader from "../../../components/Loader";
+import NoChatSelected from "../../user/messages/components/NoChatSelected";
 import { useSocket } from "../../../context/SocketProvider";
 import { useNotifications } from "../../../context/NotificationContextFinal";
 
@@ -259,16 +271,8 @@ function MessagesRecuriter() {
       )}
 
       {loadingConversations ? (
-        <div className="flex-1 flex items-center justify-center bg-white">
-          <div className="flex flex-col items-center bg-white rounded-xl shadow-lg px-8 py-10">
-            <div className="w-12 h-12 border-4 border-gray-200 border-t-[#1890FF] rounded-full animate-spin mb-6"></div>
-            <div className="text-lg font-semibold text-[#1890FF]">
-              Loading your messages...
-            </div>
-            <div className="text-sm text-gray-400 mt-2">
-              Please wait while we fetch your conversations.
-            </div>
-          </div>
+        <div className="flex justify-center items-center h-64">
+          <Loader />
         </div>
       ) : (
         <div className="flex flex-1 overflow-hidden pt-[120px]">

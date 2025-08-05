@@ -1,16 +1,24 @@
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { motion } from "framer-motion";
 import {
-  CameraIcon,
-  MessageCircle,
-  MoreHorizontal,
+  Camera,
+  MapPin,
   Pencil,
+  Building,
+  Mail,
+  Phone,
+  Globe,
+  Save,
+  X,
 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import axiosInstance from "../../../../lib/axio";
+import { setCurrentUser } from "../../../../store/features/authSlice";
+import Loader from "../../../../components/Loader";
 import {
   uploadRecuriterBanner,
   uploadRecuriterProfilePic,
 } from "../../../../store/features/user/profileSlice";
-import { useEffect, useState } from "react";
-import axiosInstance from "../../../../lib/axio";
 import { useParams } from "react-router-dom";
 
 const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
@@ -105,7 +113,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
         {isOwnProfile && (
           <>
             <label htmlFor="coverImageUpload">
-              <CameraIcon className="absolute top-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer" />
+              <Camera className="absolute top-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer" />
             </label>
             <input
               id="coverImageUpload"
@@ -139,7 +147,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
               {isOwnProfile && (
                 <>
                   <label htmlFor="avatarImageUpload">
-                    <CameraIcon className="absolute bottom-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer" />
+                    <Camera className="absolute bottom-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer" />
                   </label>
                   <input
                     id="avatarImageUpload"
@@ -177,7 +185,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
               </button>
             )}
             <button className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors">
-              <MoreHorizontal className="w-5 h-5 text-gray-600" />
+              {/* <MoreHorizontal className="w-5 h-5 text-gray-600" /> */}
             </button>
 
             {!isOwnProfile && (
@@ -192,7 +200,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
                   } ${loadingFollow ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
                   {loadingFollow ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <Loader />
                   ) : isFollowing ? (
                     "Following"
                   ) : (
@@ -204,7 +212,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
                 </button>
 
                 <button className="h-10 bg-gray-100 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors font-medium">
-                  <MessageCircle className="w-4 h-4" />
+                  {/* <MessageCircle className="w-4 h-4" /> */}
                   Message
                 </button>
               </>

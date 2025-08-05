@@ -1,20 +1,23 @@
-import { useEffect, useState, useRef } from "react";
-import { FiBookmark } from "react-icons/fi";
+import React, { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { FaRegBookmark } from "react-icons/fa";
-import BookMarkIcon from "../../../../assets/Bookmark.png";
+import { Flag, Share2, EyeOff, CheckCircle } from "lucide-react";
+import axiosInstance from "../../../../lib/axio";
+import { setCurrentUser } from "../../../../store/features/authSlice";
 import SavedIcon from "../../../../assets/SavedIcon.png";
+import BookMarkIcon from "../../../../assets/Bookmark.png";
+import Loader from "../../../../components/Loader";
+
+import { FiBookmark } from "react-icons/fi";
+import { FaRegBookmark } from "react-icons/fa";
 import {
   LuClock,
   LuGraduationCap,
   LuBriefcase,
   LuCalendarDays,
 } from "react-icons/lu";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../../lib/axio";
-
-import { Flag, Share2, EyeOff, UserCircle, CheckCircle } from "lucide-react";
 
 const getTagIcon = (tag) => {
   if (tag.includes("Year")) return <LuCalendarDays size={14} />;
@@ -295,7 +298,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                         >
                           <span>{isHiding ? "Hiding..." : "Hide Job"}</span>
                           {isHiding ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-gray-400"></div>
+                            <Loader />
                           ) : (
                             <EyeOff size={18} className="text-[#595959]" />
                           )}
@@ -491,7 +494,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                     >
                       <span>{isHiding ? "Hiding..." : "Hide Job"}</span>
                       {isHiding ? (
-                        <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-gray-400"></div>
+                        <Loader />
                       ) : (
                         <EyeOff size={16} className="text-[#595959]" />
                       )}

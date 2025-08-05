@@ -66,8 +66,8 @@ const JobStats = ({ activeTab }) => {
         <button
           key={tab.id}
           onClick={() => routeChange(tab.route)}
-          className={`flex flex-col items-start justify-between h-[170px] w-full bg-white rounded-xl border border-gray-200 shadow-sm transition-all px-6 py-6 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-100 ${
-            activeTab === tab.id ? "ring-2 ring-blue-100" : ""
+          className={`flex flex-col items-start justify-between h-[170px] w-full bg-white rounded-xl border border-gray-200 shadow-sm transition-all px-6 py-6 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:ring-opacity-50 ${
+            activeTab === tab.id ? "ring-2 ring-[#1890FF] ring-opacity-50" : ""
           }`}
           style={{ minWidth: 240 }}
         >
