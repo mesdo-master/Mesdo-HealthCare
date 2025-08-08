@@ -1,9 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5020/", // LOCAL DEVELOPMENT: Using local server
-  // baseURL: "https://mesdo-healthcare-4.onrender.com/", // PRODUCTION: Using deployed server
-  // baseURL: process.env.REACT_APP_API_URL || "https://mesdo-healthcare-3.onrender.com",
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5020/",
   withCredentials: true, // Allow cookies to be sent with requests
 });
 
