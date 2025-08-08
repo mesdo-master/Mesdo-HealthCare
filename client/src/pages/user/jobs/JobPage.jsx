@@ -144,22 +144,37 @@ const JobPage = () => {
   }, [isClosing, navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen mt-[-40px] ml-[30px] mr-[10px] pt-[50px]">
+    <div className="flex flex-col min-h-screen mt-[-40px] ml-[30px] mr-[10px] pt-[5px]">
       {/* Blur sidebar + main content when jobId is present */}
       <div className={jobId ? "blur-sm pointer-events-none select-none" : ""}>
         <div className={"flex flex-1 overflow-hidden pt-16 mb-7 mr-20 ml-18"}>
           <div className="flex flex-1 ml-[300px] mt-9 mb-5 overflow-y-auto p-6">
             <div className="w-full max-w-5xl mx-auto">
-              <JobStats />
-              <JobFilters />
-              <JobSort
-                totalResults={sortedJobs.length}
-                onSortChange={setSortBy}
-              />
+              {/* JobStats - Full width container */}
+              <div className="w-full mb-6">
+                <JobStats />
+              </div>
 
-              <div className="space-y-4 mt-6">
+              {/* JobFilters - Full width container */}
+              <div className="w-full mb-6">
+                <JobFilters />
+              </div>
+
+              {/* JobSort - Full width container */}
+              <div className="w-full mb-6  pl-4 rounded-xl">
+                <JobSort
+                  totalResults={sortedJobs.length}
+                  onSortChange={setSortBy}
+                />
+              </div>
+
+              {/* Job Cards - Full width container */}
+              <div className="w-full space-y-[-20px]">
                 {sortedJobs.map((job) => (
-                  <div key={job._id} className="w-full">
+                  <div
+                    key={job._id}
+                    className="w-full bg-[#f6f8fb] p-4 rounded-xl"
+                  >
                     <JobCard
                       job={{
                         ...job,

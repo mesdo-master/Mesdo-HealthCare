@@ -83,7 +83,7 @@ export default function Sidebar({ className = "" }) {
           aria-live="polite"
           style={{ pointerEvents: "none" }}
         >
-          <div className="flex flex-col items-center bg-white  rounded-2xl shadow-2xl px-10 py-8 animate-fade-in">
+          <div className="flex flex-col items-center bg-white rounded-2xl px-10 py-8 animate-fade-in">
             <Loader
               size="large"
               text={
@@ -112,7 +112,7 @@ export default function Sidebar({ className = "" }) {
         className={`absolute left-0 top-0 h-full w-[210px] bg-white z-40 ${className}`}
       ></div>
       <aside
-        className={`absolute top-0 left-0 h-full w-[250px] md:w-[250px] lg:w-[250px] ml-[70px] bg-white flex flex-col pt-[140px] z-50 ${className}`}
+        className={`absolute top-0 left-0 h-full w-[250px] md:w-[250px] lg:w-[250px] ml-[70px] bg-white flex flex-col pt-[100px] z-50 ${className}`}
         style={
           showSwitchLoader || navigating
             ? { pointerEvents: "none", opacity: 0.7 }

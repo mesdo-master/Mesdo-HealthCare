@@ -38,8 +38,8 @@ const JobSort = ({ totalResults, onSortChange }) => {
   };
 
   return (
-    <div className="flex justify-between items-center w-full px-1 mb-2 relative">
-      <span className="text-sm text-gray-400 ml-3">
+    <div className="flex justify-between items-center w-full mb-2 relative">
+      <span className="text-sm text-gray-400">
         Showing {totalResults} results
       </span>
       <div className="relative" ref={dropdownRef}>

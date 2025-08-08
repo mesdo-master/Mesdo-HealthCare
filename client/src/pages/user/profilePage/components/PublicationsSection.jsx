@@ -9,7 +9,7 @@ const PublicationsSection = ({ isOwnProfile, userData, openModal }) => {
   }, [userData?.publications]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-8 mt-6">
+    <div className="bg-white rounded-2xl p-8 border border-[#E4E5E8]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-[18px] font-medium text-gray-900">Publications</h2>
         {isOwnProfile && (

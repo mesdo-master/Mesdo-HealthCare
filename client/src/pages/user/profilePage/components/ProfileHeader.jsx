@@ -368,7 +368,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full h-[340px] border border-[#E4E5E8] rounded-2xl overflow-hidden">
       {/* Hidden file inputs */}
       <input
         type="file"
@@ -386,11 +386,11 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       />
 
       {/* Cover Photo */}
-      <div className="h-[200px] relative rounded-t-2xl overflow-hidden">
+      <div className="h-[200px] relative overflow-hidden">
         <img
           src={bannerImage}
           alt="Profile Banner"
-          className="w-full h-full object-cover rounded-t-2xl"
+          className="w-full h-full object-cover"
         />
         {showEditButtons && (
           <button
@@ -409,7 +409,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
       </div>
 
       {/* Profile Info Container */}
-      <div className="bg-white px-8 py-4 shadow-sm">
+      <div className="bg-white px-8 py-4">
         <div className="flex justify-between items-center">
           {/* Profile Info Left */}
           <div className="flex items-center gap-6">
@@ -454,7 +454,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
                 {userData?.name}
               </h1>
               <p
-                className="text-gray-600 mt-1 pt-[8px]"
+                className="text-gray-600 mt-1 pt-[6px]"
                 style={{
                   fontFamily: "Inter",
                   fontWeight: 300,
@@ -468,7 +468,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
                 {userData?.headline}
               </p>
               <p
-                className="text-blue-500 mt-2 cursor-pointer hover:underline"
+                className="text-blue-500 mt-2 cursor-pointer hover:underline pt-[4px]"
                 style={{
                   fontFamily: "Inter",
                   fontWeight: 600,

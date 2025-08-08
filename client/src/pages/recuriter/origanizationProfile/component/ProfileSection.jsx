@@ -100,7 +100,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
   return (
     <div className="w-full">
       {/* Cover Photo */}
-      <div className="h-[200px] relative">
+      <div className="h-[200px] relative rounded-t-2xl overflow-hidden">
         <img
           src={
             profileData?.orgBanner
@@ -129,7 +129,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
       </div>
 
       {/* Profile Info Container */}
-      <div className="bg-white px-8 py-4 shadow-sm">
+      <div className="bg-white px-8 py-4 shadow-sm border border-[#E4E5E8] rounded-b-2xl">
         <div className="flex justify-between items-center">
           {/* Profile Info Left */}
           <div className="flex items-center gap-6">

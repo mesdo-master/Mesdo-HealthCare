@@ -294,10 +294,10 @@ const ProfilePage = () => {
   return (
     <>
       <div className="flex flex-col h-screen">
-        <div className="flex flex-1 overflow-hidden pt-[140px]">
+        <div className="flex flex-1 overflow-hidden pt-[100px]">
           <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
             <div className="max-w-5xl mx-auto w-full">
-              <div className="bg-white rounded-2xl shadow-sm w-full mt-[-50px]">
+              <div className="bg-white rounded-2xl w-full mt-[-50px] border border-[#E4E5E8]">
                 <div className="p-10">
                   <Header />
                   <div className="flex flex-col mt-6">
@@ -310,7 +310,7 @@ const ProfilePage = () => {
                     />
 
                     {/* Tabs and Content */}
-                    <div className="flex gap-4 mt-4">
+                    <div className="flex gap-4 mt-1">
                       <div className="w-2/3">
                         <OverviewTab
                           userData={userData}
@@ -328,12 +328,12 @@ const ProfilePage = () => {
                       </div>
 
                       {/* Right Sidebar */}
-                      <div className="w-1/3">
+                      <div className="w-1/3 mt-6">
                         {/* Profile Completion */}
-                        <div className="bg-white rounded-2xl shadow-sm p-6">
-                          <div className="flex items-center justify-between mb-6">
+                        <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8]">
+                          <div className="flex items-center justify-between mb-6 ">
                             <h3 className="text-[16px] font-medium text-gray-900">
-                              Complete your Profile to get hired
+                              Profile Completion
                             </h3>
                           </div>
 
@@ -1035,7 +1035,7 @@ const ProfilePage = () => {
 
                         {/* Suggested Users */}
                         {!isOwnProfile && (
-                          <div className="bg-white rounded-2xl shadow-sm p-6 mt-4">
+                          <div className="bg-white rounded-2xl p-6 mt-4 border border-[#E4E5E8]">
                             <h3 className="text-[16px] font-medium text-gray-900 mb-4">
                               Suggested Users
                             </h3>
@@ -1079,7 +1079,7 @@ const ProfilePage = () => {
 
                         {/* People You Might Know - for own profile */}
                         {isOwnProfile && (
-                          <div className="bg-white rounded-2xl shadow-sm p-6 mt-4">
+                          <div className="bg-white rounded-2xl p-6 mt-4 border border-[#E4E5E8]">
                             <h3 className="text-[16px] font-medium text-gray-900 mb-4">
                               People You Might Know
                             </h3>

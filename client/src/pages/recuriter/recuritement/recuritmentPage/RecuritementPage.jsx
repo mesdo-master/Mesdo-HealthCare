@@ -87,7 +87,7 @@ const RecruitementPage = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 overflow-hidden pt-[120px]">
+      <div className="flex flex-1 overflow-hidden pt-[80px]">
         <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
           <div className="max-w-5xl mx-auto w-full">
             <div className="bg-#464d4f rounded-xl shadow-sm w-full mt-[-20px]">

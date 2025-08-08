@@ -267,7 +267,7 @@ const MessageInput = ({
   );
 
   return (
-    <div className="relative border-t bg-white p-4">
+    <div className="relative bg-white px-4 py-3 border border-[#E4E5E8] rounded-lg mb-4 mx-4">
       {/* Reply Preview */}
       {replyingTo && (
         <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg flex items-start justify-between">
@@ -292,7 +292,7 @@ const MessageInput = ({
 
       {/* File Preview */}
       {selectedFile && (
-        <div className="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-between">
+        <div className="mb-3 p-3 bg-gray-50 rounded-lg flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             <Paperclip size={16} className="text-gray-500" />
             <span className="text-sm text-gray-700">{selectedFile.name}</span>
@@ -317,36 +317,8 @@ const MessageInput = ({
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="flex items-center gap-2">
-        {/* File Upload */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
-          aria-label="Attach file"
-          disabled={isInputDisabled}
-        >
-          <Paperclip size={20} />
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-        />
-
-        {/* Emoji Button */}
-        <button
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
-          aria-label="Add emoji"
-          disabled={isInputDisabled}
-        >
-          <Smile size={20} />
-        </button>
-
-        {/* Text Input */}
+      {/* Text Input - Positioned higher up */}
+      <div className="mb-3">
         <input
           type="text"
           value={inputMessage}
@@ -357,22 +329,62 @@ const MessageInput = ({
               ? "Select a conversation to start messaging..."
               : "Type a message..."
           }
-          className="flex-1 p-3 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-transparent border-none outline-none text-sm placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isInputDisabled}
         />
+      </div>
 
-        {/* Send Button */}
+      {/* Bottom row with icons and send button */}
+      <div className="flex items-center justify-between">
+        {/* Left-aligned Icons at bottom */}
+        <div className="flex items-center gap-3">
+          {/* File Upload */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+            aria-label="Attach file"
+            disabled={isInputDisabled}
+          >
+            <Paperclip size={18} />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+          />
+
+          {/* Emoji Button */}
+          <button
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+            aria-label="Add emoji"
+            disabled={isInputDisabled}
+          >
+            <Smile size={18} />
+          </button>
+        </div>
+
+        {/* Send Button - Blue background, white text */}
         <button
           onClick={handleSend}
           disabled={isSendDisabled}
-          className={`p-2 rounded-full transition ${
+          className={`px-4 py-2 rounded-lg transition-colors font-medium text-sm flex items-center gap-2 ${
             !isSendDisabled
-              ? "bg-blue-500 text-white hover:bg-blue-600"
+              ? "bg-[#1890FF] text-white hover:bg-[#006ACC]"
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
           aria-label="Send message"
         >
-          {isLoading ? <Loader /> : <Send size={20} />}
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <span>Send</span>
+              <Send size={16} />
+            </>
+          )}
         </button>
       </div>
     </div>

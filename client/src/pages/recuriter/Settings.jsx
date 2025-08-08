@@ -203,7 +203,7 @@ const RecruiterSettings = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 overflow-hidden pt-[140px]">
+      <div className="flex flex-1 overflow-hidden pt-[100px]">
         <div className="flex-1 ml-[90px] overflow-y-auto px-8">
           <div className="max-w-5xl mx-auto">
             <div className="flex justify-between items-center mb-6">

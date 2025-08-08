@@ -188,8 +188,8 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
           small
             ? "w-full h-auto"
             : fullWidth
-            ? "w-full h-[180px] min-h-[100px]"
-            : "w-full max-w-[900px] lg:max-w-[900px] xl:max-w-[1005px] h-[180px] min-h-[100px] ml-[10px]"
+            ? "w-full h-[200px] min-h-[100px]"
+            : "w-full max-w-[900px] lg:max-w-[900px] xl:max-w-[1005px] h-[200px] min-h-[100px]"
         } rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-[#E4E5E8] relative flex ${
           small ? "flex-col" : "items-center"
         } cursor-pointer ${isHiding ? "opacity-50 pointer-events-none" : ""}`}
@@ -228,15 +228,15 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
         {!small && (
           <>
             {/* Divider - only for large cards */}
-            <div className="h-16 w-px bg-gray-200 ml-[20px] mr-[33px]" />
+            <div className="h-[120px] w-px bg-gray-200 ml-[20px] mr-[33px]" />
             {/* Main Content - only for large cards */}
             <div className="flex-1 min-w-0">
               {/* Top Row: Status and Actions */}
               <div className="flex items-center justify-between">
-                <span className="bg-[#F3EFFF] text-[#A259FF] text-xs font-medium ml-[-10px] px-3 py-1 rounded-md inline-block mb-1">
+                <span className="text-[#9254DE] text-xs font-medium inline-block mb-2">
                   Recently active
                 </span>
-                <div className="flex items-center gap-3 text-gray-400 text-sm mr-[-110px]">
+                <div className="flex items-center gap-3 text-gray-400 text-sm mr-[-140px]">
                   <span className="text-xs text-gray-500 ">
                     Posted {formatRelativeTime(job.createdAt)}
                   </span>
@@ -309,7 +309,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                 </div>
               </div>
               {/* Title and Company */}
-              <h3 className="text-xl font-semibold text-gray-800 leading-tight mb-2">
+              <h3 className="text-xl font-semibold text-gray-800 leading-tight mb-[8px]">
                 {job.jobTitle}
               </h3>
               <p className="text-sm text-gray-500 mb-6">
@@ -317,7 +317,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                 {job.location}
               </p>
               {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-1 gap-1">
+              <div className="flex flex-wrap gap-3 mb-1">
                 {tags.map((tag, index) => (
                   <div
                     key={index}
@@ -330,10 +330,10 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
               </div>
             </div>
             {/* Match Percentage - only for large cards */}
-            <div className="flex flex-col items-center mt-[80px] justify-center ml-6 min-w-[80px]">
-              <div className="relative w-10 h-10">
+            <div className="flex items-center gap-3 ml-6 min-w-[120px] mt-[80px] ">
+              <div className="relative w-11 h-11 pl-[10px]">
                 <svg
-                  className="w-10 h-10 transform -rotate-90"
+                  className="w-11 h-11 transform -rotate-90"
                   viewBox="0 0 36 36"
                 >
                   {/* Background circle */}
@@ -358,13 +358,13 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                     strokeDashoffset="0"
                   />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-semibold text-green-600">
-                    {job.matchPercentage}%
-                  </span>
-                </div>
               </div>
-              <span className="text-xs text-slate-500">Match</span>
+              <div className="flex flex-col pl-[10px]">
+                <span className="text-lg font-bold text-green-600">
+                  {job.matchPercentage}%
+                </span>
+                <span className="text-xs text-[#BFBFBF]">Match</span>
+              </div>
             </div>
           </>
         )}
@@ -373,7 +373,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
           <>
             {/* Status and Actions for small cards */}
             <div className="flex items-center justify-between mb-3">
-              <span className="bg-[#F3EFFF] text-[#A259FF] text-xs font-medium px-2 py-1 rounded-md">
+              <span className="text-[#9254DE] text-xs font-medium">
                 Recently active
               </span>
               <div className="flex items-center gap-2">
@@ -405,7 +405,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             </div>
 
             {/* Tags for small cards */}
-            <div className="flex flex-wrap gap-1 mb-3">
+            <div className="flex flex-wrap gap-3 mb-3">
               {tags.slice(0, 2).map((tag, index) => (
                 <div
                   key={index}
@@ -452,13 +452,13 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
                       strokeDashoffset="0"
                     />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-green-600">
-                      {job.matchPercentage}%
-                    </span>
-                  </div>
                 </div>
-                <span className="text-xs text-slate-500">Match</span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-green-600">
+                    {job.matchPercentage}%
+                  </span>
+                  <span className="text-xs text-gray-500">Match</span>
+                </div>
               </div>
               <button
                 className="hover:text-gray-600 relative"

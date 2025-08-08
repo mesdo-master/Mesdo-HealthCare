@@ -3,13 +3,13 @@ import { Pencil, Briefcase } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
 
 const WorkExperienceDisplay = ({
+  userData,
   isOwnProfile,
   openModal,
   setActiveModalTab,
   setEditingExperienceId,
   setEditingExperienceData,
   setIsEditing,
-  userData, // Add userData prop
 }) => {
   const [experiences, setExperiences] = useState([]);
 
@@ -87,7 +87,7 @@ const WorkExperienceDisplay = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-8 mt-6">
+    <div className="bg-white rounded-2xl p-8 border border-[#E4E5E8]">
       <div className="flex items-center justify-between mb-4">
         <h2
           className="text-[18px] font-medium text-gray-900"

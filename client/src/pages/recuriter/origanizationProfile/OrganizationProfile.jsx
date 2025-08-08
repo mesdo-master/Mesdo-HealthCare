@@ -397,7 +397,7 @@ const AddressSection = ({ addresses, onEdit }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+    <div className="bg-white rounded-lg shadow-sm p-6 mt-6 border border-[#E4E5E8]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-[16px] font-medium text-gray-900">Addresses</h2>
         <button onClick={onEdit} className="text-gray-400 hover:text-gray-600">
@@ -707,7 +707,7 @@ const TabsSection = ({
           {activeTab === "Overview" && (
             <div>
               {/* About Section */}
-              <div className="bg-white rounded-md shadow-sm p-6">
+              <div className="bg-white rounded-md shadow-sm p-6 border border-[#E4E5E8]">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-medium text-gray-800">About</h2>
                   {isOwnProfile && (
@@ -728,7 +728,7 @@ const TabsSection = ({
               </div>
 
               {/* Specialities Section */}
-              <div className="bg-white rounded-md shadow-sm p-6 mt-6">
+              <div className="bg-white rounded-md shadow-sm p-6 mt-6 border border-[#E4E5E8]">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-medium text-gray-800">
                     Specialities
@@ -764,7 +764,7 @@ const TabsSection = ({
               </div>
 
               {/* Jobs Section */}
-              <div className="bg-white rounded-xl shadow-sm p-6 mt-6 border border-gray-100">
+              <div className="bg-white rounded-xl shadow-sm p-6 mt-6 border border-[#E4E5E8]">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900 font-sans tracking-wide">
@@ -834,7 +834,7 @@ const TabsSection = ({
               </div>
 
               {/* People at Apollo Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+              <div className="bg-white rounded-lg shadow-sm p-6 mt-6 border border-[#E4E5E8]">
                 <h3 className="text-[16px] font-medium text-gray-900 mb-4">
                   People at Apollo
                 </h3>
@@ -905,7 +905,7 @@ const TabsSection = ({
             </div>
           )}
           {activeTab === "Jobs" && (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E4E5E8]">
               <h2 className="text-xl font-mb text-gray-900 mb-6 font-sans tracking-wide">
                 Available Jobs
               </h2>
@@ -942,7 +942,7 @@ const TabsSection = ({
             </div>
           )}
           {activeTab === "People" && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-[#E4E5E8]">
               <h2 className="text-xl font-medium text-gray-900 mb-6">
                 People at Apollo
               </h2>
@@ -1004,7 +1004,7 @@ const TabsSection = ({
             </div>
           )}
           {activeTab === "Connection" && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-[#E4E5E8]">
               <h2 className="text-xl font-medium text-gray-900 mb-6">
                 Connections
               </h2>
@@ -1506,7 +1506,7 @@ const OrganizationProfile = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 overflow-hidden pt-[140px]">
+      <div className="flex flex-1 overflow-hidden pt-[100px]">
         <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
           <div className="max-w-5xl mx-auto w-full">
             <div className="bg-white rounded-2xl shadow-sm w-full mt-[-50px]">
@@ -1548,7 +1548,7 @@ const OrganizationProfile = () => {
                     {/* Right Sidebar */}
                     <div className="w-1/3 py-6">
                       {/* More Information */}
-                      <div className="bg-white rounded-xl shadow-sm p-6">
+                      <div className="bg-white rounded-xl shadow-sm p-6 border border-[#E4E5E8]">
                         <div className="flex justify-between items-center mb-4">
                           <h2 className="text-[16px] font-medium text-gray-900">
                             More Information

@@ -275,11 +275,11 @@ function MessagesRecuriter() {
           <Loader />
         </div>
       ) : (
-        <div className="flex flex-1 overflow-hidden pt-[120px]">
+        <div className="flex flex-1 overflow-hidden pt-[44px]">
           <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
             <div className="w-full">
               <div className="bg-[#E4E5E8] rounded-lg w-full">
-                <div className="flex h-[calc(100vh-180px)] gap-4 bg-[#F5F7FA] p-4">
+                <div className="flex h-[calc(100vh-100px)] gap-4 bg-[#F5F7FA] p-4">
                   <MessageList
                     users={allConversations}
                     selectedId={selectedConversation}

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Pencil } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
 
-const AboutSection = ({ isOwnProfile, userData, openModal }) => {
+const AboutSection = ({ userData, isOwnProfile, openModal }) => {
   const [aboutData, setAboutData] = useState("");
 
   // Helper function to strip HTML tags from text
@@ -23,7 +23,7 @@ const AboutSection = ({ isOwnProfile, userData, openModal }) => {
   }, [userData]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-8">
+    <div className="bg-white rounded-2xl p-8 border border-[#E4E5E8]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[18px] font-medium text-gray-900">About</h2>
         {isOwnProfile && (
