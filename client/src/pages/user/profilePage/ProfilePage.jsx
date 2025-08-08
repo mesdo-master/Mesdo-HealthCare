@@ -292,802 +292,809 @@ const ProfilePage = () => {
   }
 
   return (
-    <>
+    <div>
       <div className="flex flex-col h-screen">
-        <div className="flex flex-1 overflow-hidden pt-[100px]">
+        <div className="flex flex-1 overflow-hidden pt-[40px]">
           <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
             <div className="max-w-5xl mx-auto w-full">
-              <div className="bg-white rounded-2xl w-full mt-[-50px] border border-[#E4E5E8]">
-                <div className="p-10">
-                  <Header />
-                  <div className="flex flex-col mt-6">
-                    {/* Profile Section */}
-                    <ProfileHeader
-                      userData={userData}
-                      isOwnProfile={isOwnProfile}
-                      openModal={openModal}
-                      onDataUpdate={handleDataUpdate}
-                    />
+              <div className="p-10">
+                <Header />
+                <div className="flex flex-col mt-6">
+                  {/* Profile Section */}
+                  <ProfileHeader
+                    userData={userData}
+                    isOwnProfile={isOwnProfile}
+                    openModal={openModal}
+                    onDataUpdate={handleDataUpdate}
+                  />
 
-                    {/* Tabs and Content */}
-                    <div className="flex gap-4 mt-1">
-                      <div className="w-2/3">
-                        <OverviewTab
-                          userData={userData}
-                          isOwnProfile={isOwnProfile}
-                          openModal={openModal}
-                          setActiveModalTab={setActiveModalTab}
-                          setEditingExperienceId={setEditingExperienceId}
-                          setEditingExperienceData={setEditingExperienceData}
-                          setIsEditing={setIsEditing}
-                          setActiveQualificationTab={setActiveQualificationTab}
-                          setEditingQualification={setEditingQualification}
-                          setEditingAchievement={setEditingAchievement}
-                          setActiveAchievementTab={setActiveAchievementTab}
-                        />
-                      </div>
+                  {/* Tabs and Content */}
+                  <div className="flex gap-4 mt-1">
+                    <div className="w-2/3">
+                      <OverviewTab
+                        userData={userData}
+                        isOwnProfile={isOwnProfile}
+                        openModal={openModal}
+                        setActiveModalTab={setActiveModalTab}
+                        setEditingExperienceId={setEditingExperienceId}
+                        setEditingExperienceData={setEditingExperienceData}
+                        setIsEditing={setIsEditing}
+                        setActiveQualificationTab={setActiveQualificationTab}
+                        setEditingQualification={setEditingQualification}
+                        setEditingAchievement={setEditingAchievement}
+                        setActiveAchievementTab={setActiveAchievementTab}
+                      />
+                    </div>
 
-                      {/* Right Sidebar */}
-                      <div className="w-1/3 mt-6">
-                        {/* Profile Completion */}
-                        <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8]">
-                          <div className="flex items-center justify-between mb-6 ">
-                            <h3 className="text-[16px] font-medium text-gray-900">
-                              Profile Completion
-                            </h3>
-                          </div>
+                    {/* Right Sidebar */}
+                    <div className="w-1/3 mt-7">
+                      {/* Profile Completion */}
+                      <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8]">
+                        <div className="flex items-center justify-between mb-6 ">
+                          <h3 className="text-[16px] font-medium text-gray-900">
+                            Profile Completion
+                          </h3>
+                        </div>
 
-                          {/* Profile Image and Progress */}
-                          <div className="flex items-center gap-4 mb-6">
-                            <div className="relative">
-                              <img
-                                src={
-                                  userData?.profilePicture ||
-                                  "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-                                }
-                                alt="Profile"
-                                className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                              />
+                        {/* Profile Image and Progress */}
+                        <div className="flex items-center gap-4 mb-6">
+                          <div className="relative">
+                            <img
+                              src={
+                                userData?.profilePicture ||
+                                "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                              }
+                              alt="Profile"
+                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                            />
 
-                              {/* Circular Progress Overlay */}
-                              <div className="absolute -inset-2">
-                                <svg
-                                  className="w-20 h-20 transform -rotate-90"
-                                  viewBox="0 0 36 36"
-                                >
-                                  <path
-                                    d="M18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
-                                    fill="none"
-                                    stroke="#3B82F6"
-                                    strokeWidth="2"
-                                    strokeDasharray={`${(() => {
-                                      const totalFields = 7;
-                                      let completedFields = 0;
-
-                                      if (
-                                        userData?.name &&
-                                        userData?.email &&
-                                        userData?.phoneNo
-                                      )
-                                        completedFields++;
-                                      if (userData?.profilePicture)
-                                        completedFields++;
-                                      if (
-                                        userData?.about &&
-                                        userData?.about.trim().length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.experience &&
-                                        userData?.experience.length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.education &&
-                                        userData?.education.length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.skills &&
-                                        userData?.skills.length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.location ||
-                                        userData?.city ||
-                                        userData?.state
-                                      )
-                                        completedFields++;
-
-                                      return Math.round(
-                                        (completedFields / totalFields) * 100
-                                      );
-                                    })()}, 100`}
-                                    className="transition-all duration-700"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-
-                            <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900 mb-2">
-                                GET DISCOVERED
-                              </h4>
-                              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                                <div
-                                  className="bg-[#1890FF] h-2 rounded-full transition-all duration-700"
-                                  style={{
-                                    width: `${(() => {
-                                      const totalFields = 7;
-                                      let completedFields = 0;
-
-                                      if (
-                                        userData?.name &&
-                                        userData?.email &&
-                                        userData?.phoneNo
-                                      )
-                                        completedFields++;
-                                      if (userData?.profilePicture)
-                                        completedFields++;
-                                      if (
-                                        userData?.about &&
-                                        userData?.about.trim().length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.experience &&
-                                        userData?.experience.length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.education &&
-                                        userData?.education.length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.skills &&
-                                        userData?.skills.length > 0
-                                      )
-                                        completedFields++;
-                                      if (
-                                        userData?.location ||
-                                        userData?.city ||
-                                        userData?.state
-                                      )
-                                        completedFields++;
-
-                                      return (
-                                        (completedFields / totalFields) * 100
-                                      );
-                                    })()}%`,
-                                  }}
-                                />
-                              </div>
-                              <p className="text-xs text-gray-500">
-                                {(() => {
-                                  const totalFields = 7;
-                                  let completedFields = 0;
-
-                                  if (
-                                    userData?.name &&
-                                    userData?.email &&
-                                    userData?.phoneNo
-                                  )
-                                    completedFields++;
-                                  if (userData?.profilePicture)
-                                    completedFields++;
-                                  if (
-                                    userData?.about &&
-                                    userData?.about.trim().length > 0
-                                  )
-                                    completedFields++;
-                                  if (
-                                    userData?.experience &&
-                                    userData?.experience.length > 0
-                                  )
-                                    completedFields++;
-                                  if (
-                                    userData?.education &&
-                                    userData?.education.length > 0
-                                  )
-                                    completedFields++;
-                                  if (
-                                    userData?.skills &&
-                                    userData?.skills.length > 0
-                                  )
-                                    completedFields++;
-                                  if (
-                                    userData?.location ||
-                                    userData?.city ||
-                                    userData?.state
-                                  )
-                                    completedFields++;
-
-                                  return Math.round(
-                                    (completedFields / totalFields) * 100
-                                  );
-                                })()}
-                                % complete
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Completion Sections */}
-                          <div className="space-y-3 max-h-60 overflow-y-auto">
-                            {/* Basic Information */}
-                            <div
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                                userData?.name &&
-                                userData?.email &&
-                                userData?.phoneNo
-                                  ? "bg-gray-50"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                              onClick={() => {
-                                if (
-                                  !(
-                                    userData?.name &&
-                                    userData?.email &&
-                                    userData?.phoneNo
-                                  )
-                                ) {
-                                  openModal("Basic Information");
-                                }
-                              }}
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  userData?.name &&
-                                  userData?.email &&
-                                  userData?.phoneNo
-                                    ? "bg-[#1890FF]"
-                                    : "border-2 border-gray-300"
-                                }`}
+                            {/* Circular Progress Overlay */}
+                            <div className="absolute -inset-2">
+                              <svg
+                                className="w-20 h-20 transform -rotate-90"
+                                viewBox="0 0 36 36"
                               >
-                                {userData?.name &&
-                                userData?.email &&
-                                userData?.phoneNo ? (
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs">1</span>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium flex-1 ${
-                                  userData?.name &&
-                                  userData?.email &&
-                                  userData?.phoneNo
-                                    ? "text-gray-500 line-through"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                Basic Information
-                              </span>
-                              <div className="flex-shrink-0">
-                                <svg
-                                  className="w-4 h-4 text-gray-400"
+                                <path
+                                  d="M18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
                                   fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
+                                  stroke="#3B82F6"
+                                  strokeWidth="2"
+                                  strokeDasharray={`${(() => {
+                                    const totalFields = 7;
+                                    let completedFields = 0;
 
-                            {/* Profile Photo */}
-                            <div
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                                userData?.profilePicture
-                                  ? "bg-gray-50"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                              onClick={() => {
-                                if (!userData?.profilePicture) {
-                                  // Trigger profile photo upload
-                                  const profileImageInput =
-                                    document.querySelector(
-                                      'input[type="file"]'
+                                    if (
+                                      userData?.name &&
+                                      userData?.email &&
+                                      userData?.phoneNo
+                                    )
+                                      completedFields++;
+                                    if (userData?.profilePicture)
+                                      completedFields++;
+                                    if (
+                                      userData?.about &&
+                                      userData?.about.trim().length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.experience &&
+                                      userData?.experience.length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.education &&
+                                      userData?.education.length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.skills &&
+                                      userData?.skills.length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.location ||
+                                      userData?.city ||
+                                      userData?.state
+                                    )
+                                      completedFields++;
+
+                                    return Math.round(
+                                      (completedFields / totalFields) * 100
                                     );
-                                  if (profileImageInput)
-                                    profileImageInput.click();
-                                }
-                              }}
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  userData?.profilePicture
-                                    ? "bg-[#1890FF]"
-                                    : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {userData?.profilePicture ? (
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs">📷</span>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium flex-1 ${
-                                  userData?.profilePicture
-                                    ? "text-gray-500 line-through"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                Profile Photo
-                              </span>
-                              <div className="flex-shrink-0">
-                                <svg
-                                  className="w-4 h-4 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
+                                  })()}, 100`}
+                                  className="transition-all duration-700"
+                                />
+                              </svg>
                             </div>
+                          </div>
 
-                            {/* About Section */}
-                            <div
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                                userData?.about &&
-                                userData?.about.trim().length > 0
-                                  ? "bg-gray-50"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                              onClick={() => {
-                                if (
-                                  !(
-                                    userData?.about &&
-                                    userData?.about.trim().length > 0
-                                  )
-                                ) {
-                                  openModal("About");
-                                }
-                              }}
-                            >
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-gray-900 mb-2">
+                              GET DISCOVERED
+                            </h4>
+                            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                               <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                className="bg-[#1890FF] h-2 rounded-full transition-all duration-700"
+                                style={{
+                                  width: `${(() => {
+                                    const totalFields = 7;
+                                    let completedFields = 0;
+
+                                    if (
+                                      userData?.name &&
+                                      userData?.email &&
+                                      userData?.phoneNo
+                                    )
+                                      completedFields++;
+                                    if (userData?.profilePicture)
+                                      completedFields++;
+                                    if (
+                                      userData?.about &&
+                                      userData?.about.trim().length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.experience &&
+                                      userData?.experience.length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.education &&
+                                      userData?.education.length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.skills &&
+                                      userData?.skills.length > 0
+                                    )
+                                      completedFields++;
+                                    if (
+                                      userData?.location ||
+                                      userData?.city ||
+                                      userData?.state
+                                    )
+                                      completedFields++;
+
+                                    return (
+                                      (completedFields / totalFields) * 100
+                                    );
+                                  })()}%`,
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {(() => {
+                                const totalFields = 7;
+                                let completedFields = 0;
+
+                                if (
+                                  userData?.name &&
+                                  userData?.email &&
+                                  userData?.phoneNo
+                                )
+                                  completedFields++;
+                                if (userData?.profilePicture) completedFields++;
+                                if (
                                   userData?.about &&
                                   userData?.about.trim().length > 0
-                                    ? "bg-[#1890FF]"
-                                    : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {userData?.about &&
-                                userData?.about.trim().length > 0 ? (
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs">📝</span>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium flex-1 ${
-                                  userData?.about &&
-                                  userData?.about.trim().length > 0
-                                    ? "text-gray-500 line-through"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                About Section
-                              </span>
-                              <div className="flex-shrink-0">
-                                <svg
-                                  className="w-4 h-4 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-
-                            {/* Experience */}
-                            <div
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                                userData?.experience &&
-                                userData?.experience.length > 0
-                                  ? "bg-gray-50"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                              onClick={() => {
+                                )
+                                  completedFields++;
                                 if (
-                                  !(
-                                    userData?.experience &&
-                                    userData?.experience.length > 0
-                                  )
-                                ) {
-                                  openModal("Work Experience");
-                                }
-                              }}
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                                   userData?.experience &&
                                   userData?.experience.length > 0
-                                    ? "bg-[#1890FF]"
-                                    : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {userData?.experience &&
-                                userData?.experience.length > 0 ? (
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs">💼</span>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium flex-1 ${
-                                  userData?.experience &&
-                                  userData?.experience.length > 0
-                                    ? "text-gray-500 line-through"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                Experience
-                              </span>
-                              <div className="flex-shrink-0">
-                                <svg
-                                  className="w-4 h-4 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-
-                            {/* Education */}
-                            <div
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                                userData?.education &&
-                                userData?.education.length > 0
-                                  ? "bg-gray-50"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                              onClick={() => {
+                                )
+                                  completedFields++;
                                 if (
-                                  !(
-                                    userData?.education &&
-                                    userData?.education.length > 0
-                                  )
-                                ) {
-                                  openModal("Qualification");
-                                }
-                              }}
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                                   userData?.education &&
                                   userData?.education.length > 0
-                                    ? "bg-[#1890FF]"
-                                    : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {userData?.education &&
-                                userData?.education.length > 0 ? (
-                                  <svg
-                                    className="w-5 h-5 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs">🎓</span>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium flex-1 ${
-                                  userData?.education &&
-                                  userData?.education.length > 0
-                                    ? "text-gray-500 line-through"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                Education
-                              </span>
-                              <div className="flex-shrink-0">
-                                <svg
-                                  className="w-4 h-4 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-
-                            {/* Skills */}
-                            <div
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                                userData?.skills && userData?.skills.length > 0
-                                  ? "bg-gray-50"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                              onClick={() => {
+                                )
+                                  completedFields++;
                                 if (
-                                  !(
-                                    userData?.skills &&
-                                    userData?.skills.length > 0
-                                  )
-                                ) {
-                                  openModal("Skills");
-                                }
-                              }}
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                                   userData?.skills &&
                                   userData?.skills.length > 0
-                                    ? "bg-[#1890FF]"
-                                    : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {userData?.skills &&
-                                userData?.skills.length > 0 ? (
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs">⚡</span>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium flex-1 ${
-                                  userData?.skills &&
-                                  userData?.skills.length > 0
-                                    ? "text-gray-500 line-through"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                Skills
-                              </span>
-                              <div className="flex-shrink-0">
-                                <svg
-                                  className="w-4 h-4 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-
-                            {/* Location */}
-                            <div
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                                userData?.location ||
-                                userData?.city ||
-                                userData?.state
-                                  ? "bg-gray-50"
-                                  : "hover:bg-gray-50 cursor-pointer"
-                              }`}
-                              onClick={() => {
+                                )
+                                  completedFields++;
                                 if (
-                                  !(
-                                    userData?.location ||
-                                    userData?.city ||
-                                    userData?.state
-                                  )
-                                ) {
-                                  openModal("Basic Information");
-                                }
-                              }}
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                                   userData?.location ||
                                   userData?.city ||
                                   userData?.state
-                                    ? "bg-[#1890FF]"
-                                    : "border-2 border-gray-300"
-                                }`}
-                              >
-                                {userData?.location ||
-                                userData?.city ||
-                                userData?.state ? (
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span className="text-xs">📍</span>
-                                )}
-                              </div>
-                              <span
-                                className={`text-sm font-medium flex-1 ${
-                                  userData?.location ||
-                                  userData?.city ||
-                                  userData?.state
-                                    ? "text-gray-500 line-through"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                Location
-                              </span>
-                              <div className="flex-shrink-0">
-                                <svg
-                                  className="w-4 h-4 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
+                                )
+                                  completedFields++;
+
+                                return Math.round(
+                                  (completedFields / totalFields) * 100
+                                );
+                              })()}
+                              % complete
+                            </p>
                           </div>
                         </div>
 
-                        {/* Suggested Users */}
-                        {!isOwnProfile && (
-                          <div className="bg-white rounded-2xl p-6 mt-4 border border-[#E4E5E8]">
-                            <h3 className="text-[16px] font-medium text-gray-900 mb-4">
+                        {/* Completion Sections */}
+                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                          {/* Basic Information */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                              userData?.name &&
+                              userData?.email &&
+                              userData?.phoneNo
+                                ? "bg-gray-50"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (
+                                !(
+                                  userData?.name &&
+                                  userData?.email &&
+                                  userData?.phoneNo
+                                )
+                              ) {
+                                openModal("Basic Information");
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                userData?.name &&
+                                userData?.email &&
+                                userData?.phoneNo
+                                  ? "bg-[#1890FF]"
+                                  : "border-2 border-gray-300"
+                              }`}
+                            >
+                              {userData?.name &&
+                              userData?.email &&
+                              userData?.phoneNo ? (
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-xs">1</span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-sm font-medium flex-1 ${
+                                userData?.name &&
+                                userData?.email &&
+                                userData?.phoneNo
+                                  ? "text-gray-500 line-through"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              Basic Information
+                            </span>
+                            <div className="flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Profile Photo */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                              userData?.profilePicture
+                                ? "bg-gray-50"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (!userData?.profilePicture) {
+                                // Trigger profile photo upload
+                                const profileImageInput =
+                                  document.querySelector('input[type="file"]');
+                                if (profileImageInput)
+                                  profileImageInput.click();
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                userData?.profilePicture
+                                  ? "bg-[#1890FF]"
+                                  : "border-2 border-gray-300"
+                              }`}
+                            >
+                              {userData?.profilePicture ? (
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-xs">📷</span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-sm font-medium flex-1 ${
+                                userData?.profilePicture
+                                  ? "text-gray-500 line-through"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              Profile Photo
+                            </span>
+                            <div className="flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* About Section */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                              userData?.about &&
+                              userData?.about.trim().length > 0
+                                ? "bg-gray-50"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (
+                                !(
+                                  userData?.about &&
+                                  userData?.about.trim().length > 0
+                                )
+                              ) {
+                                openModal("About");
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                userData?.about &&
+                                userData?.about.trim().length > 0
+                                  ? "bg-[#1890FF]"
+                                  : "border-2 border-gray-300"
+                              }`}
+                            >
+                              {userData?.about &&
+                              userData?.about.trim().length > 0 ? (
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-xs">3</span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-sm font-medium flex-1 ${
+                                userData?.about &&
+                                userData?.about.trim().length > 0
+                                  ? "text-gray-500 line-through"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              About Section
+                            </span>
+                            <div className="flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Experience */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                              userData?.experience &&
+                              userData?.experience.length > 0
+                                ? "bg-gray-50"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (
+                                !(
+                                  userData?.experience &&
+                                  userData?.experience.length > 0
+                                )
+                              ) {
+                                openModal("Experience");
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                userData?.experience &&
+                                userData?.experience.length > 0
+                                  ? "bg-[#1890FF]"
+                                  : "border-2 border-gray-300"
+                              }`}
+                            >
+                              {userData?.experience &&
+                              userData?.experience.length > 0 ? (
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-xs">4</span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-sm font-medium flex-1 ${
+                                userData?.experience &&
+                                userData?.experience.length > 0
+                                  ? "text-gray-500 line-through"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              Experience
+                            </span>
+                            <div className="flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Education */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                              userData?.education &&
+                              userData?.education.length > 0
+                                ? "bg-gray-50"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (
+                                !(
+                                  userData?.education &&
+                                  userData?.education.length > 0
+                                )
+                              ) {
+                                openModal("Education");
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                userData?.education &&
+                                userData?.education.length > 0
+                                  ? "bg-[#1890FF]"
+                                  : "border-2 border-gray-300"
+                              }`}
+                            >
+                              {userData?.education &&
+                              userData?.education.length > 0 ? (
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-xs">5</span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-sm font-medium flex-1 ${
+                                userData?.education &&
+                                userData?.education.length > 0
+                                  ? "text-gray-500 line-through"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              Education
+                            </span>
+                            <div className="flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Skills */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                              userData?.skills && userData?.skills.length > 0
+                                ? "bg-gray-50"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (
+                                !(
+                                  userData?.skills &&
+                                  userData?.skills.length > 0
+                                )
+                              ) {
+                                openModal("Skills");
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                userData?.skills && userData?.skills.length > 0
+                                  ? "bg-[#1890FF]"
+                                  : "border-2 border-gray-300"
+                              }`}
+                            >
+                              {userData?.skills &&
+                              userData?.skills.length > 0 ? (
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-xs">6</span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-sm font-medium flex-1 ${
+                                userData?.skills && userData?.skills.length > 0
+                                  ? "text-gray-500 line-through"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              Skills
+                            </span>
+                            <div className="flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Location */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                              userData?.location ||
+                              userData?.city ||
+                              userData?.state
+                                ? "bg-gray-50"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (
+                                !(
+                                  userData?.location ||
+                                  userData?.city ||
+                                  userData?.state
+                                )
+                              ) {
+                                openModal("Basic Information");
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                userData?.location ||
+                                userData?.city ||
+                                userData?.state
+                                  ? "bg-[#1890FF]"
+                                  : "border-2 border-gray-300"
+                              }`}
+                            >
+                              {userData?.location ||
+                              userData?.city ||
+                              userData?.state ? (
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              ) : (
+                                <span className="text-xs">7</span>
+                              )}
+                            </div>
+                            <span
+                              className={`text-sm font-medium flex-1 ${
+                                userData?.location ||
+                                userData?.city ||
+                                userData?.state
+                                  ? "text-gray-500 line-through"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              Location
+                            </span>
+                            <div className="flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Suggested Users */}
+                      {suggestedUsers.length > 0 && (
+                        <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8] mt-6">
+                          <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-[16px] font-medium text-gray-900">
                               Suggested Users
                             </h3>
-                            {suggestedUsersLoading ? (
-                              <div className="text-center py-4">
-                                <Loader />
-                              </div>
-                            ) : suggestedUsers.length > 0 ? (
-                              <div className="space-y-3">
-                                {suggestedUsers.slice(0, 3).map((user) => (
-                                  <div
-                                    key={user._id}
-                                    className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
-                                  >
-                                    <img
-                                      src={
-                                        user.profilePicture ||
-                                        "https://via.placeholder.com/40"
-                                      }
-                                      alt={user.name}
-                                      className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-gray-900 truncate">
-                                        {user.name}
-                                      </p>
-                                      <p className="text-xs text-gray-500 truncate">
-                                        {user.headline || "No headline"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-gray-500 text-center py-4">
-                                No suggestions available
-                              </p>
-                            )}
                           </div>
-                        )}
+                          <div className="space-y-4">
+                            {suggestedUsers.slice(0, 4).map((person, index) => (
+                              <div
+                                key={person._id || index}
+                                className="flex items-center justify-between"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                  <img
+                                    src={
+                                      person.profilePicture ||
+                                      person.image ||
+                                      "/default-avatar.png"
+                                    }
+                                    alt={person.name}
+                                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                                    onError={(e) => {
+                                      e.target.src = "/default-avatar.png";
+                                    }}
+                                  />
+                                  <div className="flex-1 min-w-0 max-w-[180px]">
+                                    <h4 className="text-[14px] font-medium text-gray-900 truncate">
+                                      {person.name ||
+                                        person.username ||
+                                        `User ${index + 1}`}
+                                    </h4>
+                                    <p className="text-[12px] text-gray-500 truncate">
+                                      {person.headline ||
+                                        person.role ||
+                                        person.title ||
+                                        "Professional"}
+                                      {person.company &&
+                                        ` at ${person.company}`}
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  className="text-[12px] bg-[#1890FF] text-white hover:bg-[#1570EF] font-medium px-3 py-1 rounded-lg transition-colors"
+                                  onClick={() => {
+                                    // TODO: Implement follow functionality
+                                    console.log(`Following ${person.name}`);
+                                  }}
+                                >
+                                  + Follow
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                        {/* People You Might Know - for own profile */}
-                        {isOwnProfile && (
-                          <div className="bg-white rounded-2xl p-6 mt-4 border border-[#E4E5E8]">
-                            <h3 className="text-[16px] font-medium text-gray-900 mb-4">
+                      {/* People You Might Know */}
+                      {suggestedUsers.length === 0 && (
+                        <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8] mt-6">
+                          <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-[16px] font-medium text-gray-900">
                               People You Might Know
                             </h3>
-                            {suggestedUsersLoading ? (
-                              <div className="text-center py-4">
-                                <Loader />
-                              </div>
-                            ) : suggestedUsers.length > 0 ? (
+                          </div>
+                          <div className="space-y-4">
+                            {suggestedUsers.length > 0 ? (
                               <div className="space-y-4">
                                 {suggestedUsers
                                   .slice(0, 4)
@@ -1149,8 +1156,8 @@ const ProfilePage = () => {
                               </div>
                             )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1180,7 +1187,7 @@ const ProfilePage = () => {
         activeAchievementTab={activeAchievementTab}
         setActiveAchievementTab={setActiveAchievementTab}
       />
-    </>
+    </div>
   );
 };
 

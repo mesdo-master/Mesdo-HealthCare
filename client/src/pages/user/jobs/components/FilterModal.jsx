@@ -8,14 +8,14 @@ import { useNavigate } from "react-router-dom";
 const FilterModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
-    jobTitle: "",
+    jobTitle: "Dental Surgeon",
     location: "",
     skills: [],
     specializations: [],
     experience: 0,
     jobTypes: [],
     languages: [],
-    salaryRange: 0,
+    salaryRange: [0, 50], // Changed to array for dual pointer
   });
   const [newSkill, setNewSkill] = useState("");
   const [newSpec, setNewSpec] = useState("");
@@ -49,16 +49,33 @@ const FilterModal = ({ isOpen, onClose }) => {
     valueSetter("");
   };
 
+  const handleSalaryRangeChange = (index, value) => {
+    const newRange = [...filters.salaryRange];
+    newRange[index] = parseInt(value);
+
+    // Ensure min doesn't exceed max and vice versa
+    if (index === 0 && newRange[0] > newRange[1]) {
+      newRange[1] = newRange[0];
+    } else if (index === 1 && newRange[1] < newRange[0]) {
+      newRange[0] = newRange[1];
+    }
+
+    setFilters((prev) => ({
+      ...prev,
+      salaryRange: newRange,
+    }));
+  };
+
   const handleReset = () => {
     setFilters({
-      jobTitle: "",
+      jobTitle: "Dental Surgeon",
       location: "",
       skills: [],
       specializations: [],
       experience: 0,
       jobTypes: [],
       languages: [],
-      salaryRange: 0,
+      salaryRange: [0, 50], // Reset to array
     });
   };
 
@@ -77,44 +94,43 @@ const FilterModal = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-10 backdrop-blur-sm flex items-center justify-center z-50 p-4 mt-16">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto border border-gray-100">
         <div className="p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-semibold">Filters</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 rounded-full p-2 transition-colors"
-            >
-              <X size={24} />
-            </button>
-          </div>
-
           {/* Search Inputs */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            {["jobTitle", "location"].map((field, idx) => (
-              <div key={field} className="relative">
-                <input
-                  type="text"
-                  name={field}
-                  placeholder={
-                    field === "jobTitle" ? "Dental Surgeon" : "Enter Location"
-                  }
-                  value={filters[field]}
-                  onChange={handleInputChange}
-                  className="w-full py-4 pl-5 pr-10 text-base bg-[#f8f9fb] outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
-                />
-                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-5 h-5" />
-              </div>
-            ))}
+            <div className="relative">
+              <input
+                type="text"
+                name="jobTitle"
+                value={filters.jobTitle}
+                onChange={handleInputChange}
+                placeholder="Dental Surgeon"
+                className="w-full py-4 pl-5 pr-10 text-base bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+              />
+              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-5 h-5" />
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                name="location"
+                value={filters.location}
+                onChange={handleInputChange}
+                placeholder="Enter Location"
+                className="w-full py-4 pl-5 pr-10 text-base bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+              />
+              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-5 h-5" />
+            </div>
           </div>
+
+          {/* Filters Heading */}
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Filters</h2>
 
           {/* Filters Grid */}
           <div className="grid grid-cols-2 gap-6 mb-8">
             {/* Experience */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-              <div className="mb-2 text-sm font-medium text-gray-700">
+            <div className="bg-white border border-[#E4E5E8] rounded-xl p-6">
+              <div className="mb-4 text-sm font-medium text-gray-900">
                 Experience
               </div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs text-gray-400">&lt; 1 year</span>
+              <div className="mb-2">
                 <input
                   type="range"
                   min="0"
@@ -126,68 +142,119 @@ const FilterModal = ({ isOpen, onClose }) => {
                       experience: parseInt(e.target.value),
                     }))
                   }
-                  className="flex-1 accent-blue-500 h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #1890FF 0%, #1890FF ${
+                      (filters.experience / 10) * 100
+                    }%, #E5E7EB ${
+                      (filters.experience / 10) * 100
+                    }%, #E5E7EB 100%)`,
+                  }}
                 />
-                <span className="text-xs text-gray-400">10 years</span>
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-gray-500 mb-2">
+                <span>&lt; 1 year</span>
+                <span>10 years</span>
+              </div>
+              <div className="text-xs text-gray-500">
                 {filters.experience} year
               </div>
             </div>
+
             {/* Salary Range */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-              <div className="mb-2 text-sm font-medium text-gray-700">
+            <div className="bg-white border border-[#E4E5E8] rounded-xl p-6">
+              <div className="mb-4 text-sm font-medium text-gray-900">
                 Salary Range
               </div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs text-gray-400">Rs 0</span>
+              <div className="mb-2 relative">
+                {/* Background track */}
+                <div className="w-full h-2 bg-gray-200 rounded-lg"></div>
+
+                {/* Blue highlight between pointers */}
+                <div
+                  className="absolute h-2 bg-[#1890FF] rounded-lg top-0"
+                  style={{
+                    left: `${(filters.salaryRange[0] / 50) * 100}%`,
+                    width: `${
+                      ((filters.salaryRange[1] - filters.salaryRange[0]) / 50) *
+                      100
+                    }%`,
+                  }}
+                ></div>
+
+                {/* Min value slider */}
                 <input
                   type="range"
                   min="0"
                   max="50"
-                  value={filters.salaryRange}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      salaryRange: parseInt(e.target.value),
-                    }))
-                  }
-                  className="flex-1 accent-blue-500 h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer"
+                  value={filters.salaryRange[0]}
+                  onChange={(e) => handleSalaryRangeChange(0, e.target.value)}
+                  className="absolute w-full h-2 bg-transparent appearance-none cursor-pointer slider top-0 z-10"
                 />
-                <span className="text-xs text-gray-400">Rs 50L+</span>
+
+                {/* Max value slider */}
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value={filters.salaryRange[1]}
+                  onChange={(e) => handleSalaryRangeChange(1, e.target.value)}
+                  className="absolute w-full h-2 bg-transparent appearance-none cursor-pointer slider top-0 z-10"
+                />
               </div>
-              <div className="text-xs text-gray-400">
-                Rs 0 - Rs {filters.salaryRange}L
+              <div className="flex justify-between text-xs text-gray-500 mb-2">
+                <span>Rs 0</span>
+                <span>Rs 50L+</span>
+              </div>
+              <div className="text-xs text-gray-500">
+                Rs {filters.salaryRange[0]}L - Rs {filters.salaryRange[1]}L
               </div>
             </div>
+
             {/* Job Type */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-              <div className="mb-2 text-sm font-medium text-gray-700">
+            <div className="bg-white border border-[#E4E5E8] rounded-xl p-6">
+              <div className="mb-4 text-sm font-medium text-gray-900">
                 Job Type
               </div>
-              <div className="flex flex-wrap gap-2">
-                {["Internship", "Full-Time", "Contract"].map((type) => (
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  value={newJobType}
+                  onChange={(e) => setNewJobType(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag("jobTypes", setNewJobType, newJobType);
+                    }
+                  }}
+                  placeholder="Internship"
+                  className="w-full py-2 pl-4 pr-10 text-sm bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+                />
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-4 h-4" />
+              </div>
+              <div className="flex gap-2">
+                {filters.jobTypes.map((type) => (
                   <button
                     key={type}
-                    type="button"
-                    className={`px-4 py-1 rounded-full border text-xs font-medium transition-colors ${
-                      filters.jobTypes.includes(type)
-                        ? "bg-[#1890FF] text-white border-[#1890FF]"
-                        : "bg-gray-100 text-gray-500 border-gray-200"
-                    }`}
                     onClick={() => handleToggleSelection("jobTypes", type)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filters.jobTypes.includes(type)
+                        ? "bg-[#1890FF] text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
                   >
                     {type}
                   </button>
                 ))}
               </div>
             </div>
+
             {/* Department */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-              <div className="mb-2 text-sm font-medium text-gray-700">
+            <div className="bg-white border border-[#E4E5E8] rounded-xl p-6">
+              <div className="mb-4 text-sm font-medium text-gray-900">
                 Department
               </div>
-              <div className="relative mb-2">
+              <div className="relative mb-4">
                 <input
                   type="text"
                   value={newSpec}
@@ -198,32 +265,36 @@ const FilterModal = ({ isOpen, onClose }) => {
                       handleAddTag("specializations", setNewSpec, newSpec);
                     }
                   }}
-                  placeholder="Add Department"
-                  className="w-full py-2 pl-4 pr-10 text-sm bg-[#f8f9fb] outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+                  placeholder="Dermatologist"
+                  className="w-full py-2 pl-4 pr-10 text-sm bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
                 />
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-4 h-4" />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {filters.specializations.map((dep, idx) => (
+              <div className="flex gap-2">
+                {filters.specializations.map((dept) => (
                   <button
-                    key={dep}
-                    type="button"
-                    className={`px-4 py-1 rounded-full border text-xs font-medium transition-colors bg-[#E6F4FF] text-[#1890FF] border-[#1890FF]`}
+                    key={dept}
                     onClick={() =>
-                      handleToggleSelection("specializations", dep)
+                      handleToggleSelection("specializations", dept)
                     }
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filters.specializations.includes(dept)
+                        ? "bg-[#1890FF] text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
                   >
-                    {dep} <span className="ml-1">&times;</span>
+                    {dept}
                   </button>
                 ))}
               </div>
             </div>
+
             {/* Skills */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-              <div className="mb-2 text-sm font-medium text-gray-700">
+            <div className="bg-white border border-[#E4E5E8] rounded-xl p-6">
+              <div className="mb-4 text-sm font-medium text-gray-900">
                 Skills
               </div>
-              <div className="relative mb-2">
+              <div className="relative mb-4">
                 <input
                   type="text"
                   value={newSkill}
@@ -234,30 +305,34 @@ const FilterModal = ({ isOpen, onClose }) => {
                       handleAddTag("skills", setNewSkill, newSkill);
                     }
                   }}
-                  placeholder="Add Skill"
-                  className="w-full py-2 pl-4 pr-10 text-sm bg-[#f8f9fb] outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+                  placeholder="Add Skills"
+                  className="w-full py-2 pl-4 pr-10 text-sm bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
                 />
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-4 h-4" />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {filters.skills.map((skill, idx) => (
+              <div className="flex gap-2">
+                {filters.skills.map((skill) => (
                   <button
                     key={skill}
-                    type="button"
-                    className={`px-4 py-1 rounded-full border text-xs font-medium transition-colors bg-[#E6F4FF] text-[#1890FF] border-[#1890FF]`}
                     onClick={() => handleToggleSelection("skills", skill)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filters.skills.includes(skill)
+                        ? "bg-[#1890FF] text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
                   >
-                    {skill} <span className="ml-1">&times;</span>
+                    {skill}
                   </button>
                 ))}
               </div>
             </div>
+
             {/* Languages */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col">
-              <div className="mb-2 text-sm font-medium text-gray-700">
+            <div className="bg-white border border-[#E4E5E8] rounded-xl p-6">
+              <div className="mb-4 text-sm font-medium text-gray-900">
                 Languages
               </div>
-              <div className="relative mb-2">
+              <div className="relative mb-4">
                 <input
                   type="text"
                   value={newLanguage}
@@ -269,19 +344,22 @@ const FilterModal = ({ isOpen, onClose }) => {
                     }
                   }}
                   placeholder="Add Language"
-                  className="w-full py-2 pl-4 pr-10 text-sm bg-[#f8f9fb] outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+                  className="w-full py-2 pl-4 pr-10 text-sm bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
                 />
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-4 h-4" />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {filters.languages.map((lang, idx) => (
+              <div className="flex gap-2">
+                {filters.languages.map((lang) => (
                   <button
                     key={lang}
-                    type="button"
-                    className={`px-4 py-1 rounded-full border text-xs font-medium transition-colors bg-[#E6F4FF] text-[#1890FF] border-[#1890FF]`}
                     onClick={() => handleToggleSelection("languages", lang)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filters.languages.includes(lang)
+                        ? "bg-[#1890FF] text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
                   >
-                    {lang} <span className="ml-1">&times;</span>
+                    {lang}
                   </button>
                 ))}
               </div>
@@ -289,69 +367,57 @@ const FilterModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center mt-8">
+          <div className="flex justify-end gap-4">
             <button
               onClick={onClose}
-              className="px-6 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-500 font-medium hover:bg-gray-100 transition-colors"
+              className="px-6 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
-              className="px-8 py-2 rounded-lg bg-[#1890FF] text-white font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+              className="px-6 py-2 rounded-lg bg-[#1890FF] text-white font-medium hover:bg-blue-700 transition-colors"
             >
               Apply Changes
             </button>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 18px;
+          width: 18px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          border: 1px solid #f2f2f2;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          z-index: 20;
+        }
+
+        .slider::-moz-range-thumb {
+          height: 18px;
+          width: 18px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          border: 1px solid #f2f2f2;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          z-index: 20;
+        }
+
+        .slider::-webkit-slider-track {
+          background: transparent;
+        }
+
+        .slider::-moz-range-track {
+          background: transparent;
+        }
+      `}</style>
     </div>
   );
 };
-
-const TagInput = ({
-  title,
-  field,
-  tags,
-  newTag,
-  setNewTag,
-  toggle,
-  addTag,
-}) => (
-  <div>
-    <h3 className="text-sm font-medium mb-2">{title}</h3>
-    <div className="relative mb-3">
-      <input
-        type="text"
-        value={newTag}
-        onChange={(e) => setNewTag(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            addTag(field, setNewTag, newTag);
-          }
-        }}
-        placeholder={`Add ${title.toLowerCase()}`}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-      />
-      <Search className="absolute right-3 top-2.5 text-[#1890FF] w-5 h-5" />
-    </div>
-    <div className="flex flex-wrap gap-2 mb-2">
-      {tags.map((tag) => (
-        <button
-          key={tag}
-          onClick={() => toggle(field, tag)}
-          className={`px-3 py-1 rounded-full text-sm ${
-            tags.includes(tag)
-              ? "bg-[#1890FF] text-white"
-              : "bg-[#E6F4FF] text-[#1890FF]"
-          }`}
-        >
-          {tag}
-        </button>
-      ))}
-    </div>
-  </div>
-);
 
 export default FilterModal;

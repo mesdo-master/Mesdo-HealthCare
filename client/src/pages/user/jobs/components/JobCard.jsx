@@ -233,7 +233,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
             <div className="flex-1 min-w-0">
               {/* Top Row: Status and Actions */}
               <div className="flex items-center justify-between">
-                <span className="text-[#9254DE] text-xs font-medium inline-block mb-2">
+                <span className="text-[#9254DE] bg-[#F9F0FF] text-xs font-medium inline-block mb-2">
                   Recently active
                 </span>
                 <div className="flex items-center gap-3 text-gray-400 text-sm mr-[-140px]">
@@ -373,7 +373,7 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
           <>
             {/* Status and Actions for small cards */}
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[#9254DE] text-xs font-medium">
+              <span className="text-[#9254DE] bg-[#F9F0FF] text-xs font-medium">
                 Recently active
               </span>
               <div className="flex items-center gap-2">

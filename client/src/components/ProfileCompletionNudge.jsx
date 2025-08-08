@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const ProfileCompletionNudge = ({ onClose }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -13,11 +14,13 @@ const ProfileCompletionNudge = ({ onClose }) => {
   const { currentUser, mode, businessProfile } = useSelector(
     (state) => state.auth
   );
+  const navigate = useNavigate();
 
   // Check if nudge was dismissed
   const [isDismissed, setIsDismissed] = useState(() => {
     const dismissed = localStorage.getItem("profileNudgeDismissed");
-    return dismissed === "true";
+    // Temporarily force show for testing
+    return false; // dismissed === "true";
   });
 
   // Handle close with persistence
@@ -25,6 +28,20 @@ const ProfileCompletionNudge = ({ onClose }) => {
     setIsDismissed(true);
     localStorage.setItem("profileNudgeDismissed", "true");
     onClose?.();
+  };
+
+  // Handle section click to navigate to profile
+  const handleSectionClick = (sectionName) => {
+    console.log("handleSectionClick called with:", sectionName);
+    console.log("Current mode:", mode);
+    setIsExpanded(false);
+    if (mode === "individual") {
+      console.log("Navigating to /profile");
+      navigate("/profile");
+    } else {
+      console.log("Navigating to /organization-profile");
+      navigate("/organization-profile");
+    }
   };
 
   // Reset dismissal when profile completion changes significantly
@@ -154,16 +171,19 @@ const ProfileCompletionNudge = ({ onClose }) => {
     calculateCompletion();
   }, [currentUser, mode, businessProfile]);
 
-  // Don't show if profile is complete
-  if (completionData.percentage >= 100) return null;
+  // Don't show if profile is complete or dismissed
+  if (completionData.percentage >= 100 || isDismissed) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {/* Collapsed State */}
       {!isExpanded && (
         <div
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-all duration-300 max-w-sm"
-          onClick={() => setIsExpanded(true)}
+          className="bg-white rounded-2xl shadow-sm border border-[#E4E5E8] p-4 cursor-pointer hover:shadow-md transition-all duration-300 max-w-sm"
+          onClick={() => {
+            console.log("Expanding modal");
+            setIsExpanded(true);
+          }}
         >
           <div className="flex items-center gap-3">
             {/* Circular Progress */}
@@ -218,13 +238,16 @@ const ProfileCompletionNudge = ({ onClose }) => {
 
       {/* Expanded State */}
       {isExpanded && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 max-w-md animate-in slide-in-from-bottom-4 duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border border-[#E4E5E8] p-6 w-96 animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[16px] font-medium text-gray-900">
-              Complete your Profile to get hired
+              Profile Completion
             </h3>
             <button
-              onClick={() => setIsExpanded(false)}
+              onClick={() => {
+                console.log("Collapsing modal");
+                setIsExpanded(false);
+              }}
               className="text-gray-400 hover:text-gray-600 transition-colors p-1 ml-5 rounded-full hover:bg-gray-100"
             >
               <X size={20} />
@@ -252,12 +275,6 @@ const ProfileCompletionNudge = ({ onClose }) => {
                   className="w-20 h-20 transform -rotate-90"
                   viewBox="0 0 36 36"
                 >
-                  <path
-                    d="M18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
-                    fill="none"
-                    stroke="#E5E7EB"
-                    strokeWidth="2"
-                  />
                   <path
                     d="M18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
                     fill="none"
@@ -292,9 +309,9 @@ const ProfileCompletionNudge = ({ onClose }) => {
             {completionData.completedSections.map((section, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-200"
+                className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
               >
-                <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-[#1890FF] rounded-full flex items-center justify-center flex-shrink-0">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"
@@ -309,9 +326,24 @@ const ProfileCompletionNudge = ({ onClose }) => {
                     />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-gray-500 line-through">
+                <span className="text-sm font-medium text-gray-500 line-through flex-1">
                   {section.name}
                 </span>
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </div>
             ))}
 
@@ -319,14 +351,36 @@ const ProfileCompletionNudge = ({ onClose }) => {
             {completionData.pendingSections.map((section, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border border-gray-200"
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => {
+                  console.log(
+                    "Navigating to profile for section:",
+                    section.name
+                  );
+                  handleSectionClick(section.name);
+                }}
               >
-                <div className="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-gray-500">{index + 1}</span>
+                <div className="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs">{index + 1}</span>
                 </div>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 flex-1">
                   {section.name}
                 </span>
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </div>
             ))}
           </div>

@@ -38,7 +38,7 @@ const JobSort = ({ totalResults, onSortChange }) => {
   };
 
   return (
-    <div className="flex justify-between items-center w-full mb-2 relative">
+    <div className="flex justify-between items-center w-full mb-1 relative">
       <span className="text-sm text-gray-400">
         Showing {totalResults} results
       </span>

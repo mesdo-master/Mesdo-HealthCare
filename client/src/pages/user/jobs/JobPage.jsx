@@ -161,7 +161,7 @@ const JobPage = () => {
               </div>
 
               {/* JobSort - Full width container */}
-              <div className="w-full mb-6  pl-4 rounded-xl">
+              <div className="w-full mb-3 pl-4 rounded-xl">
                 <JobSort
                   totalResults={sortedJobs.length}
                   onSortChange={setSortBy}

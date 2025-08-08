@@ -368,7 +368,7 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
   };
 
   return (
-    <div className="w-full h-[340px] border border-[#E4E5E8] rounded-2xl overflow-hidden">
+    <div className="w-full h-[340px] bg-white border border-[#E4E5E8] rounded-2xl overflow-hidden">
       {/* Hidden file inputs */}
       <input
         type="file"
