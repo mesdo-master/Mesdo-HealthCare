@@ -665,7 +665,7 @@ const Qualification = ({
   }, []);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-white">
       <div
         className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
@@ -1101,7 +1101,8 @@ const Qualification = ({
           )}
         </div>
       </div>
-      <div className="w-1/2 bg-[#f8f8f8]" />
+      {/* Right Side - Empty Space */}
+      <div className="w-1/2 bg-white" />
     </div>
   );
 };
