@@ -22,6 +22,7 @@ app.use(
       const allowedOrigins = [
         "https://mesdo.vercel.app",
         "https://mesdo-health-care-u5s9.vercel.app",
+        "https://mesdo-health-care.vercel.app",
         "http://localhost:3000",
         "https://mesdo-healthcare-4-ui.vercel.app",
       ];
