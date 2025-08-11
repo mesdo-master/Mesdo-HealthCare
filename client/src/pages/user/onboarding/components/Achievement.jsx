@@ -130,18 +130,38 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
   };
 
   const handleContinue = () => {
-    // Validate all achievements
-    for (const a of achievements) {
-      if (!a.award || !a.issuer || !a.year) {
-        setError("Please fill all required fields for each achievement.");
-        return;
+    // Check if any achievement has any field filled
+    const hasAnyContent = achievements.some(
+      (a) => a.award || a.issuer || a.year || a.description
+    );
+
+    // If any achievement has content, validate that all required fields are filled
+    if (hasAnyContent) {
+      for (const a of achievements) {
+        // If this achievement has any content, all required fields must be filled
+        const hasAnyField = a.award || a.issuer || a.year || a.description;
+        if (hasAnyField && (!a.award || !a.issuer || !a.year)) {
+          setError(
+            "Please fill all required fields for each achievement or leave all fields empty to skip."
+          );
+          return;
+        }
       }
     }
+
     setError("");
 
+    // Only save achievements that have content
+    const achievementsWithContent = achievements.filter(
+      (a) => a.award || a.issuer || a.year || a.description
+    );
+
     // ✅ Save data before showing preview
-    console.log("💾 Saving achievements before preview:", achievements);
-    updateFormData({ achievements: achievements });
+    console.log(
+      "💾 Saving achievements before preview:",
+      achievementsWithContent
+    );
+    updateFormData({ achievements: achievementsWithContent });
 
     setShowPreview(true);
   };
@@ -165,10 +185,29 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
     achievements[achievements.length - 1];
 
   const isFormComplete = () => {
-    return achievements.every(
-      (achievement) =>
-        achievement.award && achievement.issuer && achievement.year
+    // Check if any achievement has any content
+    const hasAnyContent = achievements.some(
+      (a) => a.award || a.issuer || a.year || a.description
     );
+
+    // If no content, form is complete (can skip)
+    if (!hasAnyContent) {
+      return true;
+    }
+
+    // If there's content, check that all filled achievements have required fields
+    return achievements.every((achievement) => {
+      const hasAnyField =
+        achievement.award ||
+        achievement.issuer ||
+        achievement.year ||
+        achievement.description;
+      // If achievement has any content, all required fields must be filled
+      return (
+        !hasAnyField ||
+        (achievement.award && achievement.issuer && achievement.year)
+      );
+    });
   };
 
   const handleSkipAll = () => {
@@ -178,7 +217,8 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-white">
+      {/* Left - Content */}
       <div
         className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
@@ -399,7 +439,8 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
           )}
         </div>
       </div>
-      <div className="w-1/2 bg-[#f8f8f8]" />
+      {/* Right - Background */}
+      <div className="w-1/2 bg-white" />
     </div>
   );
 };

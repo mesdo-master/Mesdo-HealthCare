@@ -482,20 +482,14 @@ const Qualification = ({
     // eslint-disable-next-line
   }, [qualList]);
 
-  useEffect(() => {
-    updateFormData({ ...formValues, skills });
-  }, [formValues, skills]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
-    updateFormData({ [name]: value });
   };
 
   const handleCourseChange = (e) => {
     const { value } = e.target;
     setFormValues((prev) => ({ ...prev, course: value, specialization: "" }));
-    updateFormData({ course: value, specialization: "" });
 
     // Fetch specializations for the selected course
     if (value) {
@@ -510,7 +504,6 @@ const Qualification = ({
     } else {
       setIsOtherSelected(false);
       setFormValues((prev) => ({ ...prev, university: selectedOption.value }));
-      updateFormData({ university: selectedOption.value });
     }
   };
 
@@ -550,24 +543,44 @@ const Qualification = ({
   };
 
   const handleAddOrUpdate = useCallback(() => {
-    if (
-      !formValues.qualification ||
-      !formValues.university ||
-      !formValues.course ||
-      !formValues.passingYear ||
-      !formValues.specialization ||
-      !formValues.courseType
-    ) {
-      setError("Please fill all required fields.");
-      return;
+    // Check if any field is filled
+    const hasAnyField =
+      formValues.qualification ||
+      formValues.university ||
+      formValues.course ||
+      formValues.passingYear ||
+      formValues.specialization ||
+      formValues.courseType ||
+      skills.length > 0 ||
+      formValues.description;
+
+    // If any field is filled, all required fields must be filled
+    if (hasAnyField) {
+      if (
+        !formValues.qualification ||
+        !formValues.university ||
+        !formValues.course ||
+        !formValues.passingYear ||
+        !formValues.specialization ||
+        !formValues.courseType
+      ) {
+        setError(
+          "Please fill all required fields or leave all fields empty to skip."
+        );
+        return;
+      }
     }
+
     setError("");
     let updatedList = [...qualList];
     const newEntry = { ...formValues, skills };
     if (editIdx !== null) {
       updatedList[editIdx] = newEntry;
     } else {
-      updatedList.push(newEntry);
+      // Only add if there's actual content
+      if (hasAnyField) {
+        updatedList.push(newEntry);
+      }
     }
     setQualList(updatedList);
 
@@ -778,7 +791,6 @@ const Qualification = ({
                           ...prev,
                           qualification: option.value,
                         }));
-                        updateFormData({ qualification: option.value });
                       }}
                       options={qualifications}
                       placeholder={
@@ -1047,7 +1059,6 @@ const Qualification = ({
                         ...prev,
                         description: value,
                       }));
-                      updateFormData({ description: value });
                     }}
                     modules={modules}
                     className="[&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:h-[200px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:text-gray-700"

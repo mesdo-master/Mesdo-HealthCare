@@ -415,12 +415,22 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
           <div className="flex items-center gap-6">
             {/* Profile Picture */}
             <div className="relative -mt-16">
-              <img
-                src={profileImage}
-                alt={userData?.name}
-                className="w-[140px] h-[140px] rounded-full border-4 border-white object-cover bg-white"
-                onError={() => setProfileImage("/default-avatar.png")}
-              />
+              {profileImage && profileImage !== "/default-avatar.png" ? (
+                <img
+                  src={profileImage}
+                  alt={userData?.name}
+                  className="w-[140px] h-[140px] rounded-full border-4 border-white object-cover bg-white"
+                  onError={() => setProfileImage("/default-avatar.png")}
+                />
+              ) : (
+                <div className="w-[140px] h-[140px] rounded-full border-4 border-white bg-[#1890FF] flex items-center justify-center">
+                  <span className="text-white text-4xl font-bold">
+                    {userData?.name
+                      ? userData.name.charAt(0).toUpperCase()
+                      : "U"}
+                  </span>
+                </div>
+              )}
               {showEditButtons && (
                 <button
                   onClick={() => profileImageInputRef.current?.click()}

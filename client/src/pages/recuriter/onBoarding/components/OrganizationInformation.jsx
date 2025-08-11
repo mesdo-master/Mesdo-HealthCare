@@ -16,8 +16,10 @@ const OrganizationInformation = ({
   };
 
   const handleContinue = () => {
+    // All fields are mandatory - check if all are filled
     if (
       !formData.name ||
+      !formData.website ||
       !formData.industry ||
       !formData.organizationSize ||
       !formData.organizationType
@@ -25,12 +27,33 @@ const OrganizationInformation = ({
       setError("Please fill all required fields.");
       return;
     }
+
+    // Basic validations
+    // Name should not be only numbers
+    if (/^\d+$/.test(formData.name.trim())) {
+      setError("Organization name cannot contain only numbers.");
+      return;
+    }
+
+    // Name should be at least 2 characters
+    if (formData.name.trim().length < 2) {
+      setError("Organization name must be at least 2 characters long.");
+      return;
+    }
+
+    // Website should be a valid URL format (basic check)
+    const websiteRegex = /^(https?:\/\/)?([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w\-._~:?#[\]@!$&'()*+,;=%]*)?$/;
+    if (!websiteRegex.test(formData.website.trim())) {
+      setError("Please enter a valid website URL (e.g., https://example.com).");
+      return;
+    }
+
     setError("");
     nextStep();
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-white">
       {/* Left Side - Form */}
       <div
         className="w-1/2 flex flex-col px-[100px] py-[60px] mt-[-20px]"
@@ -64,7 +87,7 @@ const OrganizationInformation = ({
           {/* Website */}
           <div>
             <label className="block text-[15px] text-gray-900 mb-1">
-              Website
+              Website*
             </label>
             <input
               type="text"
@@ -171,7 +194,7 @@ const OrganizationInformation = ({
         </div>
       </div>
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-[#f8f8f8]" />
+      <div className="w-1/2 bg-white" />
     </div>
   );
 };

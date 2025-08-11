@@ -123,8 +123,8 @@ const SkillsSpecialization = ({
   }, [skillInput, formValues.skills]);
 
   return (
-    <div className="flex h-screen">
-      {/* Left Form */}
+    <div className="flex h-screen bg-white">
+      {/* Left - Content */}
       <div
         className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
@@ -138,7 +138,7 @@ const SkillsSpecialization = ({
             <h1 className="text-[32px] font-semibold leading-[130%] mb-1">
               Skills or Specialization
             </h1>
-            <StepProgressCircle currentStep={6} totalSteps={7} />
+            <StepProgressCircle currentStep={6} totalSteps={8} />
           </div>
           <p className="text-sm text-gray-500 mb-6">
             Include all of your relevant experience and dates in this section.
@@ -220,7 +220,7 @@ const SkillsSpecialization = ({
       </div>
 
       {/* Right - Empty Side */}
-      <div className="w-1/2 bg-[#f8f8f8] h-screen flex-shrink-0" />
+      <div className="w-1/2 bg-white h-screen flex-shrink-0" />
     </div>
   );
 };

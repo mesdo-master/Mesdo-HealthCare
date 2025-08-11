@@ -83,7 +83,7 @@ const Settings = () => {
     } else if (windowWidth <= 1920) {
       // Medium screens
       return {
-        marginLeft: "150px", // Same left spacing
+        marginLeft: "180px", // Same left spacing
         paddingLeft: "32px",
         paddingRight: "32px",
         padding: "40px",

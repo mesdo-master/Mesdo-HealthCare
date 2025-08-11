@@ -366,7 +366,7 @@ function Messages() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden pt-[45px]">
+      <div className="flex flex-1 overflow-hidden pt-[85px]">
         <div
           className="flex flex-1 overflow-y-auto"
           style={{

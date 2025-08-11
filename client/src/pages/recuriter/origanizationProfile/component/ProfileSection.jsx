@@ -11,6 +11,8 @@ import {
   Globe,
   Save,
   X,
+  MoreHorizontal,
+  MessageCircle,
 } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
 import { setCurrentUser } from "../../../../store/features/authSlice";
@@ -80,27 +82,60 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
       alert("Please select an image to upload.");
       return;
     }
-    if (type === "profile") {
-      const response = await dispatch(uploadRecuriterProfilePic(image));
-      setProfileData((prevData) => ({
-        ...prevData,
-        orgLogo: response.payload,
-      }));
-    } else if (type === "cover") {
-      const response = await dispatch(uploadRecuriterBanner(image));
-      setProfileData((prevData) => ({
-        ...prevData,
-        orgBanner: response.payload,
-      }));
-    } else {
-      alert("Invalid type of image upload");
+
+    // Validate file type
+    if (!image.type.startsWith('image/')) {
+      alert("Please select a valid image file.");
+      return;
     }
+
+    // Validate file size (5MB limit)
+    if (image.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB.");
+      return;
+    }
+
+    try {
+      if (type === "profile") {
+        console.log("Uploading profile image:", image.name);
+        const response = await dispatch(uploadRecuriterProfilePic(image));
+        if (response.payload) {
+          setProfileData((prevData) => ({
+            ...prevData,
+            orgLogo: response.payload,
+          }));
+          console.log("Profile image updated successfully");
+        } else {
+          console.error("No payload received from profile upload");
+        }
+      } else if (type === "cover") {
+        console.log("Uploading cover image:", image.name);
+        const response = await dispatch(uploadRecuriterBanner(image));
+        if (response.payload) {
+          setProfileData((prevData) => ({
+            ...prevData,
+            orgBanner: response.payload,
+          }));
+          console.log("Cover image updated successfully");
+        } else {
+          console.error("No payload received from banner upload");
+        }
+      } else {
+        alert("Invalid type of image upload");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    }
+
+    // Clear the input value to allow re-uploading the same file
+    e.target.value = '';
   };
 
   return (
-    <div className="w-full mb-[-30px]">
+    <div className="w-full h-[340px] bg-white border border-[#E4E5E8] rounded-2xl overflow-hidden">
       {/* Cover Photo */}
-      <div className="h-[200px] relative rounded-t-2xl overflow-hidden">
+      <div className="h-[200px] relative overflow-hidden">
         <img
           src={
             profileData?.orgBanner
@@ -112,8 +147,8 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
         />
         {isOwnProfile && (
           <>
-            <label htmlFor="coverImageUpload">
-              <Camera className="absolute top-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer" />
+            <label htmlFor="coverImageUpload" className="absolute top-3 right-3 w-8 h-8 p-1 border-2 rounded-full border-white bg-white/90 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:scale-110 transition-all duration-200 shadow-lg">
+              <Camera className="w-4 h-4 text-gray-600" />
             </label>
             <input
               id="coverImageUpload"
@@ -129,25 +164,31 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
       </div>
 
       {/* Profile Info Container */}
-      <div className="bg-white px-8 py-4 shadow-sm border border-[#E4E5E8] rounded-b-2xl">
+      <div className="bg-white px-8 py-4">
         <div className="flex justify-between items-center">
           {/* Profile Info Left */}
           <div className="flex items-center gap-6">
             {/* Profile Picture */}
-            <div className="relative -mt-16 ">
-              <img
-                src={
-                  profileData?.orgLogo
-                    ? profileData?.orgLogo
-                    : "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-                }
-                alt="Organization Logo"
-                className="w-[140px] h-[140px] rounded-full border-4 border-white object-cover bg-white"
-              />
+            <div className="relative -mt-16">
+              {profileData?.orgLogo ? (
+                <img
+                  src={profileData.orgLogo}
+                  alt="Organization Logo"
+                  className="w-[140px] h-[140px] rounded-full border-4 border-white object-cover bg-white"
+                />
+              ) : (
+                <div className="w-[140px] h-[140px] rounded-full border-4 border-white bg-[#1890FF] flex items-center justify-center">
+                  <span className="text-white text-4xl font-bold">
+                    {profileData?.name
+                      ? profileData.name.charAt(0).toUpperCase()
+                      : "O"}
+                  </span>
+                </div>
+              )}
               {isOwnProfile && (
                 <>
-                  <label htmlFor="avatarImageUpload">
-                    <Camera className="absolute bottom-3 right-3 w-7 h-7 p-1 border-2 rounded-full border-white bg-white cursor-pointer" />
+                  <label htmlFor="avatarImageUpload" className="absolute bottom-3 right-3 w-8 h-8 p-1 border-2 rounded-full border-white bg-white/90 backdrop-blur-sm cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:scale-110 transition-all duration-200 shadow-lg">
+                    <Camera className="w-4 h-4 text-gray-600" />
                   </label>
                   <input
                     id="avatarImageUpload"
@@ -164,11 +205,46 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
 
             {/* Name and Title */}
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
+              <h1
+                className="text-gray-900"
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 500,
+                  fontStyle: "Medium",
+                  fontSize: "24px",
+                  lineHeight: "100%",
+                  letterSpacing: "0.5px",
+                  verticalAlign: "middle",
+                }}
+              >
                 {profileData?.name}
               </h1>
-              <p className="text-gray-600 mt-1">{profileData?.headline}</p>
-              <p className="text-blue-500 mt-2 text-sm font-semibold cursor-pointer hover:underline">
+              <p
+                className="text-gray-600 mt-1 pt-[6px]"
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 300,
+                  fontStyle: "Light",
+                  fontSize: "16px",
+                  lineHeight: "100%",
+                  letterSpacing: "0.5px",
+                  verticalAlign: "middle",
+                }}
+              >
+                {profileData?.headline}
+              </p>
+              <p
+                className="text-blue-500 mt-2 cursor-pointer hover:underline pt-[4px]"
+                style={{
+                  fontFamily: "Inter",
+                  fontWeight: 600,
+                  fontStyle: "Semi Bold",
+                  fontSize: "14px",
+                  lineHeight: "100%",
+                  letterSpacing: "0px",
+                  verticalAlign: "middle",
+                }}
+              >
                 {profileData?.followers?.length || 0} Followers
               </p>
             </div>
@@ -185,7 +261,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
               </button>
             )}
             <button className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors">
-              {/* <MoreHorizontal className="w-5 h-5 text-gray-600" /> */}
+              <MoreHorizontal className="w-5 h-5 text-gray-600" />
             </button>
 
             {!isOwnProfile && (
@@ -212,7 +288,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
                 </button>
 
                 <button className="h-10 bg-gray-100 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors font-medium">
-                  {/* <MessageCircle className="w-4 h-4" /> */}
+                  <MessageCircle className="w-4 h-4" />
                   Message
                 </button>
               </>

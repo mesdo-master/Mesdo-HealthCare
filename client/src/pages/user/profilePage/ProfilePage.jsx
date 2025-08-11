@@ -13,6 +13,25 @@ const ProfilePage = () => {
   const { userId } = params;
   const { currentUser } = useSelector((state) => state.auth);
 
+  // Add CSS to hide scrollbars
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .profile-scroll-container::-webkit-scrollbar {
+        display: none;
+      }
+      .profile-scroll-container {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   console.log("🎯 PROFILE PAGE INIT:", {
     allParams: params,
     extractedUserId: userId,
@@ -338,14 +357,16 @@ const ProfilePage = () => {
       <div className="flex flex-col h-screen">
         <div className="flex flex-1 overflow-hidden pt-[40px]">
           <div
-            className="flex flex-1 overflow-y-auto"
+            className="flex flex-1 overflow-y-auto profile-scroll-container"
             style={{
               marginLeft: layout.marginLeft,
               paddingLeft: layout.paddingLeft,
               paddingRight: layout.paddingRight,
+              scrollbarWidth: "none" /* Firefox */,
+              msOverflowStyle: "none" /* Internet Explorer 10+ */,
             }}
           >
-            <div className="max-w-5xl mx-auto w-full">
+            <div className="max-w-5xl mx-auto w-500">
               <div style={{ padding: layout.padding }}>
                 <Header />
                 <div className="flex flex-col mt-6">

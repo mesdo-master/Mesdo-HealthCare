@@ -277,7 +277,7 @@ export default function CreateJob() {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen flex justify-center items-center mt-[-20px] mr-[2px] ml-[-230px]">
+    <div className="bg-[#F5F7FA] min-h-screen flex justify-center items-center mt-[-20px] mr-[2px] ml-[-230px]">
       {/* Success Overlay */}
       <AnimatePresence>
         {showSuccess && (
@@ -351,7 +351,7 @@ export default function CreateJob() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="w-[80%] py-[10vh] pt-[15vh]">
+      <div className="w-[80%] py-[10vh] pt-[13vh]  ml-[-40px]">
         <div
           className="max-w-4.6xl mx-auto bg-white shadow-md rounded-xl p-6 border border-[#DDE4EE] overflow-hidden "
           style={{ marginLeft: "200px" }}

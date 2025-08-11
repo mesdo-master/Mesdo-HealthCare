@@ -1148,7 +1148,6 @@ const WorkExperience = ({
       newValues.endDate = "";
     }
     setFormValues(newValues);
-    updateFormData(newValues);
   };
 
   const handleSelectChange = (selectedOption, fieldName) => {
@@ -1157,7 +1156,6 @@ const WorkExperience = ({
       [fieldName]: selectedOption.value,
     };
     setFormValues(newValues);
-    updateFormData(newValues);
   };
 
   const handleQuillChange = (value) => {
@@ -1166,7 +1164,6 @@ const WorkExperience = ({
       description: value,
     };
     setFormValues(newValues);
-    updateFormData(newValues);
   };
 
   const handleSkillInputChange = (e) => setSkillInput(e.target.value);
@@ -1180,27 +1177,50 @@ const WorkExperience = ({
     if (skillInput.trim() && !formValues.skills.includes(skillInput.trim())) {
       const newSkills = [...formValues.skills, skillInput.trim()];
       setFormValues((prev) => ({ ...prev, skills: newSkills }));
-      updateFormData({ ...formValues, skills: newSkills });
       setSkillInput("");
     }
   };
   const handleSkillRemove = (idx) => {
     const newSkills = formValues.skills.filter((_, i) => i !== idx);
     setFormValues((prev) => ({ ...prev, skills: newSkills }));
-    updateFormData({ ...formValues, skills: newSkills });
   };
 
   const handleAddOrUpdate = () => {
-    if (!formValues.jobTitle || !formValues.hospital || !formValues.startDate) {
-      setError("Please fill all required fields.");
-      return;
+    // Check if any field is filled
+    const hasAnyField =
+      formValues.jobTitle ||
+      formValues.hospital ||
+      formValues.employmentType ||
+      formValues.location ||
+      formValues.startDate ||
+      formValues.endDate ||
+      formValues.skills?.length > 0 ||
+      formValues.description ||
+      formValues.currentlyWorking;
+
+    // If any field is filled, all required fields must be filled
+    if (hasAnyField) {
+      if (
+        !formValues.jobTitle ||
+        !formValues.hospital ||
+        !formValues.startDate
+      ) {
+        setError(
+          "Please fill all required fields or leave all fields empty to skip."
+        );
+        return;
+      }
     }
+
     setError("");
     let updatedList = [...expList];
     if (editIdx !== null) {
       updatedList[editIdx] = { ...formValues };
     } else {
-      updatedList.push({ ...formValues });
+      // Only add if there's actual content
+      if (hasAnyField) {
+        updatedList.push({ ...formValues });
+      }
     }
     setExpList(updatedList);
     updateFormData({ workExperience: updatedList });
@@ -1248,7 +1268,7 @@ const WorkExperience = ({
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-white">
       {/* Left (scrollable) */}
       <div
         className={`w-1/2 flex flex-col px-[100px] h-screen overflow-y-auto ${getResponsiveTopSpacing()}`}
@@ -1637,7 +1657,7 @@ const WorkExperience = ({
         </div>
       </div>
       {/* Right (fixed, never scrolls) */}
-      <div className="w-1/2 h-screen bg-[#f8f8f8] flex-shrink-0" />
+      <div className="w-1/2 h-screen bg-white flex-shrink-0" />
     </div>
   );
 };

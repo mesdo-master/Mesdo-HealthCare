@@ -12,10 +12,41 @@ const About = ({
   const [error, setError] = useState("");
 
   const handleContinue = () => {
+    // Check if all required fields are filled
     if (!formData.tagline || !formData.phoneNo || !formData.overview) {
       setError("Please fill all required fields.");
       return;
     }
+
+    // Tagline validation (mandatory)
+    if (formData.tagline.trim().length < 3) {
+      setError("Tagline must be at least 3 characters long.");
+      return;
+    }
+
+    if (formData.tagline.trim().length > 100) {
+      setError("Tagline must be less than 100 characters.");
+      return;
+    }
+
+    // Phone number validation
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(formData.phoneNo.replace(/\s+/g, ''))) {
+      setError("Please enter a valid phone number.");
+      return;
+    }
+
+    // Overview validation
+    if (formData.overview.trim().length < 10) {
+      setError("Overview must be at least 10 characters long.");
+      return;
+    }
+
+    if (formData.overview.trim().length > 500) {
+      setError("Overview must be less than 500 characters.");
+      return;
+    }
+
     setError("");
     nextStep();
   };

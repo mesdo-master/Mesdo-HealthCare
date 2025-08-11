@@ -707,41 +707,43 @@ const TabsSection = ({
           {activeTab === "Overview" && (
             <div>
               {/* About Section */}
-              <div className="bg-white rounded-md shadow-sm p-6 border border-[#E4E5E8]">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-medium text-gray-800">About</h2>
+              <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8]">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-[18px] font-semibold text-gray-900">
+                    About
+                  </h3>
                   {isOwnProfile && (
                     <button
                       onClick={() => {
                         setActiveModalTab("About");
                         setIsEditing(true);
                       }}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <Pencil className="w-5 h-5" />
+                      <Pencil className="w-4 h-4 text-gray-600" />
                     </button>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed mt-3">
-                  {aboutData || "No description provided."}
+                <p className="text-gray-700 leading-relaxed">
+                  {aboutData || "No description available."}
                 </p>
               </div>
 
               {/* Specialities Section */}
-              <div className="bg-white rounded-md shadow-sm p-6 mt-6 border border-[#E4E5E8]">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-medium text-gray-800">
+              <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8] mt-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-[18px] font-semibold text-gray-900">
                     Specialities
-                  </h2>
+                  </h3>
                   {isOwnProfile && (
                     <button
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                       onClick={() => {
                         setActiveModalTab("Specialities");
                         setIsEditing(true);
                       }}
+                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <Pencil className="w-5 h-5 text-gray-700" />
+                      <Pencil className="w-4 h-4 text-gray-600" />
                     </button>
                   )}
                 </div>
@@ -764,12 +766,12 @@ const TabsSection = ({
               </div>
 
               {/* Jobs Section */}
-              <div className="bg-white rounded-xl shadow-sm p-6 mt-6 border border-[#E4E5E8]">
+              <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8] mt-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 font-sans tracking-wide">
+                    <h3 className="text-[18px] font-semibold text-gray-900">
                       Recent Jobs
-                    </h2>
+                    </h3>
                     <p className="text-sm text-gray-500 mt-1">
                       Latest job openings from this organization
                     </p>
@@ -834,8 +836,8 @@ const TabsSection = ({
               </div>
 
               {/* People at Apollo Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mt-6 border border-[#E4E5E8]">
-                <h3 className="text-[16px] font-medium text-gray-900 mb-4">
+              <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8] mt-6">
+                <h3 className="text-[18px] font-semibold text-gray-900 mb-6">
                   People at Apollo
                 </h3>
                 <div className="space-y-4">
@@ -1292,6 +1294,25 @@ const OrganizationProfile = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // ✅ Hide scrollbar while maintaining scroll functionality
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .profile-scroll-container::-webkit-scrollbar {
+        display: none;
+      }
+      .profile-scroll-container {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Fetch organization data first
   useEffect(() => {
     const fetchProfile = async () => {
@@ -1552,7 +1573,7 @@ const OrganizationProfile = () => {
     <div className="flex flex-col h-screen">
       <div className="flex flex-1 overflow-hidden pt-[100px]">
         <div
-          className="flex flex-1 overflow-y-auto"
+          className="flex flex-1 overflow-y-auto profile-scroll-container"
           style={{
             marginLeft: layout.marginLeft,
             paddingLeft: layout.paddingLeft,
@@ -1598,20 +1619,20 @@ const OrganizationProfile = () => {
                   {/* Right Sidebar */}
                   <div className="w-1/3 py-6">
                     {/* More Information */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-[#E4E5E8]">
-                      <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-[16px] font-medium text-gray-900">
+                    <div className="bg-white rounded-2xl p-6 border border-[#E4E5E8]">
+                      <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-[16px] font-medium text-gray-900">
                           More Information
-                        </h2>
+                        </h3>
                         {isOwnProfile && (
                           <button
                             onClick={() => {
                               setIsEditing(true);
                               setActiveModalTab("More Information");
                             }}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
                           >
-                            <Pencil className="w-4 h-4" />
+                            <Pencil className="w-4 h-4 text-gray-600" />
                           </button>
                         )}
                       </div>
@@ -1633,7 +1654,7 @@ const OrganizationProfile = () => {
                     </div>
 
                     {/* Map with realistic location */}
-                    <div className="bg-white rounded-2xl shadow-sm p-0 mt-6 overflow-hidden">
+                    <div className="bg-white rounded-2xl p-0 mt-6 overflow-hidden border border-[#E4E5E8]">
                       <div className="h-48 bg-gray-200 relative">
                         <img
                           src="https://maps.googleapis.com/maps/api/staticmap?center=17.4065,78.4772&zoom=13&size=400x200&maptype=roadmap&markers=color:blue%7Clabel:A%7C17.4065,78.4772&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dg0A1c0Xjr0b2Y"

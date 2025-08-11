@@ -15,6 +15,20 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
     }
   }, [formData]);
 
+  // ✅ Auto-fill name from email when component mounts
+  useEffect(() => {
+    if (formData && formData.email && !formData.name) {
+      const emailName = formData.email.split("@")[0];
+      const formattedName = emailName
+        .split(/[._-]/)
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
+      updateFormData({ name: formattedName });
+    }
+  }, [formData.email, formData.name, updateFormData]);
+
   useEffect(() => {
     const getStateFunc = async () => {
       // Fetch states on component mount
@@ -42,6 +56,19 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
     }
   }, [selectedState]);
 
+  // ✅ Validation function to check if all required fields are filled
+  const isFormComplete = () => {
+    return (
+      formData.name?.trim() &&
+      formData.email?.trim() &&
+      formData.phoneNo?.trim() &&
+      formData.gender &&
+      formData.dob &&
+      selectedState &&
+      formData.city
+    );
+  };
+
   // Handle input changes and update parent state directly
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -52,7 +79,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
   const handleStateChange = (e) => {
     const { value } = e.target;
     setSelectedState(value);
-    updateFormData({ state: value });
+    updateFormData({ state: value, city: "" }); // Reset city when state changes
   };
 
   // ✅ Responsive top spacing for different screen sizes
@@ -70,10 +97,10 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-white">
       {/* Left Side - Form */}
       <div
-        className="w-1/2 flex flex-col px-[100px] justify-center"
+        className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
         <button className="mb-8 mt-2 text-left" onClick={onPrevious}>
@@ -100,10 +127,10 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
             <input
               type="text"
               id="name"
-              value={formData.name}
+              value={formData.name || ""}
               onChange={handleChange}
               placeholder="Akhil Sharma"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-gray-50 px-4 text-gray-700 text-[14px] font-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-sm focus:outline-none focus:ring-2 focus:ring-[#1890FF] placeholder-gray-400"
             />
           </div>
 
@@ -118,7 +145,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
             <input
               type="email"
               id="email"
-              value={formData.email}
+              value={formData.email || ""}
               disabled
               placeholder="akhil.sharma@gmail.com"
               className="block w-full h-[48px] rounded-lg border border-gray-200 bg-gray-50 px-4 text-gray-700 text-[14px] font-normal placeholder-gray-400 cursor-not-allowed"
@@ -136,10 +163,10 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
             <input
               type="text"
               id="phoneNo"
-              value={formData.phoneNo}
+              value={formData.phoneNo || ""}
               onChange={handleChange}
               placeholder="921XXXX123"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-gray-50 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] placeholder-gray-400"
             />
           </div>
 
@@ -155,9 +182,9 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
               <div className="relative">
                 <select
                   id="gender"
-                  value={formData.gender}
+                  value={formData.gender || ""}
                   onChange={handleChange}
-                  className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF]"
                 >
                   <option value="">Select</option>
                   <option value="Male">Male</option>
@@ -180,9 +207,9 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
               <input
                 type="date"
                 id="dob"
-                value={formData.dob}
+                value={formData.dob || ""}
                 onChange={handleChange}
-                className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF]"
               />
             </div>
           </div>
@@ -194,14 +221,14 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                 htmlFor="state"
                 className="block text-[15px] text-gray-900 mb-1"
               >
-                State
+                State*
               </label>
               <div className="relative">
                 <select
                   id="state"
                   value={selectedState}
                   onChange={handleStateChange}
-                  className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF]"
                 >
                   <option value="">Select</option>
                   {states.map((state) => (
@@ -221,15 +248,15 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                 htmlFor="city"
                 className="block text-[15px] text-gray-900 mb-1"
               >
-                City
+                City*
               </label>
               <div className="relative">
                 <select
                   id="city"
-                  value={formData.city}
+                  value={formData.city || ""}
                   onChange={handleChange}
                   disabled={!selectedState}
-                  className={`appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] ${
                     !selectedState ? "cursor-not-allowed" : ""
                   }`}
                 >
@@ -253,7 +280,12 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
             <button
               type="button"
               onClick={onNext}
-              className="w-[180px] h-[48px] bg-[#1890FF] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
+              disabled={!isFormComplete()}
+              className={`w-[180px] h-[48px] text-[17px] font-medium rounded-lg transition-all shadow-none ${
+                isFormComplete()
+                  ? "bg-[#1890FF] text-white hover:bg-[#0D6EFD]"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Next
             </button>
@@ -262,7 +294,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
       </div>
 
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-[#f8f8f8]" />
+      <div className="w-1/2 bg-white" />
     </div>
   );
 };

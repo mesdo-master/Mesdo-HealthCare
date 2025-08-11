@@ -81,45 +81,59 @@ const ProfessionalSummary = ({
 
   const handleTaglineChange = (e) => {
     const { value } = e.target;
+    console.log("🔍 Tagline change:", {
+      value,
+      length: value.length,
+      isEmpty: value.trim().length === 0,
+    });
     setFormValues((prev) => ({ ...prev, tagline: value }));
     updateFormData({ tagline: value });
   };
 
   const handleAboutYouChange = (value) => {
+    console.log("🔍 About You change:", {
+      value,
+      length: value.length,
+      isEmpty: value.trim().length === 0,
+    });
     setFormValues((prev) => ({ ...prev, aboutYou: value }));
     updateFormData({ aboutYou: value });
   };
 
-  // ✅ Validation logic: check if form has any content
+  // ✅ Validation logic: check if form has any content (Tagline is mandatory)
   const hasFormContent = () => {
-    return formValues.tagline.trim() || formValues.aboutYou.trim();
+    const taglineContent = formValues.tagline?.trim() || "";
+    // For ReactQuill, we need to check if it's just empty HTML tags or actual content
+    const aboutYouContent =
+      formValues.aboutYou?.replace(/<[^>]*>/g, "").trim() || "";
+    // Form has content if Tagline is filled (About You is optional)
+    return taglineContent.length > 0;
   };
 
-  // ✅ Check if form is complete (all filled fields are valid)
+  // ✅ Check if form is complete (Tagline is mandatory, About You is optional)
   const isFormComplete = () => {
-    // If no content, form is considered complete (can skip)
-    if (!hasFormContent()) {
-      console.log("✅ Form has no content - can proceed");
-      return true;
+    const taglineContent = formValues.tagline?.trim() || "";
+    // For ReactQuill, we need to check if it's just empty HTML tags or actual content
+    const aboutYouContent =
+      formValues.aboutYou?.replace(/<[^>]*>/g, "").trim() || "";
+
+    console.log("🔍 isFormComplete called with:", {
+      tagline: `"${formValues.tagline}"`,
+      aboutYou: `"${formValues.aboutYou}"`,
+      taglineTrimmed: `"${taglineContent}"`,
+      aboutYouTrimmed: `"${aboutYouContent}"`,
+      taglineLength: taglineContent.length,
+      aboutYouLength: aboutYouContent.length,
+    });
+
+    // Tagline is mandatory - must be filled
+    if (!taglineContent) {
+      console.log("❌ Tagline is empty - cannot proceed");
+      return false;
     }
 
-    // If there's content, check if it's properly filled
-    const hasTagline = formValues.tagline.trim().length > 0;
-    const hasAboutYou = formValues.aboutYou.trim().length > 0;
-
-    // If either field has content, both should be filled
-    if (hasTagline || hasAboutYou) {
-      const isComplete = hasTagline && hasAboutYou;
-      console.log("🔍 Validation check:", {
-        tagline: formValues.tagline,
-        aboutYou: formValues.aboutYou,
-        hasTagline,
-        hasAboutYou,
-        isComplete,
-      });
-      return isComplete;
-    }
-
+    // If Tagline is filled, form is complete (About You is optional)
+    console.log("✅ Tagline is filled - can proceed (About You is optional)");
     return true;
   };
 
@@ -134,8 +148,12 @@ const ProfessionalSummary = ({
       ) {
         // Save current data and proceed to Interest page
         onSkipAll();
+      } else {
+        // Clear the form and proceed
+        setFormValues({ tagline: "", aboutYou: "" });
+        updateFormData({ tagline: "", aboutYou: "" });
+        onSkipAll();
       }
-      // If they click cancel, stay on the page
     } else {
       // If form is empty, allow skip to Interest page
       onSkipAll();
@@ -143,7 +161,7 @@ const ProfessionalSummary = ({
   };
 
   return (
-    <div className="flex h-screen ">
+    <div className="flex h-screen bg-white">
       {/* Left Side - Form */}
       <div
         className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
@@ -158,7 +176,7 @@ const ProfessionalSummary = ({
             Professional Summary
           </h1>
           {/* Progress Circle */}
-          <StepProgressCircle currentStep={0} totalSteps={5} />
+          <StepProgressCircle currentStep={3} totalSteps={8} />
         </div>
 
         <p className="text-[13px] font-sm text-[#8C8C8C] mb-8">
@@ -170,14 +188,14 @@ const ProfessionalSummary = ({
           {/* Tagline */}
           <div>
             <label className="block text-[15px] text-gray-900 mb-1">
-              Tagline
+              Tagline *
             </label>
             <input
               type="text"
               value={formValues.tagline}
               onChange={handleTaglineChange}
               placeholder="Enter Tagline"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-gray-50 px-4 text-gray-700 text-[14px] font-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-sm focus:outline-none focus:ring-2 focus:ring-[#1890FF] placeholder-gray-400"
             />
           </div>
 
@@ -186,14 +204,14 @@ const ProfessionalSummary = ({
             <label className="block text-[15px] text-gray-900 mb-1">
               About You
             </label>
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#1890FF]">
               <ReactQuill
                 theme="snow"
                 value={formValues.aboutYou}
                 onChange={handleAboutYouChange}
                 modules={modules}
                 placeholder="About You"
-                className="h-[200px] text-[14px] font-sm border-none"
+                className="h-[200px] text-[14px] font-sm border-none focus:outline-none"
                 style={{
                   border: "none",
                   minHeight: 308,
@@ -218,7 +236,7 @@ const ProfessionalSummary = ({
               disabled={!isFormComplete()}
               className={`w-[180px] h-[48px] text-[17px] font-medium rounded-lg transition-all shadow-none ${
                 isFormComplete()
-                  ? "bg-[#1890FF] text-white hover:bg-blue-600"
+                  ? "bg-[#1890FF] text-white hover:bg-[#0D6EFD]"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
@@ -229,7 +247,7 @@ const ProfessionalSummary = ({
       </div>
 
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-[#f8f8f8]" />
+      <div className="w-1/2 bg-white" />
     </div>
   );
 };

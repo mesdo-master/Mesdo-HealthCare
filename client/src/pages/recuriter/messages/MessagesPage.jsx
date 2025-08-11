@@ -325,7 +325,7 @@ function MessagesRecuriter() {
           <Loader />
         </div>
       ) : (
-        <div className="flex flex-1 overflow-hidden pt-[48px]">
+        <div className="flex flex-1 overflow-hidden pt-[85px]">
           <div
             className="flex flex-1 overflow-y-auto"
             style={{
