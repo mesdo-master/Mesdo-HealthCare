@@ -10,11 +10,39 @@ const ProfessionalSummary = ({
   updateFormData,
   onPrevious,
   onNext,
+  onSkipAll, // ✅ Add onSkipAll prop
 }) => {
   const [formValues, setFormValues] = useState({
     tagline: "",
     aboutYou: "",
   });
+
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Responsive top spacing for different screen sizes
+  const getResponsiveTopSpacing = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - use padding top instead of justify-center
+      return "pt-10";
+    } else if (windowWidth <= 1920) {
+      // Medium screens - slightly reduced top spacing
+      return "pt-20";
+    } else {
+      // Large screens - significantly reduced top spacing to fix extra space
+      return "pt-10";
+    }
+  };
 
   // Initialize form values with existing data when component mounts
   useEffect(() => {
@@ -23,8 +51,20 @@ const ProfessionalSummary = ({
         tagline: formData.tagline || "",
         aboutYou: formData.aboutYou || "",
       });
+
+      // ✅ Debug: Log formData to see what's pre-filled
+      console.log("🔍 ProfessionalSummary formData:", formData);
     }
   }, [formData]);
+
+  // ✅ Debug: Log validation results whenever formValues changes
+  useEffect(() => {
+    console.log("🔍 Validation results:", {
+      hasFormContent: hasFormContent(),
+      isFormComplete: isFormComplete(),
+      formValues: formValues,
+    });
+  }, [formValues]);
 
   // ReactQuill Modules
   const modules = {
@@ -50,11 +90,63 @@ const ProfessionalSummary = ({
     updateFormData({ aboutYou: value });
   };
 
+  // ✅ Validation logic: check if form has any content
+  const hasFormContent = () => {
+    return formValues.tagline.trim() || formValues.aboutYou.trim();
+  };
+
+  // ✅ Check if form is complete (all filled fields are valid)
+  const isFormComplete = () => {
+    // If no content, form is considered complete (can skip)
+    if (!hasFormContent()) {
+      console.log("✅ Form has no content - can proceed");
+      return true;
+    }
+
+    // If there's content, check if it's properly filled
+    const hasTagline = formValues.tagline.trim().length > 0;
+    const hasAboutYou = formValues.aboutYou.trim().length > 0;
+
+    // If either field has content, both should be filled
+    if (hasTagline || hasAboutYou) {
+      const isComplete = hasTagline && hasAboutYou;
+      console.log("🔍 Validation check:", {
+        tagline: formValues.tagline,
+        aboutYou: formValues.aboutYou,
+        hasTagline,
+        hasAboutYou,
+        isComplete,
+      });
+      return isComplete;
+    }
+
+    return true;
+  };
+
+  // ✅ Handle skip all - goes directly to Interest page
+  const handleSkipAll = () => {
+    if (hasFormContent()) {
+      // If form has content, ask user if they want to save or clear
+      if (
+        window.confirm(
+          "You have entered some information. Do you want to save it before skipping?"
+        )
+      ) {
+        // Save current data and proceed to Interest page
+        onSkipAll();
+      }
+      // If they click cancel, stay on the page
+    } else {
+      // If form is empty, allow skip to Interest page
+      onSkipAll();
+    }
+  };
+
   return (
     <div className="flex h-screen ">
       {/* Left Side - Form */}
       <div
-        className="w-1/2 flex flex-col justify-center px-[100px] "
+        className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
         <button className="mb-8 mt-2 text-left" onClick={onPrevious}>
@@ -115,7 +207,7 @@ const ProfessionalSummary = ({
           <div className="flex justify-between pt-8 mt-8">
             <button
               type="button"
-              onClick={onPrevious}
+              onClick={handleSkipAll}
               className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[16px] font-medium rounded-lg hover:bg-gray-200 transition-all"
             >
               Skip All
@@ -123,7 +215,12 @@ const ProfessionalSummary = ({
             <button
               type="button"
               onClick={onNext}
-              className="w-[180px] h-[48px] bg-[#1890FF] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
+              disabled={!isFormComplete()}
+              className={`w-[180px] h-[48px] text-[17px] font-medium rounded-lg transition-all shadow-none ${
+                isFormComplete()
+                  ? "bg-[#1890FF] text-white hover:bg-blue-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Next
             </button>
@@ -141,6 +238,7 @@ ProfessionalSummary.propTypes = {
   updateFormData: PropTypes.func.isRequired,
   onNext: PropTypes.func.isRequired,
   onPrevious: PropTypes.func.isRequired,
+  onSkipAll: PropTypes.func.isRequired, // ✅ Add onSkipAll prop to propTypes
 };
 
 export default ProfessionalSummary;

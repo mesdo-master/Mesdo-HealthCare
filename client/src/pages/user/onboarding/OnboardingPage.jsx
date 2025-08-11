@@ -194,6 +194,11 @@ const Onboarding = () => {
     setForceAchievementPreview(true);
   };
 
+  // ✅ Handle Skip All - goes directly to Interest page (last page)
+  const handleSkipAll = () => {
+    setStep(8); // Go directly to Interest page (step 8 - last page)
+  };
+
   const steps = [
     { component: UploadResume, title: "Upload Resume" },
     { component: PersonalInfo, title: "Personal Information" },
@@ -201,8 +206,8 @@ const Onboarding = () => {
     { component: Qualification, title: "Qualification" },
     { component: WorkExperience, title: "Work Experience" },
     { component: SkillsSpecialization, title: "Skills & Specialization" },
-    { component: Achievement, title: "Achievement" },
-    { component: Interest, title: "Interest" },
+    { component: Achievement, title: "Achievement" }, // ✅ Achievement is step 7
+    { component: Interest, title: "Interest" }, // ✅ Interest is step 8 (last step)
   ];
 
   const CurrentStep = steps[step - 1].component;
@@ -220,6 +225,7 @@ const Onboarding = () => {
           onFinish={handleFinish}
           isLoading={isLoading}
           forcePreview={forceQualificationPreview}
+          onSkipAll={handleSkipAll} // ✅ Pass skip all function
         />
       ) : step === 5 ? (
         <WorkExperience
@@ -232,34 +238,37 @@ const Onboarding = () => {
           isLoading={isLoading}
           forcePreview={forceWorkExperiencePreview}
           onBackToQualificationPreview={onBackToQualificationPreview}
+          onSkipAll={handleSkipAll} // ✅ Pass skip all function
         />
       ) : step === 6 ? (
         <SkillsSpecialization
           formData={formData}
           updateFormData={updateFormData}
-          onNext={handleNext}
+          onNext={() => setStep(7)} // ✅ Go to Achievement page (step 7)
           onPrevious={() => {
             setStep(5);
             setForceWorkExperiencePreview(true);
           }}
+          onSkipAll={handleSkipAll} // ✅ Pass skip all function
         />
       ) : step === 7 ? (
         <Achievement
           formData={formData}
           updateFormData={updateFormData}
-          onNext={handleNext}
-          onPrevious={() => setStep(6)}
+          onNext={() => setStep(8)} // ✅ Go to Interest page (step 8)
+          onPrevious={() => {
+            setStep(6);
+            setForceAchievementPreview(true);
+          }}
           forcePreview={forceAchievementPreview}
+          onSkipAll={handleSkipAll} // ✅ Pass skip all function
         />
       ) : step === 8 ? (
         <Interest
           formData={formData}
           updateFormData={updateFormData}
-          onFinish={handleFinish}
-          onPrevious={() => {
-            setStep(7);
-            setForceAchievementPreview(true);
-          }}
+          onFinish={handleFinish} // ✅ Use onFinish prop instead of onNext
+          onPrevious={() => setStep(7)}
           isLoading={isLoading}
         />
       ) : (
@@ -272,6 +281,7 @@ const Onboarding = () => {
           isLastStep={step === steps.length}
           onFinish={handleFinish}
           isLoading={isLoading}
+          onSkipAll={step === 2 || step === 3 ? handleSkipAll : undefined} // ✅ Pass handleSkipAll to PersonalInfo and ProfessionalSummary
         />
       )}
     </div>

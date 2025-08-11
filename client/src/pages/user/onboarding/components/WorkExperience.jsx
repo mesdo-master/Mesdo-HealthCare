@@ -7,7 +7,13 @@ import PropTypes from "prop-types";
 import StepProgressCircle from "../../../../components/StepProgressCircle";
 import axios from "axios";
 
-const WorkExperience = ({ formData, updateFormData, onNext, onPrevious }) => {
+const WorkExperience = ({
+  formData,
+  updateFormData,
+  onNext,
+  onPrevious,
+  onSkipAll,
+}) => {
   const [formValues, setFormValues] = useState({
     jobTitle: "",
     hospital: "",
@@ -32,6 +38,91 @@ const WorkExperience = ({ formData, updateFormData, onNext, onPrevious }) => {
     hospitals: false,
     cities: false,
   });
+
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Responsive top spacing for different screen sizes
+  const getResponsiveTopSpacing = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - use padding top instead of justify-center
+      return "pt-10";
+    } else if (windowWidth <= 1920) {
+      // Medium screens - slightly reduced top spacing
+      return "pt-20";
+    } else {
+      // Large screens - significantly reduced top spacing to fix extra space
+      return "pt-10";
+    }
+  };
+
+  // ✅ Validation logic: check if form has any content
+  const hasFormContent = () => {
+    return (
+      formValues.jobTitle?.trim() ||
+      formValues.hospital?.trim() ||
+      formValues.employmentType ||
+      formValues.location ||
+      formValues.startDate ||
+      formValues.endDate ||
+      formValues.skills?.length > 0 ||
+      formValues.description?.trim()
+    );
+  };
+
+  // ✅ Check if form is complete (all filled fields are valid)
+  const isFormComplete = () => {
+    // If no content, form is considered complete (can skip)
+    if (!hasFormContent()) {
+      console.log("✅ Form has no content - can proceed");
+      return true;
+    }
+
+    // If there's content, check if required fields are filled
+    const hasRequiredFields =
+      formValues.jobTitle?.trim() &&
+      formValues.hospital?.trim() &&
+      formValues.startDate;
+
+    console.log("🔍 Validation check:", {
+      jobTitle: formValues.jobTitle,
+      hospital: formValues.hospital,
+      startDate: formValues.startDate,
+      hasRequiredFields: hasRequiredFields,
+      hasFormContent: hasFormContent(),
+    });
+
+    return hasRequiredFields;
+  };
+
+  // ✅ Handle skip all - goes directly to Interest page
+  const handleSkipAll = () => {
+    if (hasFormContent()) {
+      // If form has content, ask user if they want to save or clear
+      if (
+        window.confirm(
+          "You have entered some information. Do you want to save it before skipping?"
+        )
+      ) {
+        // Save current data and proceed to Interest page
+        onSkipAll();
+      }
+      // If they click cancel, stay on the page
+    } else {
+      // If form is empty, allow skip to Interest page
+      onSkipAll();
+    }
+  };
 
   // Initialize work experience with existing data when component mounts
   useEffect(() => {
@@ -1160,7 +1251,7 @@ const WorkExperience = ({ formData, updateFormData, onNext, onPrevious }) => {
     <div className="flex h-screen">
       {/* Left (scrollable) */}
       <div
-        className="w-1/2 flex flex-col justify-between px-[100px] h-screen overflow-y-auto mt-10"
+        className={`w-1/2 flex flex-col px-[100px] h-screen overflow-y-auto ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
         <div>
@@ -1516,7 +1607,7 @@ const WorkExperience = ({ formData, updateFormData, onNext, onPrevious }) => {
         <div className="flex justify-between items-center pb-8 pt-4">
           <button
             type="button"
-            onClick={onPrevious}
+            onClick={handleSkipAll}
             className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[15px] font-medium rounded-lg hover:bg-gray-200 transition-all"
           >
             Skip All
@@ -1533,7 +1624,12 @@ const WorkExperience = ({ formData, updateFormData, onNext, onPrevious }) => {
             <button
               type="button"
               onClick={handleAddOrUpdate}
-              className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
+              disabled={!isFormComplete()}
+              className={`w-[180px] h-[48px] text-[17px] font-medium rounded-lg transition-all shadow-none ${
+                isFormComplete()
+                  ? "bg-[#4285F4] text-white hover:bg-blue-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Next
             </button>
@@ -1550,6 +1646,7 @@ WorkExperience.propTypes = {
   updateFormData: PropTypes.func.isRequired,
   onNext: PropTypes.func.isRequired,
   onPrevious: PropTypes.func.isRequired,
+  onSkipAll: PropTypes.func.isRequired,
 };
 
 WorkExperience.defaultProps = {

@@ -142,9 +142,9 @@ const EmailVerificationPage = () => {
       <div className="w-full md:w-1/2 flex items-center justify-center px-8">
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-16 h-16 bg-[#E6F3FF] rounded-full flex items-center justify-center mb-4">
               <svg
-                className="w-8 h-8 text-blue-600"
+                className="w-8 h-8 text-[#1890FF]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -160,10 +160,10 @@ const EmailVerificationPage = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Check your email
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-1">
               We've sent a 6-digit verification code to
             </p>
-            <p className="text-blue-600 font-medium">{email}</p>
+            <p className="text-[#1890FF] font-medium">{email}</p>
           </div>
 
           {errors.general && (
@@ -173,8 +173,8 @@ const EmailVerificationPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+            <div className="text-center">
+              <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
                 Enter verification code
               </label>
               <div className="flex space-x-2 justify-center">
@@ -186,7 +186,7 @@ const EmailVerificationPage = () => {
                     value={digit}
                     onChange={(e) => handleCodeChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-[#1890FF] ${
                       errors.code ? "border-red-500" : "border-gray-300"
                     }`}
                     maxLength={1}
@@ -195,14 +195,16 @@ const EmailVerificationPage = () => {
                 ))}
               </div>
               {errors.code && (
-                <p className="text-red-500 text-sm mt-2">{errors.code}</p>
+                <p className="text-red-500 text-sm mt-2 text-center">
+                  {errors.code}
+                </p>
               )}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-[#1890FF] text-white rounded-md font-medium hover:bg-[#0D6EFD] focus:outline-none focus:ring-2 focus:ring-[#1890FF] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? "Verifying..." : "Verify Email"}
             </button>
@@ -215,7 +217,7 @@ const EmailVerificationPage = () => {
             <button
               onClick={handleResendCode}
               disabled={resendTimer > 0}
-              className="text-blue-600 font-medium hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="text-[#1890FF] font-medium hover:text-[#0D6EFD] disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend code"}
             </button>
@@ -227,7 +229,7 @@ const EmailVerificationPage = () => {
                 localStorage.removeItem("pendingVerificationEmail");
                 navigate("/signup");
               }}
-              className="text-gray-500 text-sm hover:text-gray-700"
+              className="text-gray-500 text-sm hover:text-gray-700 transition-colors"
             >
               ← Back to Sign Up
             </button>

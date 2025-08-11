@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Edit2,
   Trash2,
+  Plus,
 } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -25,9 +26,54 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
 
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Responsive top spacing for different screen sizes
+  const getResponsiveTopSpacing = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - use padding top instead of justify-between
+      return "pt-10";
+    } else if (windowWidth <= 1920) {
+      // Medium screens - slightly reduced top spacing
+      return "pt-20";
+    } else {
+      // Large screens - significantly reduced top spacing to fix extra space
+      return "pt-10";
+    }
+  };
+
   // Initialize achievements with existing data when component mounts
   useEffect(() => {
-    if (formData && formData.Achievements && formData.Achievements.length > 0) {
+    console.log("🔄 Loading formData:", formData);
+    if (formData && formData.achievements && formData.achievements.length > 0) {
+      console.log("📥 Found saved achievements:", formData.achievements);
+      const formattedAchievements = formData.achievements.map((ach, index) => ({
+        id: index + 1,
+        award: ach.award || "",
+        issuer: ach.issuer || "",
+        year: ach.year || "",
+        description: ach.description || "",
+      }));
+      setAchievements(formattedAchievements);
+      setShowPreview(true);
+    } else if (
+      formData &&
+      formData.Achievements &&
+      formData.Achievements.length > 0
+    ) {
+      // Handle legacy data format (capital A)
+      console.log("📥 Found legacy Achievements:", formData.Achievements);
       const formattedAchievements = formData.Achievements.map((ach, index) => ({
         id: index + 1,
         award: ach.award || "",
@@ -37,6 +83,9 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
       }));
       setAchievements(formattedAchievements);
       setShowPreview(true);
+    } else {
+      console.log("📭 No saved achievements found, using default");
+      // Don't change state if no data - keep existing state
     }
   }, [formData]);
 
@@ -58,23 +107,26 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
       achievement.id === id ? { ...achievement, [field]: value } : achievement
     );
     setAchievements(updatedAchievements);
-    updateFormData({ achievements: updatedAchievements });
+
+    // ✅ Only update parent form data when moving to preview or next
+    // Don't update on every keystroke to prevent blinking
   };
 
   const addAchievement = () => {
     const newId = Date.now();
-    setAchievements([
-      ...achievements,
-      {
-        id: newId,
-        award: "",
-        issuer: "",
-        year: "",
-        description: "",
-      },
-    ]);
+    const newAchievement = {
+      id: newId,
+      award: "",
+      issuer: "",
+      year: "",
+      description: "",
+    };
+
+    setAchievements((prev) => [...prev, newAchievement]);
     setEditId(newId);
     setShowPreview(false);
+
+    // ✅ Don't update parent form data here - wait for user to complete the form
   };
 
   const handleContinue = () => {
@@ -86,6 +138,11 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
       }
     }
     setError("");
+
+    // ✅ Save data before showing preview
+    console.log("💾 Saving achievements before preview:", achievements);
+    updateFormData({ achievements: achievements });
+
     setShowPreview(true);
   };
 
@@ -97,7 +154,9 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
   const handleDelete = (id) => {
     const updated = achievements.filter((a) => a.id !== id);
     setAchievements(updated);
-    updateFormData({ achievements: updated });
+
+    // ✅ Only update parent form data when moving to preview or next
+    // Don't update on every delete to prevent blinking
   };
 
   // If editing, only show the form for the selected achievement
@@ -105,13 +164,26 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
     achievements.find((a) => a.id === editId) ||
     achievements[achievements.length - 1];
 
+  const isFormComplete = () => {
+    return achievements.every(
+      (achievement) =>
+        achievement.award && achievement.issuer && achievement.year
+    );
+  };
+
+  const handleSkipAll = () => {
+    // Optionally, you can update the formData with empty achievements
+    // updateFormData({ achievements: [] });
+    onNext();
+  };
+
   return (
     <div className="flex h-screen">
       <div
-        className="w-1/2 flex flex-col justify-between px-[100px] mt-10"
+        className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
-        <div>
+        <div className="flex-1">
           <button className="mb-8" onClick={onPrevious}>
             <ArrowLeft size={28} className="text-black" />
           </button>
@@ -119,7 +191,7 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
             <h1 className="font-inter font-semibold text-[32px] leading-[130%] tracking-[0px] mb-1">
               Awards & Achievements
             </h1>
-            <StepProgressCircle currentStep={4} totalSteps={5} />
+            <StepProgressCircle currentStep={7} totalSteps={8} />
           </div>
           <p className="text-[13px] font-sm text-[#8C8C8C] mb-8">
             Include all of your relevant experience and dates in this section.
@@ -181,10 +253,10 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
                   className="flex items-center gap-3 mb-8 mt-2"
                 >
                   <span className="w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#8C8C8C]">
-                    <PlusCircle size={28} className="text-[#23272E]" />
+                    <Plus size={28} className="text-[#23272E]" />
                   </span>
                   <span className="text-[15px] font-medium text-[#23272E]">
-                    Add Experience
+                    Add Achievement
                   </span>
                 </button>
               </>
@@ -291,17 +363,23 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
             )}
           </div>
         </div>
-        {/* Bottom Buttons - always at the bottom */}
-        <div className="flex justify-between items-center pb-8 pt-4">
+
+        {/* Bottom Buttons - positioned at bottom */}
+        <div className="flex justify-between items-center pb-8 pt-4 mt-auto">
           <button
-            onClick={onPrevious}
+            onClick={handleSkipAll}
             className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[15px] font-medium rounded-lg hover:bg-gray-200 transition-all"
           >
             Skip All
           </button>
           {showPreview ? (
             <button
-              onClick={onNext}
+              onClick={() => {
+                console.log("🎯 Next button clicked in preview mode");
+                console.log("📋 Current achievements:", achievements);
+                console.log("🔗 onNext function:", onNext);
+                onNext();
+              }}
               className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
             >
               Next
@@ -309,7 +387,12 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
           ) : (
             <button
               onClick={handleContinue}
-              className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
+              disabled={!isFormComplete()}
+              className={`w-[180px] h-[48px] text-[17px] font-medium rounded-lg transition-all shadow-none ${
+                isFormComplete()
+                  ? "bg-[#4285F4] text-white hover:bg-blue-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Next
             </button>

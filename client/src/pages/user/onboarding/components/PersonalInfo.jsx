@@ -6,6 +6,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [selectedState, setSelectedState] = useState("");
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   // Initialize selectedState with existing data when component mounts
   useEffect(() => {
@@ -54,11 +55,25 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
     updateFormData({ state: value });
   };
 
+  // ✅ Responsive top spacing for different screen sizes
+  const getResponsiveTopSpacing = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - use padding top instead of justify-center
+      return "pt-10";
+    } else if (windowWidth <= 1920) {
+      // Medium screens - slightly reduced top spacing
+      return "pt-20";
+    } else {
+      // Large screens - significantly reduced top spacing to fix extra space
+      return "pt-10";
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Left Side - Form */}
       <div
-        className="w-1/2 flex flex-col justify-center px-[100px]"
+        className="w-1/2 flex flex-col px-[100px] justify-center"
         style={{ minWidth: 560 }}
       >
         <button className="mb-8 mt-2 text-left" onClick={onPrevious}>
@@ -233,8 +248,8 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
             </div>
           </div>
 
-          {/* Next Button */}
-          <div className="flex justify-end pt-4">
+          {/* Buttons */}
+          <div className="flex justify-between pt-4">
             <button
               type="button"
               onClick={onNext}

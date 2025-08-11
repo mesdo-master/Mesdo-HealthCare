@@ -18,6 +18,7 @@ const Qualification = ({
   updateFormData,
   onNext,
   onPrevious,
+  onSkipAll, // ✅ Add onSkipAll prop
 }) => {
   const [universities, setUniversities] = useState([]);
   const [qualifications, setQualifications] = useState([]);
@@ -50,6 +51,33 @@ const Qualification = ({
 
   // Cache for universities to avoid repeated API calls
   const [universitiesCache, setUniversitiesCache] = useState(null);
+
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Responsive top spacing for different screen sizes
+  const getResponsiveTopSpacing = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - use padding top instead of justify-center
+      return "pt-10";
+    } else if (windowWidth <= 1920) {
+      // Medium screens - slightly reduced top spacing
+      return "pt-20";
+    } else {
+      // Large screens - significantly reduced top spacing to fix extra space
+      return "pt-10";
+    }
+  };
 
   // Initialize qualifications with existing data when component mounts
   useEffect(() => {
@@ -626,7 +654,7 @@ const Qualification = ({
   return (
     <div className="flex h-screen">
       <div
-        className="w-1/2 flex flex-col justify-between px-[100px] mt-10"
+        className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
         <div>
@@ -1038,7 +1066,7 @@ const Qualification = ({
         <div className="flex justify-between items-center pb-8 pt-4">
           <button
             type="button"
-            onClick={onPrevious}
+            onClick={onSkipAll}
             className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[15px] font-medium rounded-lg hover:bg-gray-200 transition-all"
           >
             Skip All
