@@ -98,7 +98,7 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full mb-[-30px]">
       {/* Cover Photo */}
       <div className="h-[200px] relative rounded-t-2xl overflow-hidden">
         <img

@@ -1268,6 +1268,9 @@ const OrganizationProfile = () => {
   const [userSkills, setUserSkills] = useState([]);
   const [experiences, setExperiences] = useState([]);
   const [editingExperience, setEditingExperience] = useState(null);
+
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [moreInfo, setMoreInfo] = useState({
     website: "",
     organizationSize: "",
@@ -1278,6 +1281,16 @@ const OrganizationProfile = () => {
   });
   const [addresses, setAddresses] = useState([]);
   const [orgJobs, setOrgJobs] = useState([]); // <-- New state for real jobs
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Fetch organization data first
   useEffect(() => {
@@ -1408,6 +1421,37 @@ const OrganizationProfile = () => {
 
   const SIDEBAR_WIDTH = "80px";
 
+  // ✅ Consistent left spacing, adaptive layout
+  const getResponsiveLayout = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - consistent left spacing
+      return {
+        marginLeft: "50px", // Fixed left spacing - same on all screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px", // Adjusted for organization profile
+      };
+    } else if (windowWidth <= 1920) {
+      // Medium screens
+      return {
+        marginLeft: "-90px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    } else {
+      // Large screens
+      return {
+        marginLeft: "50px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    }
+  };
+
+  const layout = getResponsiveLayout();
+
   const handleSaveMoreInfo = async (updatedInfo) => {
     try {
       const response = await axiosInstance.put(`/recuriter/updateProfile`, {
@@ -1507,116 +1551,118 @@ const OrganizationProfile = () => {
   return (
     <div className="flex flex-col h-screen">
       <div className="flex flex-1 overflow-hidden pt-[100px]">
-        <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
-          <div className="max-w-5xl mx-auto w-full">
-            <div className="bg-white rounded-2xl shadow-sm w-full mt-[-50px]">
-              <div className="p-10">
-                <Header />
-                <div className="flex flex-col mt-6">
-                  {/* Profile Section */}
-                  <ProfileSection
-                    userData={userData}
-                    isOwnProfile={isOwnProfile}
-                    openModal={openModal}
-                  />
-                  {/* Tabs and Content */}
-                  <div className="flex gap-4 mt-6">
-                    <div className="w-2/3">
-                      <TabsSection
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        userData={userData}
-                        isOwnProfile={isOwnProfile}
-                        editData={editData}
-                        setEditData={setEditData}
-                        handleChange={handleChange}
-                        handleSave={handleSave}
-                        userSkills={userSkills}
-                        setUserSkills={setUserSkills}
-                        experiences={orgJobs} // <-- Pass real jobs here
-                        setExperiences={setExperiences} // (not used for jobs now)
-                        editingExperience={editingExperience}
-                        setEditingExperience={setEditingExperience}
-                        handleSaveExperience={handleSaveExperience}
-                        setIsEditing={setIsEditing}
-                        setActiveModalTab={setActiveModalTab}
-                        isEditing={isEditing}
-                        activeModalTab={activeModalTab}
-                        handleDeleteExperience={handleDeleteExperience}
-                      />
-                    </div>
-                    {/* Right Sidebar */}
-                    <div className="w-1/3 py-6">
-                      {/* More Information */}
-                      <div className="bg-white rounded-xl shadow-sm p-6 border border-[#E4E5E8]">
-                        <div className="flex justify-between items-center mb-4">
-                          <h2 className="text-[16px] font-medium text-gray-900">
-                            More Information
-                          </h2>
-                          {isOwnProfile && (
-                            <button
-                              onClick={() => {
-                                setIsEditing(true);
-                                setActiveModalTab("More Information");
-                              }}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                        <div className="space-y-3">
-                          <InfoItem
-                            label="Website"
-                            value={moreInfo.website}
-                            isLink={true}
-                          />
-                          <InfoItem
-                            label="Organization Size"
-                            value={moreInfo.organizationSize}
-                          />
-                          <InfoItem label="Type" value={moreInfo.type} />
-                          <InfoItem label="Founded" value={moreInfo.founded} />
-                          <InfoItem
-                            label="Industry"
-                            value={moreInfo.industry}
-                          />
-                          <InfoItem label="Socials" value={moreInfo.socials} />
-                        </div>
-                      </div>
-
-                      {/* Map with realistic location */}
-                      <div className="bg-white rounded-2xl shadow-sm p-0 mt-6 overflow-hidden">
-                        <div className="h-48 bg-gray-200 relative">
-                          <img
-                            src="https://maps.googleapis.com/maps/api/staticmap?center=17.4065,78.4772&zoom=13&size=400x200&maptype=roadmap&markers=color:blue%7Clabel:A%7C17.4065,78.4772&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dg0A1c0Xjr0b2Y"
-                            alt="Apollo Hospitals Location"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.src =
-                                "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&h=200&fit=crop&crop=center";
+        <div
+          className="flex flex-1 overflow-y-auto"
+          style={{
+            marginLeft: layout.marginLeft,
+            paddingLeft: layout.paddingLeft,
+            paddingRight: layout.paddingRight,
+          }}
+        >
+          <div className="max-w-5xl mx-auto w-full mt-[-60px]">
+            <div style={{ padding: layout.padding }}>
+              <Header />
+              <div className="flex flex-col mt-6">
+                {/* Profile Section */}
+                <ProfileSection
+                  userData={userData}
+                  isOwnProfile={isOwnProfile}
+                  openModal={openModal}
+                />
+                {/* Tabs and Content */}
+                <div className="flex gap-4 mt-6">
+                  <div className="w-2/3">
+                    <TabsSection
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      userData={userData}
+                      isOwnProfile={isOwnProfile}
+                      editData={editData}
+                      setEditData={setEditData}
+                      handleChange={handleChange}
+                      handleSave={handleSave}
+                      userSkills={userSkills}
+                      setUserSkills={setUserSkills}
+                      experiences={orgJobs} // <-- Pass real jobs here
+                      setExperiences={setExperiences} // (not used for jobs now)
+                      editingExperience={editingExperience}
+                      setEditingExperience={setEditingExperience}
+                      handleSaveExperience={handleSaveExperience}
+                      setIsEditing={setIsEditing}
+                      setActiveModalTab={setActiveModalTab}
+                      isEditing={isEditing}
+                      activeModalTab={activeModalTab}
+                      handleDeleteExperience={handleDeleteExperience}
+                    />
+                  </div>
+                  {/* Right Sidebar */}
+                  <div className="w-1/3 py-6">
+                    {/* More Information */}
+                    <div className="bg-white rounded-xl shadow-sm p-6 border border-[#E4E5E8]">
+                      <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-[16px] font-medium text-gray-900">
+                          More Information
+                        </h2>
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => {
+                              setIsEditing(true);
+                              setActiveModalTab("More Information");
                             }}
-                          />
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="bg-blue-500 w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                          </div>
-                          <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-gray-600">
-                            Hyderabad, India
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-3">
+                        <InfoItem
+                          label="Website"
+                          value={moreInfo.website}
+                          isLink={true}
+                        />
+                        <InfoItem
+                          label="Organization Size"
+                          value={moreInfo.organizationSize}
+                        />
+                        <InfoItem label="Type" value={moreInfo.type} />
+                        <InfoItem label="Founded" value={moreInfo.founded} />
+                        <InfoItem label="Industry" value={moreInfo.industry} />
+                        <InfoItem label="Socials" value={moreInfo.socials} />
+                      </div>
+                    </div>
+
+                    {/* Map with realistic location */}
+                    <div className="bg-white rounded-2xl shadow-sm p-0 mt-6 overflow-hidden">
+                      <div className="h-48 bg-gray-200 relative">
+                        <img
+                          src="https://maps.googleapis.com/maps/api/staticmap?center=17.4065,78.4772&zoom=13&size=400x200&maptype=roadmap&markers=color:blue%7Clabel:A%7C17.4065,78.4772&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dg0A1c0Xjr0b2Y"
+                          alt="Apollo Hospitals Location"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=400&h=200&fit=crop&crop=center";
+                          }}
+                        />
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          <div className="bg-blue-500 w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
                           </div>
                         </div>
+                        <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs text-gray-600">
+                          Hyderabad, India
+                        </div>
                       </div>
-
-                      {/* Address Section */}
-                      <AddressSection
-                        addresses={addresses}
-                        onEdit={() => {
-                          setIsEditing(true);
-                          setActiveModalTab("Addresses");
-                        }}
-                      />
                     </div>
+
+                    {/* Address Section */}
+                    <AddressSection
+                      addresses={addresses}
+                      onEdit={() => {
+                        setIsEditing(true);
+                        setActiveModalTab("Addresses");
+                      }}
+                    />
                   </div>
                 </div>
               </div>

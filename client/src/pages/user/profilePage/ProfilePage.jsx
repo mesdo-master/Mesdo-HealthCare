@@ -27,6 +27,9 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("Basic Information");
 
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   // Profile completion nudge state
   const [showProfileNudge, setShowProfileNudge] = useState(true);
 
@@ -42,6 +45,16 @@ const ProfilePage = () => {
   const [editingExperienceData, setEditingExperienceData] = useState(null);
   const [editingAchievement, setEditingAchievement] = useState(null);
   const [activeAchievementTab, setActiveAchievementTab] = useState("Preview");
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -223,7 +236,36 @@ const ProfilePage = () => {
     }, 500); // 500ms delay
   };
 
-  const SIDEBAR_WIDTH = "80px";
+  // ✅ Consistent left spacing, adaptive layout
+  const getResponsiveLayout = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - consistent left spacing
+      return {
+        marginLeft: "40px", // Fixed left spacing - same on all screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px", // Adjusted for profile page
+      };
+    } else if (windowWidth <= 1920) {
+      // Medium screens
+      return {
+        marginLeft: "-100px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    } else {
+      // Large screens
+      return {
+        marginLeft: "20px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    }
+  };
+
+  const layout = getResponsiveLayout();
 
   if (loading) {
     return (
@@ -295,9 +337,16 @@ const ProfilePage = () => {
     <div>
       <div className="flex flex-col h-screen">
         <div className="flex flex-1 overflow-hidden pt-[40px]">
-          <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
+          <div
+            className="flex flex-1 overflow-y-auto"
+            style={{
+              marginLeft: layout.marginLeft,
+              paddingLeft: layout.paddingLeft,
+              paddingRight: layout.paddingRight,
+            }}
+          >
             <div className="max-w-5xl mx-auto w-full">
-              <div className="p-10">
+              <div style={{ padding: layout.padding }}>
                 <Header />
                 <div className="flex flex-col mt-6">
                   {/* Profile Section */}

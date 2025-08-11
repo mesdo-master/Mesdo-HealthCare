@@ -1,0 +1,88 @@
+/* Responsive Messages - Same VISUAL appearance across all screen sizes */
+/* 13-inch MacBook and smaller screens - your perfect baseline */
+@media (max-width: 1599px) {
+  .responsive-messages-container {
+    margin-left: 50px !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+
+  .responsive-messages-content {
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+
+  .responsive-messages-wrapper {
+    max-width: 80rem !important;
+  }
+}
+
+/* Default fallback (also ensures 13-inch gets correct spacing) */
+.responsive-messages-container {
+  margin-left: 50px;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.responsive-messages-content {
+  gap: 16px;
+  padding: 16px;
+}
+
+.responsive-messages-wrapper {
+  max-width: 80rem;
+}
+
+/* 15-17 inch screens - slightly reduce to maintain visual density */
+@media (min-width: 1600px) and (max-width: 1920px) {
+  .responsive-messages-container {
+    margin-left: 45px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  
+  .responsive-messages-content {
+    gap: 14px;
+    padding: 14px;
+  }
+  
+  .responsive-messages-wrapper {
+    max-width: 85rem;
+  }
+}
+
+/* 24-27 inch screens - reduce more to maintain visual density */
+@media (min-width: 1921px) and (max-width: 2560px) {
+  .responsive-messages-container {
+    margin-left: 40px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  
+  .responsive-messages-content {
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .responsive-messages-wrapper {
+    max-width: 90rem;
+  }
+}
+
+/* 32+ inch screens - significantly reduce to maintain visual density */
+@media (min-width: 2561px) {
+  .responsive-messages-container {
+    margin-left: 35px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  .responsive-messages-content {
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .responsive-messages-wrapper {
+    max-width: 95rem;
+  }
+}

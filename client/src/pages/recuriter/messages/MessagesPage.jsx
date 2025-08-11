@@ -29,6 +29,9 @@ function MessagesRecuriter() {
   const [selectedConversation, setSelectedConversation] =
     useState(conversationId);
 
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   useEffect(() => {
     setSelectedConversation(conversationId);
     // Mark conversation as read when opened
@@ -36,6 +39,16 @@ function MessagesRecuriter() {
       markConversationAsRead(conversationId);
     }
   }, [conversationId, markConversationAsRead]);
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const [activeTab, setActiveTab] = useState("Recruitment");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -57,6 +70,43 @@ function MessagesRecuriter() {
   const toggleFetch = () => {
     setFetchConvo(!fetchConvo);
   };
+
+  // ✅ Consistent left spacing, adaptive message section width
+  const getResponsiveLayout = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - smaller MessageList, consistent left spacing
+      return {
+        marginLeft: "100px", // Fixed left spacing - same on all screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        gap: "16px",
+        padding: "16px",
+        messageListWidth: "300px", // Smaller MessageList on small screens
+      };
+    } else if (windowWidth <= 1920) {
+      // Medium screens - slightly bigger MessageList
+      return {
+        marginLeft: "50px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        gap: "16px",
+        padding: "16px",
+        messageListWidth: "320px", // Slightly bigger
+      };
+    } else {
+      // Large screens - normal MessageList size
+      return {
+        marginLeft: "50px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        gap: "16px",
+        padding: "16px",
+        messageListWidth: "350px", // Normal size on big screens
+      };
+    }
+  };
+
+  const layout = getResponsiveLayout();
 
   // ✅ Fetch all conversations on load
   useEffect(() => {
@@ -252,7 +302,7 @@ function MessagesRecuriter() {
   console.log("Recruiter socket connected:", isConnected);
 
   return (
-    <div className="flex flex-col h-screen ml-[40px]">
+    <div className="flex flex-col h-screen">
       {/* ✅ Connection Status Bar */}
       {!isConnected && (
         <div className="bg-red-500 text-white px-4 py-2 text-sm flex items-center justify-between">
@@ -275,11 +325,25 @@ function MessagesRecuriter() {
           <Loader />
         </div>
       ) : (
-        <div className="flex flex-1 overflow-hidden pt-[44px]">
-          <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
-            <div className="w-full">
+        <div className="flex flex-1 overflow-hidden pt-[48px]">
+          <div
+            className="flex flex-1 overflow-y-auto"
+            style={{
+              marginLeft: layout.marginLeft,
+              paddingLeft: layout.paddingLeft,
+              paddingRight: layout.paddingRight,
+            }}
+          >
+            <div className="mx-auto w-full max-w-[80rem]">
               <div className="bg-[#E4E5E8] rounded-lg w-full">
-                <div className="flex h-[calc(100vh-100px)] gap-4 bg-[#F5F7FA] p-4">
+                <div
+                  className="flex bg-[#F5F7FA]"
+                  style={{
+                    height: "calc(100vh - 100px)",
+                    gap: layout.gap,
+                    padding: layout.padding,
+                  }}
+                >
                   <MessageList
                     users={allConversations}
                     selectedId={selectedConversation}
