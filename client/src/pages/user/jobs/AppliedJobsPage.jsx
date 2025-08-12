@@ -8,6 +8,25 @@ import { calculateMatchPercentage } from "../../../utils/matchPercentage";
 import { useSelector } from "react-redux";
 import Loader from "../../../components/Loader";
 
+// CSS for hiding scrollbar
+const scrollbarStyles = `
+  .appliedjobs-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .appliedjobs-scroll-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// Inject styles
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = scrollbarStyles;
+  document.head.appendChild(styleSheet);
+}
+
 // Animation variants
 const containerVariants = {
   initial: {
@@ -47,6 +66,9 @@ const AppliedJob = ({ inUserProfile }) => {
   const { currentUser } = useSelector((state) => state.auth);
   const dropdownRef = useRef(null);
 
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -60,6 +82,47 @@ const AppliedJob = ({ inUserProfile }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Consistent left spacing, adaptive layout
+  const getResponsiveLayout = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - consistent left spacing
+      return {
+        marginLeft: "90px", // Fixed left spacing - same on all screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px", // Adjusted for jobs page
+      };
+    } else if (windowWidth <= 1920) {
+      // Medium screens
+      return {
+        marginLeft: "20px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    } else {
+      // Large screens
+      return {
+        marginLeft: "20px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    }
+  };
+
+  const layout = getResponsiveLayout();
 
   const sortOptions = [
     "Recently Applied",
@@ -201,13 +264,29 @@ const AppliedJob = ({ inUserProfile }) => {
 
   if (loading) {
     return (
-      <div
-        className={`${
-          !inUserProfile && " ml-[5vw] pt-[10vh]"
-        } h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30`}
-      >
-        <div className="flex justify-center items-center h-64">
-          <Loader />
+      <div className="flex flex-col h-screen">
+        <div className="flex flex-1 overflow-hidden pt-[60px]">
+          <div
+            className="flex flex-1 overflow-y-auto"
+            style={{
+              marginLeft: layout.marginLeft,
+              paddingLeft: layout.paddingLeft,
+              paddingRight: layout.paddingRight,
+            }}
+          >
+            <div className="mx-auto w-full max-w-[80rem]">
+              <div className="bg-[#E4E5E8] rounded-lg w-full">
+                <div
+                  className="bg-[#F5F7FA] rounded-lg"
+                  style={{ padding: layout.padding }}
+                >
+                  <div className="flex justify-center items-center h-64">
+                    <Loader />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -215,11 +294,23 @@ const AppliedJob = ({ inUserProfile }) => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 overflow-hidden pt-[140px]">
-        <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
-          <div className="max-w-5xl mx-auto w-full">
-            <div className="bg-white rounded-lg border border-gray-200 w-full mt-[-40px]">
-              <div className="p-10">
+      <div className="flex flex-1 overflow-hidden pt-[60px]">
+        <div
+          className="flex flex-1 overflow-y-auto appliedjobs-scroll-container"
+          style={{
+            marginLeft: layout.marginLeft,
+            paddingLeft: layout.paddingLeft,
+            paddingRight: layout.paddingRight,
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* Internet Explorer 10+ */,
+          }}
+        >
+          <div className="mx-auto w-full max-w-[80rem]">
+            <div className="bg-[#E4E5E8] rounded-lg w-full">
+              <div
+                className="bg-[#F5F7FA] rounded-lg"
+                style={{ padding: layout.padding }}
+              >
                 <motion.div
                   className="min-h-screen"
                   variants={containerVariants}
@@ -229,7 +320,7 @@ const AppliedJob = ({ inUserProfile }) => {
                   {/* Top Bar */}
                   {!inUserProfile && (
                     <motion.div
-                      className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shadow-sm"
+                      className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 rounded-t-lg rounded-b-lg"
                       variants={itemVariants}
                     >
                       <div className="px-8 pt-6 pb-4">
@@ -260,7 +351,7 @@ const AppliedJob = ({ inUserProfile }) => {
 
                   {/* Main Content */}
                   <motion.div
-                    className="max-w-7xl mx-auto p-6"
+                    className="max-w-7xl mx-auto"
                     variants={itemVariants}
                   >
                     {/* Header Controls */}
@@ -275,7 +366,7 @@ const AppliedJob = ({ inUserProfile }) => {
                         <span className="text-sm text-slate-500">Sort by:</span>
                         <div className="relative" ref={dropdownRef}>
                           <button
-                            className="text-sm font-semibold text-slate-800 cursor-pointer transition-all duration-200 hover:text-slate-600 flex items-center justify-between min-w-[140px]"
+                            className="text-sm font-semibold text-slate-800 cursor-pointer transition-all duration-200 hover:text-slate-600 flex items-center justify-between min-w-[140px] px-4 py-2 bg-white rounded-xl hover:bg-gray-50"
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                           >
                             <span>{sortBy}</span>
@@ -298,13 +389,13 @@ const AppliedJob = ({ inUserProfile }) => {
 
                           {/* Dropdown Options */}
                           {isDropdownOpen && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1">
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 py-2 overflow-hidden">
                               {sortOptions.map((option) => (
                                 <button
                                   key={option}
-                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 transition-colors duration-150 ${
+                                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors duration-150 ${
                                     sortBy === option
-                                      ? "text-slate-800 font-medium"
+                                      ? "text-slate-800 font-medium bg-blue-50"
                                       : "text-slate-600"
                                   }`}
                                   onClick={() => {

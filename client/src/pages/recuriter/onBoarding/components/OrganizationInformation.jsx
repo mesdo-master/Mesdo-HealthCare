@@ -1,6 +1,7 @@
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import PropTypes from "prop-types";
 import { useState } from "react";
+import Select from "react-select";
 
 const OrganizationInformation = ({
   formData,
@@ -42,7 +43,8 @@ const OrganizationInformation = ({
     }
 
     // Website should be a valid URL format (basic check)
-    const websiteRegex = /^(https?:\/\/)?([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w\-._~:?#[\]@!$&'()*+,;=%]*)?$/;
+    const websiteRegex =
+      /^(https?:\/\/)?([\w\-])+\.{1}([a-zA-Z]{2,63})([\/\w\-._~:?#[\]@!$&'()*+,;=%]*)?$/;
     if (!websiteRegex.test(formData.website.trim())) {
       setError("Please enter a valid website URL (e.g., https://example.com).");
       return;
@@ -53,7 +55,7 @@ const OrganizationInformation = ({
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-full bg-white">
       {/* Left Side - Form */}
       <div
         className="w-1/2 flex flex-col px-[100px] py-[60px] mt-[-20px]"
@@ -81,7 +83,8 @@ const OrganizationInformation = ({
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter name of your organization"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:border-[#1890FF] placeholder-gray-400"
+              style={{ backgroundColor: "white" }}
             />
           </div>
           {/* Website */}
@@ -95,7 +98,8 @@ const OrganizationInformation = ({
               value={formData.website}
               onChange={handleChange}
               placeholder="Link to your website"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:border-[#1890FF] placeholder-gray-400"
+              style={{ backgroundColor: "white" }}
             />
           </div>
           {/* Industry */}
@@ -103,75 +107,154 @@ const OrganizationInformation = ({
             <label className="block text-[15px] text-gray-900 mb-1">
               Industry*
             </label>
-            <div className="relative">
-              <select
-                name="industry"
-                value={formData.industry}
-                onChange={handleChange}
-                className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Industry</option>
-                <option value="technology">Technology</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="finance">Finance</option>
-                <option value="education">Education</option>
-                <option value="manufacturing">Manufacturing</option>
-              </select>
-              <ChevronDown
-                size={20}
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-            </div>
+            <Select
+              name="industry"
+              value={
+                formData.industry
+                  ? { value: formData.industry, label: formData.industry }
+                  : null
+              }
+              onChange={(selectedOption) =>
+                updateFormData({ industry: selectedOption?.value || "" })
+              }
+              options={[
+                { value: "technology", label: "Technology" },
+                { value: "healthcare", label: "Healthcare" },
+                { value: "finance", label: "Finance" },
+                { value: "education", label: "Education" },
+                { value: "manufacturing", label: "Manufacturing" },
+              ]}
+              placeholder="Select Industry"
+              className="text-[13px]"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minHeight: "48px",
+                  height: "48px",
+                  borderColor: "#e5e7eb",
+                  borderRadius: "0.75rem",
+                  backgroundColor: "",
+                  "&:hover": {
+                    borderColor: "#e5e7eb",
+                  },
+                }),
+                valueContainer: (base) => ({
+                  ...base,
+                  padding: "0 16px",
+                }),
+                input: (base) => ({
+                  ...base,
+                  margin: 0,
+                  padding: 0,
+                }),
+              }}
+            />
           </div>
           {/* Organization Size */}
           <div>
             <label className="block text-[15px] text-gray-900 mb-1">
               Organization Size*
             </label>
-            <div className="relative">
-              <select
-                name="organizationSize"
-                value={formData.organizationSize}
-                onChange={handleChange}
-                className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Size</option>
-                <option value="1-10">1-10 employees</option>
-                <option value="11-50">11-50 employees</option>
-                <option value="51-200">51-200 employees</option>
-                <option value="201-500">201-500 employees</option>
-                <option value="501+">501+ employees</option>
-              </select>
-              <ChevronDown
-                size={20}
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-            </div>
+            <Select
+              name="organizationSize"
+              value={
+                formData.organizationSize
+                  ? {
+                      value: formData.organizationSize,
+                      label: formData.organizationSize,
+                    }
+                  : null
+              }
+              onChange={(selectedOption) =>
+                updateFormData({
+                  organizationSize: selectedOption?.value || "",
+                })
+              }
+              options={[
+                { value: "1-10", label: "1-10 employees" },
+                { value: "11-50", label: "11-50 employees" },
+                { value: "51-200", label: "51-200 employees" },
+                { value: "201-500", label: "201-500 employees" },
+                { value: "501+", label: "501+ employees" },
+              ]}
+              placeholder="Select Size"
+              className="text-[13px]"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minHeight: "48px",
+                  height: "48px",
+                  borderColor: "#e5e7eb",
+                  borderRadius: "0.75rem",
+                  backgroundColor: "",
+                  "&:hover": {
+                    borderColor: "#e5e7eb",
+                  },
+                }),
+                valueContainer: (base) => ({
+                  ...base,
+                  padding: "0 16px",
+                }),
+                input: (base) => ({
+                  ...base,
+                  margin: 0,
+                  padding: 0,
+                }),
+              }}
+            />
           </div>
           {/* Organization Type */}
           <div>
             <label className="block text-[15px] text-gray-900 mb-1">
               Organization Type*
             </label>
-            <div className="relative">
-              <select
-                name="organizationType"
-                value={formData.organizationType}
-                onChange={handleChange}
-                className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Type</option>
-                <option value="private">Private Company</option>
-                <option value="public">Public Company</option>
-                <option value="nonprofit">Non-Profit</option>
-                <option value="government">Government</option>
-                <option value="startup">Startup</option>
-              </select>
-              <ChevronDown
-                size={20}
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-            </div>
+            <Select
+              name="organizationType"
+              value={
+                formData.organizationType
+                  ? {
+                      value: formData.organizationType,
+                      label: formData.organizationType,
+                    }
+                  : null
+              }
+              onChange={(selectedOption) =>
+                updateFormData({
+                  organizationType: selectedOption?.value || "",
+                })
+              }
+              options={[
+                { value: "private", label: "Private Company" },
+                { value: "public", label: "Public Company" },
+                { value: "nonprofit", label: "Non-Profit" },
+                { value: "government", label: "Government" },
+                { value: "startup", label: "Startup" },
+              ]}
+              placeholder="Select Type"
+              className="text-[13px]"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minHeight: "48px",
+                  height: "48px",
+                  borderColor: "#e5e7eb",
+                  borderRadius: "0.75rem",
+                  backgroundColor: "",
+                  "&:hover": {
+                    borderColor: "#e5e7eb",
+                  },
+                }),
+                valueContainer: (base) => ({
+                  ...base,
+                  padding: "0 16px",
+                }),
+                input: (base) => ({
+                  ...base,
+                  margin: 0,
+                  padding: 0,
+                }),
+              }}
+            />
           </div>
         </div>
         {error && <div className="text-red-500 text-sm mt-2">{error}</div>}

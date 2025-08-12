@@ -1,16 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  ArrowLeft,
-  PlusCircle,
-  ChevronDown,
-  Edit2,
-  Trash2,
-  Plus,
-} from "lucide-react";
+import { ArrowLeft, PlusCircle, Edit2, Trash2, Plus } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import PropTypes from "prop-types";
 import StepProgressCircle from "../../../../components/StepProgressCircle";
+import Select from "react-select";
 
 const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
   const [achievements, setAchievements] = useState([
@@ -348,30 +342,52 @@ const Achievement = ({ formData, updateFormData, onNext, onPrevious }) => {
                         <label className="block text-[15px] text-gray-900 mb-1">
                           Year*
                         </label>
-                        <div className="relative">
-                          <select
-                            value={editingAchievement.year}
-                            onChange={(e) =>
-                              handleChange(
-                                editingAchievement.id,
-                                "year",
-                                e.target.value
-                              )
-                            }
-                            className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="">Select</option>
-                            {Array.from({ length: 10 }, (_, i) => (
-                              <option key={i} value={2025 - i}>
-                                {2025 - i}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown
-                            size={20}
-                            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                          />
-                        </div>
+                        <Select
+                          name="year"
+                          value={
+                            editingAchievement.year
+                              ? {
+                                  value: editingAchievement.year,
+                                  label: editingAchievement.year,
+                                }
+                              : null
+                          }
+                          onChange={(option) =>
+                            handleChange(
+                              editingAchievement.id,
+                              "year",
+                              option.value
+                            )
+                          }
+                          options={Array.from({ length: 50 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return { value: year, label: year };
+                          })}
+                          placeholder="Select"
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.75rem",
+                              backgroundColor: "",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
                       </div>
                     </div>
                     {/* Description */}

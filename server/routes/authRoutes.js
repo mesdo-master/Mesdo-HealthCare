@@ -11,6 +11,7 @@ const {
   googleAuthCallback,
   verifyEmail,
   resendVerification,
+  deleteAccount,
 } = require("../controllers/authControllers");
 const { getSuggestedUsers } = require("../controllers/user/userControllers");
 const router = express.Router();
@@ -27,5 +28,6 @@ router.post("/forget-password", forgetPassword);
 router.post("/reset-password", resetPasswordFunc);
 router.get("/google", googleAuth);
 router.get("/google/callback", googleAuthCallback);
+router.delete("/deleteAccount", protectRoute, deleteAccount);
 
 module.exports = router;

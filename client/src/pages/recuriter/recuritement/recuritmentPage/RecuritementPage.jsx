@@ -5,6 +5,25 @@ import Topbar from "../../../../components/recuritement/TopBar";
 import ProfileCompletionNudge from "../../../../components/ProfileCompletionNudge";
 import axiosInstance from "../../../../lib/axio";
 
+// CSS for hiding scrollbar
+const scrollbarStyles = `
+  .recruitment-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .recruitment-scroll-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// Inject styles
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = scrollbarStyles;
+  document.head.appendChild(styleSheet);
+}
+
 const RecruitementPage = () => {
   // Profile completion nudge state
   const [showProfileNudge, setShowProfileNudge] = useState(true);
@@ -103,18 +122,22 @@ const RecruitementPage = () => {
     if (windowWidth <= 1599) {
       // Small/normal screens - consistent left spacing
       return {
-        marginLeft: "40px", // Fixed left spacing - same on all screens
+        marginLeft: "100px", // Fixed left spacing - same on all screens
         paddingLeft: "32px",
         paddingRight: "32px",
-        padding: "40px", // Adjusted for recruitment page
+        gap: "16px",
+        padding: "16px",
+        topPadding: "90px", // Same top padding as ProfilePage
       };
     } else if (windowWidth <= 1920) {
       // Medium screens
       return {
-        marginLeft: "-90px", // Same left spacing
+        marginLeft: "50px", // Same left spacing
         paddingLeft: "32px",
         paddingRight: "32px",
-        padding: "40px",
+        gap: "16px",
+        padding: "16px",
+        topPadding: "90px", // Same top padding as ProfilePage
       };
     } else {
       // Large screens
@@ -122,27 +145,75 @@ const RecruitementPage = () => {
         marginLeft: "50px", // Same left spacing
         paddingLeft: "32px",
         paddingRight: "32px",
-        padding: "40px",
+        gap: "16px",
+        padding: "16px",
+        topPadding: "90px", // Same top padding as ProfilePage
       };
     }
   };
 
   const layout = getResponsiveLayout();
 
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen">
+        <div
+          className="flex flex-1 overflow-hidden"
+          style={{ paddingTop: layout.topPadding }}
+        >
+          <div
+            className="flex flex-1 overflow-y-auto recruitment-scroll-container"
+            style={{
+              marginLeft: layout.marginLeft,
+              paddingLeft: layout.paddingLeft,
+              paddingRight: layout.paddingRight,
+              scrollbarWidth: "none" /* Firefox */,
+              msOverflowStyle: "none" /* Internet Explorer 10+ */,
+            }}
+          >
+            <div className="mx-auto w-full max-w-[80rem]">
+              <div className="bg-[#E4E5E8] rounded-lg w-full">
+                <div
+                  className="bg-[#F5F7FA] rounded-lg"
+                  style={{ padding: layout.padding }}
+                >
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-pulse">
+                      <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
+                      <div className="h-64 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 overflow-hidden pt-[80px]">
+      <div
+        className="flex flex-1 overflow-hidden"
+        style={{ paddingTop: layout.topPadding }}
+      >
         <div
-          className="flex flex-1 overflow-y-auto"
+          className="flex flex-1 overflow-y-auto recruitment-scroll-container"
           style={{
             marginLeft: layout.marginLeft,
             paddingLeft: layout.paddingLeft,
             paddingRight: layout.paddingRight,
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* Internet Explorer 10+ */,
           }}
         >
-          <div className="max-w-5xl mx-auto w-full">
-            <div className="bg-#464d4f rounded-xl shadow-sm w-full mt-[-20px]">
-              <div style={{ padding: layout.padding }}>
+          <div className="mx-auto w-full max-w-[80rem]">
+            <div className="bg-[#E4E5E8] rounded-lg w-full">
+              <div
+                className="bg-[#F5F7FA] rounded-lg"
+                style={{ padding: layout.padding }}
+              >
                 <Topbar jobs={jobs} />
                 <Filters jobs={jobs} onFilterChange={handleFilterChange} />
                 <JobList

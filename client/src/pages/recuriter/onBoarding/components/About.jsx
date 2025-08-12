@@ -31,7 +31,7 @@ const About = ({
 
     // Phone number validation
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    if (!phoneRegex.test(formData.phoneNo.replace(/\s+/g, ''))) {
+    if (!phoneRegex.test(formData.phoneNo.replace(/\s+/g, ""))) {
       setError("Please enter a valid phone number.");
       return;
     }
@@ -52,7 +52,7 @@ const About = ({
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-white">
       {/* Left Side - Form */}
       <div
         className="w-1/2 flex flex-col px-[100px] py-[60px] mt-[-20px]"
@@ -107,7 +107,8 @@ const About = ({
               value={formData.tagline}
               onChange={handleChange}
               placeholder="Enter tagline"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:border-[#1890FF] placeholder-gray-400"
+              style={{ backgroundColor: "white" }}
             />
           </div>
 
@@ -122,7 +123,8 @@ const About = ({
               value={formData.phoneNo}
               onChange={handleChange}
               placeholder="Enter phone number"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:border-[#1890FF] placeholder-gray-400"
+              style={{ backgroundColor: "white" }}
             />
           </div>
 
@@ -136,7 +138,8 @@ const About = ({
               value={formData.overview}
               onChange={handleChange}
               placeholder="Write about your organization..."
-              className="block w-full h-[180px] rounded-lg border border-gray-200 px-4 py-3 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 resize-none"
+              className="block w-full h-[180px] rounded-lg border border-gray-200 bg-white px-4 py-3 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:border-[#1890FF] placeholder-gray-400 resize-none"
+              style={{ backgroundColor: "white" }}
             />
           </div>
         </div>
@@ -161,7 +164,7 @@ const About = ({
       </div>
 
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-[#f8f8f8]" />
+      <div className="w-1/2 bg-white" />
     </div>
   );
 };

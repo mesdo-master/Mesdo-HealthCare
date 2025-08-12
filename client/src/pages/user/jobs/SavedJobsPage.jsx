@@ -9,6 +9,25 @@ import { calculateMatchPercentage } from "../../../utils/matchPercentage";
 import { useSelector } from "react-redux";
 import Loader from "../../../components/Loader";
 
+// CSS for hiding scrollbar
+const scrollbarStyles = `
+  .savedjobs-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .savedjobs-scroll-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// Inject styles
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = scrollbarStyles;
+  document.head.appendChild(styleSheet);
+}
+
 // Animation variants
 const containerVariants = {
   initial: {
@@ -50,6 +69,64 @@ const SavedJobs = ({ inUserProfile }) => {
   const currentUser = useSelector((state) => state.auth.user);
   const authState = useSelector((state) => state.auth);
 
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Consistent left spacing, adaptive layout
+  const getResponsiveLayout = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - consistent left spacing
+      return {
+        marginLeft: "90px", // Fixed left spacing - same on all screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px", // Adjusted for jobs page
+      };
+    } else if (windowWidth <= 1920) {
+      // Medium screens
+      return {
+        marginLeft: "20px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    } else {
+      // Large screens
+      return {
+        marginLeft: "20px", // Same left spacing
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    }
+  };
+
+  const layout = getResponsiveLayout();
+
   // Custom job card component matching Applied Jobs UI
   const SavedJobCard = ({ job }) => {
     const formatRelativeTime = (isoDateStr) => {
@@ -89,90 +166,7 @@ const SavedJobs = ({ inUserProfile }) => {
       }
     };
 
-    const calculateMatchPercentage = (job, user) => {
-      if (!user || !job) return 75;
-
-      const jobSkills = Array.isArray(job.skills)
-        ? job.skills.map((s) => s.toLowerCase())
-        : [];
-      const userSkills = Array.isArray(user.skills)
-        ? user.skills.map((s) => s.toLowerCase())
-        : [];
-
-      let skillScore = 0;
-      if (jobSkills.length > 0 && userSkills.length > 0) {
-        const matchedSkills = userSkills.filter((s) => jobSkills.includes(s));
-        skillScore = matchedSkills.length / jobSkills.length;
-      } else {
-        skillScore = 0.5;
-      }
-
-      let userExp = 0;
-      if (Array.isArray(user.experience) && user.experience.length > 0) {
-        userExp = Math.max(
-          ...user.experience.map((exp) => {
-            if (exp.startDate && exp.endDate) {
-              return (
-                (new Date(exp.endDate) - new Date(exp.startDate)) /
-                (1000 * 60 * 60 * 24 * 365)
-              );
-            } else if (exp.startDate && exp.currentlyWorking) {
-              return (
-                (Date.now() - new Date(exp.startDate)) /
-                (1000 * 60 * 60 * 24 * 365)
-              );
-            }
-            return 0;
-          })
-        );
-      }
-      const jobExp = Number(job.experience) || 0;
-      let expScore = 0;
-      if (jobExp > 0) {
-        expScore = Math.min(userExp / jobExp, 1);
-      } else {
-        expScore = 0.8;
-      }
-
-      let locationScore = 0;
-      if (user.location?.city && job.location) {
-        locationScore =
-          user.location.city.toLowerCase() === job.location.toLowerCase()
-            ? 1
-            : 0;
-      } else {
-        locationScore = 0.5;
-      }
-
-      let salaryScore = 0;
-      if (user.expectedSalary && job.salaryRangeFrom && job.salaryRangeTo) {
-        salaryScore =
-          user.expectedSalary >= job.salaryRangeFrom &&
-          user.expectedSalary <= job.salaryRangeTo
-            ? 1
-            : 0;
-      } else {
-        salaryScore = 0.5;
-      }
-
-      const match =
-        skillScore * 65 + expScore * 20 + locationScore * 10 + salaryScore * 5;
-      return Math.round(match);
-    };
-
-    const matchPercentage = (() => {
-      if (!currentUser) {
-        return job.matchPercentage || 85;
-      }
-
-      const calculated = calculateMatchPercentage(job, currentUser);
-
-      if (calculated <= 10) {
-        return job.matchPercentage || 85;
-      }
-
-      return calculated;
-    })();
+    const matchPercentage = calculateMatchPercentage(job, currentUser);
 
     return (
       <motion.div
@@ -321,20 +315,6 @@ const SavedJobs = ({ inUserProfile }) => {
     }
   }, [currentUser, savedJobs, authState]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   const sortOptions = [
     "Recently Saved",
     "Job Title",
@@ -394,98 +374,6 @@ const SavedJobs = ({ inUserProfile }) => {
     }
   }, [savedJobs, sortBy]);
 
-  //   const savedJobs = [
-  //     {
-  //       id: 1,
-  //       title: "Dermatologist Specialist",
-  //       company: "Apollo Hospital",
-  //       location: "Mumbai, Maharashtra",
-  //       logo: "https://randomuser.me/api/portraits/men/1.jpg",
-  //       saved: true,
-  //       postedTime: "2 days ago",
-  //       status: "Recently active",
-  //       jobType: "Full-time",
-  //       experience: { min: 2, max: 5 },
-  //       salary: { min: 800000, max: 1200000, currency: "INR" },
-  //       skills: ["Healthcare", "Dermatology", "Dentist"],
-  //       matchPercentage: 88,
-  //     },
-  //     {
-  //       id: 2,
-  //       title: "Cardiologist",
-  //       company: "Fortis Hospital",
-  //       location: "Delhi, India",
-  //       logo: "https://randomuser.me/api/portraits/men/2.jpg",
-  //       saved: true,
-  //       postedTime: "1 day ago",
-  //       status: "Recently active",
-  //       jobType: "Part-time",
-  //       experience: { min: 5, max: 8 },
-  //       salary: { min: 1000000, max: 1500000, currency: "INR" },
-  //       skills: ["Healthcare", "Cardiology"],
-  //       matchPercentage: 92,
-  //     },
-  //     {
-  //       id: 3,
-  //       title: "Dermatologist Specialist",
-  //       company: "Apollo Hospital",
-  //       location: "Mumbai, Maharashtra",
-  //       logo: "https://randomuser.me/api/portraits/men/3.jpg",
-  //       saved: true,
-  //       postedTime: "2 days ago",
-  //       status: "Recently active",
-  //       jobType: "Full-time",
-  //       experience: { min: 2, max: 5 },
-  //       salary: { min: 800000, max: 1200000, currency: "INR" },
-  //       skills: ["Healthcare", "Dermatology", "Dentist"],
-  //       matchPercentage: 88,
-  //     },
-  //   ];
-
-  function formatRelativeTime(isoDateStr) {
-    const postedDate = new Date(isoDateStr);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - postedDate) / 1000);
-
-    const secondsIn = {
-      minute: 60,
-      hour: 3600,
-      day: 86400,
-      week: 604800,
-      month: 2629746, // Approx: 30.44 days
-      year: 31556952, // Approx: 365.24 days
-    };
-
-    if (diffInSeconds < secondsIn.minute) {
-      return "Just now";
-    } else if (diffInSeconds < secondsIn.hour) {
-      const mins = Math.floor(diffInSeconds / secondsIn.minute);
-      return `${mins} minute${mins > 1 ? "s" : ""} ago`;
-    } else if (diffInSeconds < secondsIn.day) {
-      const hours = Math.floor(diffInSeconds / secondsIn.hour);
-      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-    } else if (diffInSeconds < secondsIn.week) {
-      const days = Math.floor(diffInSeconds / secondsIn.day);
-      return `${days} day${days > 1 ? "s" : ""} ago`;
-    } else if (diffInSeconds < secondsIn.month) {
-      const weeks = Math.floor(diffInSeconds / secondsIn.week);
-      return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
-    } else if (diffInSeconds < secondsIn.year) {
-      const months = Math.floor(diffInSeconds / secondsIn.month);
-      return `${months} month${months > 1 ? "s" : ""} ago`;
-    } else {
-      const years = Math.floor(diffInSeconds / secondsIn.year);
-      return `${years} year${years > 1 ? "s" : ""} ago`;
-    }
-  }
-
-  const formatSalary = (min, max) => {
-    if (!min || !max) return "Not specified";
-    const minLakhs = (min / 100000).toFixed(0);
-    const maxLakhs = (max / 100000).toFixed(0);
-    return `${minLakhs}-${maxLakhs}L INR/year`;
-  };
-
   const handleUnsaveJob = async (jobId) => {
     try {
       setUnsavingJobId(jobId);
@@ -500,13 +388,29 @@ const SavedJobs = ({ inUserProfile }) => {
 
   if (loading) {
     return (
-      <div
-        className={`${
-          !inUserProfile && " ml-[5vw] pt-[10vh]"
-        } h-screen bg-gradient-to-br from-slate-50 to-emerald-50/30`}
-      >
-        <div className="flex justify-center items-center h-64">
-          <Loader />
+      <div className="flex flex-col h-screen">
+        <div className="flex flex-1 overflow-hidden pt-[60px]">
+          <div
+            className="flex flex-1 overflow-y-auto"
+            style={{
+              marginLeft: layout.marginLeft,
+              paddingLeft: layout.paddingLeft,
+              paddingRight: layout.paddingRight,
+            }}
+          >
+            <div className="mx-auto w-full max-w-[80rem]">
+              <div className="bg-[#E4E5E8] rounded-lg w-full">
+                <div
+                  className="bg-[#F5F7FA] rounded-lg"
+                  style={{ padding: layout.padding }}
+                >
+                  <div className="flex justify-center items-center h-64">
+                    <Loader />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -514,11 +418,23 @@ const SavedJobs = ({ inUserProfile }) => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 overflow-hidden pt-[140px]">
-        <div className="flex flex-1 ml-[50px] overflow-y-auto px-8">
-          <div className="max-w-5xl mx-auto w-full">
-            <div className="bg-white rounded-lg border border-gray-200 w-full mt-[-40px]">
-              <div className="p-10">
+      <div className="flex flex-1 overflow-hidden pt-[60px]">
+        <div
+          className="flex flex-1 overflow-y-auto savedjobs-scroll-container"
+          style={{
+            marginLeft: layout.marginLeft,
+            paddingLeft: layout.paddingLeft,
+            paddingRight: layout.paddingRight,
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* Internet Explorer 10+ */,
+          }}
+        >
+          <div className="mx-auto w-full max-w-[80rem]">
+            <div className="bg-[#E4E5E8] rounded-lg w-full">
+              <div
+                className="bg-[#F5F7FA] rounded-lg"
+                style={{ padding: layout.padding }}
+              >
                 <motion.div
                   className="min-h-screen"
                   variants={containerVariants}
@@ -528,7 +444,7 @@ const SavedJobs = ({ inUserProfile }) => {
                   {/* Top Bar */}
                   {!inUserProfile && (
                     <motion.div
-                      className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 shadow-sm"
+                      className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 rounded-t-lg rounded-b-lg"
                       variants={itemVariants}
                     >
                       <div className="px-8 pt-6 pb-4">
@@ -559,7 +475,7 @@ const SavedJobs = ({ inUserProfile }) => {
 
                   {/* Main Content */}
                   <motion.div
-                    className="max-w-7xl mx-auto p-6"
+                    className="max-w-7xl mx-auto"
                     variants={itemVariants}
                   >
                     {/* Header Controls */}
@@ -574,7 +490,7 @@ const SavedJobs = ({ inUserProfile }) => {
                         <span className="text-sm text-slate-500">Sort by:</span>
                         <div className="relative" ref={dropdownRef}>
                           <button
-                            className="text-sm font-semibold text-slate-800 cursor-pointer transition-all duration-200 hover:text-slate-600 flex items-center justify-between min-w-[140px]"
+                            className="text-sm font-semibold text-slate-800 cursor-pointer transition-all duration-200 hover:text-slate-600 flex items-center justify-between min-w-[140px] px-4 py-2 bg-white rounded-xl hover:bg-gray-50"
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                           >
                             <span>{sortBy}</span>
@@ -597,13 +513,13 @@ const SavedJobs = ({ inUserProfile }) => {
 
                           {/* Dropdown Options */}
                           {isDropdownOpen && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1">
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 py-2 overflow-hidden">
                               {sortOptions.map((option) => (
                                 <button
                                   key={option}
-                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 transition-colors duration-150 ${
+                                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors duration-150 ${
                                     sortBy === option
-                                      ? "text-slate-800 font-medium"
+                                      ? "text-slate-800 font-medium bg-blue-50"
                                       : "text-slate-600"
                                   }`}
                                   onClick={() => {
@@ -620,7 +536,7 @@ const SavedJobs = ({ inUserProfile }) => {
                       </div>
                     </motion.div>
 
-                    {/* Jobs List using JobCard component */}
+                    {/* Jobs List using AnimatePresence for smooth transitions */}
                     <AnimatePresence mode="popLayout">
                       <div className="space-y-4">
                         {sortedSavedJobs.map((job, index) => (
@@ -636,7 +552,6 @@ const SavedJobs = ({ inUserProfile }) => {
                               transition: { duration: 0.3 },
                             }}
                             transition={{ delay: index * 0.05 }}
-                            className="max-w-4xl"
                           >
                             <SavedJobCard job={job} />
                           </motion.div>

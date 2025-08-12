@@ -260,26 +260,32 @@ const ProfilePage = () => {
     if (windowWidth <= 1599) {
       // Small/normal screens - consistent left spacing
       return {
-        marginLeft: "40px", // Fixed left spacing - same on all screens
+        marginLeft: "100px", // Fixed left spacing - same on all screens
         paddingLeft: "32px",
         paddingRight: "32px",
-        padding: "40px", // Adjusted for profile page
+        gap: "16px",
+        padding: "16px",
+        topPadding: "65px", // Reduced top padding
       };
     } else if (windowWidth <= 1920) {
       // Medium screens
       return {
-        marginLeft: "-100px", // Same left spacing
+        marginLeft: "50px", // Same left spacing
         paddingLeft: "32px",
         paddingRight: "32px",
-        padding: "40px",
+        gap: "16px",
+        padding: "16px",
+        topPadding: "65px", // Reduced top padding
       };
     } else {
       // Large screens
       return {
-        marginLeft: "20px", // Same left spacing
+        marginLeft: "50px", // Same left spacing
         paddingLeft: "32px",
         paddingRight: "32px",
-        padding: "40px",
+        gap: "16px",
+        padding: "16px",
+        topPadding: "65px", // Reduced top padding
       };
     }
   };
@@ -288,63 +294,113 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="flex flex-col h-screen">
+        <div
+          className="flex flex-1 overflow-hidden"
+          style={{ paddingTop: layout.topPadding }}
+        >
+          <div
+            className="flex flex-1 overflow-y-auto"
+            style={{
+              marginLeft: layout.marginLeft,
+              paddingLeft: layout.paddingLeft,
+              paddingRight: layout.paddingRight,
+            }}
+          >
+            <div className="mx-auto w-full max-w-[80rem]">
+              <div className="bg-[#E4E5E8] rounded-lg w-full">
+                <div
+                  className="bg-[#F5F7FA] rounded-lg"
+                  style={{ padding: layout.padding }}
+                >
+                  <div className="flex justify-center items-center h-64">
+                    <Loader />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA]">
-        <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            {/* Icon */}
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-              <svg
-                className="w-8 h-8 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
+      <div className="flex flex-col h-screen">
+        <div
+          className="flex flex-1 overflow-hidden"
+          style={{ paddingTop: layout.topPadding }}
+        >
+          <div
+            className="flex flex-1 overflow-y-auto"
+            style={{
+              marginLeft: layout.marginLeft,
+              paddingLeft: layout.paddingLeft,
+              paddingRight: layout.paddingRight,
+            }}
+          >
+            <div className="mx-auto w-full max-w-[80rem]">
+              <div className="bg-[#E4E5E8] rounded-lg w-full">
+                <div
+                  className="bg-[#F5F7FA] rounded-lg"
+                  style={{ padding: layout.padding }}
+                >
+                  <div className="max-w-md w-full mx-auto">
+                    <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                      {/* Icon */}
+                      <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                        <svg
+                          className="w-8 h-8 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
 
-            {/* Title */}
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">
-              Profile Unavailable
-            </h2>
+                      {/* Title */}
+                      <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                        Profile Unavailable
+                      </h2>
 
-            {/* Message */}
-            <p className="text-gray-600 mb-6 leading-relaxed">{error}</p>
+                      {/* Message */}
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        {error}
+                      </p>
 
-            {/* Actions */}
-            <div className="space-y-3">
-              <button
-                onClick={() => window.history.back()}
-                className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Go Back
-              </button>
-              <button
-                onClick={() => (window.location.href = "/")}
-                className="w-full bg-gray-100 text-gray-700 py-2.5 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-              >
-                Go to Home
-              </button>
-            </div>
+                      {/* Actions */}
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => window.history.back()}
+                          className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                        >
+                          Go Back
+                        </button>
+                        <button
+                          onClick={() => (window.location.href = "/")}
+                          className="w-full bg-gray-100 text-gray-700 py-2.5 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          Go to Home
+                        </button>
+                      </div>
 
-            {/* Footer note */}
-            <div className="mt-6 pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-500">
-                We're working to make this feature available soon.
-              </p>
+                      {/* Footer note */}
+                      <div className="mt-6 pt-4 border-t border-gray-100">
+                        <p className="text-xs text-gray-500">
+                          We're working to make this feature available soon.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -353,21 +409,27 @@ const ProfilePage = () => {
   }
 
   return (
-    <div>
-      <div className="flex flex-col h-screen">
-        <div className="flex flex-1 overflow-hidden pt-[40px]">
-          <div
-            className="flex flex-1 overflow-y-auto profile-scroll-container"
-            style={{
-              marginLeft: layout.marginLeft,
-              paddingLeft: layout.paddingLeft,
-              paddingRight: layout.paddingRight,
-              scrollbarWidth: "none" /* Firefox */,
-              msOverflowStyle: "none" /* Internet Explorer 10+ */,
-            }}
-          >
-            <div className="max-w-5xl mx-auto w-500">
-              <div style={{ padding: layout.padding }}>
+    <div className="flex flex-col h-screen">
+      <div
+        className="flex flex-1 overflow-hidden"
+        style={{ paddingTop: layout.topPadding }}
+      >
+        <div
+          className="flex flex-1 overflow-y-auto profile-scroll-container"
+          style={{
+            marginLeft: layout.marginLeft,
+            paddingLeft: layout.paddingLeft,
+            paddingRight: layout.paddingRight,
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* Internet Explorer 10+ */,
+          }}
+        >
+          <div className="mx-auto w-full max-w-[80rem]">
+            <div className="bg-[#E4E5E8] rounded-lg w-full">
+              <div
+                className="bg-[#F5F7FA] rounded-lg"
+                style={{ padding: layout.padding }}
+              >
                 <Header />
                 <div className="flex flex-col mt-6">
                   {/* Profile Section */}

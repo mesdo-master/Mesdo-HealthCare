@@ -33,6 +33,10 @@ export default function CreateJob() {
   const [step, setStep] = useState(1); // Step state: 1 = Job Info, 2 = Additional Info, 3 = Review
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // ✅ Add window size tracking for responsive design
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   const [formData, setFormData] = useState({
     jobTitle: "",
     jobCategory: "",
@@ -98,35 +102,85 @@ export default function CreateJob() {
             });
             setDescription(job.jobDescription || "");
           } catch (err2) {
-            // ignore
+            console.error("Error fetching job:", err2);
           }
         }
       })();
-    } else {
-      setIsEditMode(false);
     }
-    // eslint-disable-next-line
   }, [location.search]);
 
+  // ✅ Track window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Consistent left spacing, adaptive layout
+  const getResponsiveLayout = () => {
+    if (windowWidth <= 1599) {
+      // Small/normal screens - consistent left spacing
+      return {
+        marginLeft: "160px", // Fixed left spacing for 13" Mac and smaller screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    } else if (windowWidth <= 1920) {
+      // Medium screens
+      return {
+        marginLeft: "120px", // Same left spacing for medium screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    } else {
+      // Large screens
+      return {
+        marginLeft: "-40px", // Same left spacing for big screens
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        padding: "40px",
+      };
+    }
+  };
+
+  const layout = getResponsiveLayout();
+
   // Utility to check if the form is empty
-  const isFormEmpty =
-    !Object.values(formData).some((val) =>
-      typeof val === "string"
-        ? val.trim()
-        : Array.isArray(val)
-        ? val.length > 0
-        : false
-    ) && !description.trim();
+  const isFormEmpty = () => {
+    // Check if any field has meaningful content
+    const hasContent = Object.values(formData).some((val) => {
+      if (typeof val === "string") {
+        return val.trim().length > 0;
+      } else if (Array.isArray(val)) {
+        return val.length > 0;
+      } else if (val !== null && val !== undefined && val !== "") {
+        return true;
+      }
+      return false;
+    });
+
+    // Also check if description has content
+    const hasDescription = description.trim().length > 0;
+
+    return !hasContent && !hasDescription;
+  };
 
   const handleBack = () => {
     if (step === 1) {
-      if (isFormEmpty) {
-        navigate("/recruitment");
+      // Only on Step 1, check if we should show draft modal or go back to recruiter page
+      if (isFormEmpty()) {
+        navigate("/recuritement");
       } else {
         setShowBackModal(true);
       }
     } else {
-      navigate("/recruitment");
+      // On Step 2 or 3, go back to previous step
+      setStep((prev) => Math.max(prev - 1, 1));
     }
   };
 
@@ -351,10 +405,20 @@ export default function CreateJob() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="w-[80%] py-[10vh] pt-[13vh]  ml-[-40px]">
+      <div
+        className="w-[80%] py-[10vh] pt-[13vh]"
+        style={{
+          marginLeft: layout.marginLeft,
+        }}
+      >
         <div
-          className="max-w-4.6xl mx-auto bg-white shadow-md rounded-xl p-6 border border-[#DDE4EE] overflow-hidden "
-          style={{ marginLeft: "200px" }}
+          className="max-w-4.6xl mx-auto bg-white shadow-md rounded-xl p-6 border border-[#DDE4EE] overflow-hidden"
+          style={{
+            marginLeft: layout.marginLeft,
+            paddingLeft: layout.paddingLeft,
+            paddingRight: layout.paddingRight,
+            padding: layout.padding,
+          }}
         >
           {/* Header */}
           <div className="mb-6 flex items-center gap-2">
@@ -374,11 +438,11 @@ export default function CreateJob() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
               <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-auto flex flex-col items-center">
                 <h3 className="text-xl font-semibold mb-2 text-gray-900 text-center">
-                  Are you sure you want to go back?
+                  Save Your Progress
                 </h3>
                 <p className="text-gray-500 text-center mb-6">
-                  Lorem ipsum dLorem ipsum dolor sit amet consectetur.olor sit
-                  amet consectetur. Laoreet tristique.
+                  You have unsaved changes. Would you like to save this job as a
+                  draft before going back?
                 </p>
                 <div className="flex w-full gap-3 mt-2">
                   <button
@@ -391,7 +455,7 @@ export default function CreateJob() {
                     onClick={handleSaveDraft}
                     className="flex-1 py-2 rounded-lg bg-[#E6F0FF] text-[#1890FF] font-medium hover:bg-[#d0e7ff] transition"
                   >
-                    Save as a draft
+                    Save as Draft
                   </button>
                 </div>
               </div>
@@ -440,7 +504,7 @@ export default function CreateJob() {
           {/* Step Content */}
           {/* STEP 1 */}
           {step === 1 && (
-            <div className="grid grid-cols-3 gap-8 text-sm">
+            <div className="grid grid-cols-3 gap-8 text-sm min-h-[600px]">
               {/* Job Information */}
               <div className="col-span-2">
                 <div className="mb-6">
@@ -619,10 +683,10 @@ export default function CreateJob() {
 
           {/* STEP 2 */}
           {step === 2 && (
-            <div className="grid grid-cols-3 gap-8 text-sm">
+            <div className="grid grid-cols-3 gap-8 text-sm min-h-[600px]">
               <div className="col-span-2">
                 {/* Skills */}
-                <div className="mb-6 pt-5">
+                <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-600">
                     Skills
                   </label>
@@ -715,6 +779,7 @@ export default function CreateJob() {
                       value={formData.Shift}
                       onChange={handleChange}
                       className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                      placeholder="Enter shift details"
                     />
                   </div>
 
@@ -754,7 +819,7 @@ export default function CreateJob() {
 
           {/* STEP 3: Review */}
           {step === 3 && (
-            <div className="grid grid-cols-3 gap-8 text-sm">
+            <div className="grid grid-cols-3 gap-8 text-sm min-h-[600px]">
               {/* LEFT: Review Information */}
               <div className="col-span-2">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -828,9 +893,9 @@ export default function CreateJob() {
             {step < 3 && (
               <button
                 onClick={handleNext}
-                className="px-4 py-2 bg-blue-500  text-white rounded-md text-sm "
+                className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm ml-auto"
               >
-                Additional Information
+                {step === 1 ? "Additional Information" : "Review"}
               </button>
             )}
 
@@ -838,7 +903,7 @@ export default function CreateJob() {
               <button
                 onClick={handleJobPublish}
                 disabled={loading}
-                className="px-4 py-2 bg-[#1890FF] text-white rounded-md "
+                className="px-4 py-2 bg-[#1890FF] text-white rounded-md ml-auto"
               >
                 {loading
                   ? isEditMode

@@ -3,8 +3,6 @@ import { ArrowLeft, X, Check } from "lucide-react";
 import PropTypes from "prop-types";
 import StepProgressCircle from "../../../../components/StepProgressCircle";
 
-const defaultSkillOptions = ["Communication", "Teamwork", "Critical Thinking"];
-
 const SkillsSpecialization = ({
   formData,
   updateFormData,
@@ -13,7 +11,7 @@ const SkillsSpecialization = ({
   onSkipAll, // ✅ Add onSkipAll prop
 }) => {
   const [formValues, setFormValues] = useState({
-    skills: defaultSkillOptions,
+    skills: [],
   });
   const [skillInput, setSkillInput] = useState("");
 
@@ -28,6 +26,16 @@ const SkillsSpecialization = ({
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Force empty skills on component mount to remove any default skills
+  useEffect(() => {
+    console.log(
+      "🚀 SkillsSpecialization component mounted - forcing empty skills"
+    );
+    setFormValues({
+      skills: [],
+    });
   }, []);
 
   // ✅ Responsive top spacing for different screen sizes
@@ -70,13 +78,30 @@ const SkillsSpecialization = ({
 
   // Initialize form values with existing data when component mounts
   useEffect(() => {
-    if (formData && formData.Skills) {
-      setFormValues({
-        skills:
-          formData.Skills.length > 0 ? formData.Skills : defaultSkillOptions,
-      });
+    console.log("🔍 SkillsSpecialization - formData received:", formData);
+    console.log("🔍 SkillsSpecialization - formData.Skills:", formData?.Skills);
+
+    // Only load skills if they exist and are not the default ones
+    if (formData && formData.Skills && formData.Skills.length > 0) {
+      // Check if these are the default skills we want to avoid
+      const defaultSkills = ["Communication", "Teamwork", "Critical Thinking"];
+      const hasDefaultSkills = defaultSkills.some((skill) =>
+        formData.Skills.includes(skill)
+      );
+
+      if (hasDefaultSkills) {
+        console.log("🚫 Detected default skills - starting with empty array");
+        setFormValues({ skills: [] });
+        updateFormData({ Skills: [] });
+      } else {
+        console.log("✅ Loading existing user-added skills:", formData.Skills);
+        setFormValues({ skills: formData.Skills });
+      }
+    } else {
+      console.log("🆕 Starting with empty skills array");
+      setFormValues({ skills: [] });
     }
-  }, [formData]);
+  }, [formData, updateFormData]);
 
   // Only update parent when skills change - with debouncing to prevent glitching
   useEffect(() => {

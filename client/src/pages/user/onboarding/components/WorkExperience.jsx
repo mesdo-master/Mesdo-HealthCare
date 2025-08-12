@@ -52,6 +52,25 @@ const WorkExperience = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // ✅ Add CSS to hide scrollbar while maintaining scroll functionality
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .workexperience-scroll-container::-webkit-scrollbar {
+        display: none;
+      }
+      .workexperience-scroll-container {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // ✅ Responsive top spacing for different screen sizes
   const getResponsiveTopSpacing = () => {
     if (windowWidth <= 1599) {
@@ -1268,10 +1287,10 @@ const WorkExperience = ({
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-white WorkExperience">
       {/* Left (scrollable) */}
       <div
-        className={`w-1/2 flex flex-col px-[100px] h-screen overflow-y-auto ${getResponsiveTopSpacing()}`}
+        className={`w-1/2 flex flex-col px-[100px] h-screen overflow-y-auto workexperience-scroll-container ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
         <div>

@@ -28,7 +28,7 @@ const Location = ({ formData, updateFormData, prevStep, saveToDatabase }) => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-white">
       {/* Left Side - Form */}
       <div
         className="w-1/2 flex flex-col px-[100px] py-[60px] mt-[-20px]"
@@ -57,7 +57,8 @@ const Location = ({ formData, updateFormData, prevStep, saveToDatabase }) => {
               value={formData.locationName}
               onChange={handleChange}
               placeholder="Enter location name"
-              className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:border-[#1890FF] placeholder-gray-400"
+              style={{ backgroundColor: "white" }}
             />
           </div>
 
@@ -70,7 +71,8 @@ const Location = ({ formData, updateFormData, prevStep, saveToDatabase }) => {
               value={formData.locationAddress}
               onChange={handleChange}
               placeholder="Enter complete address"
-              className="block w-full h-[200px] rounded-lg border border-gray-200 px-4 py-3 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 resize-none"
+              className="block w-full h-[200px] rounded-lg border border-gray-200 bg-white px-4 py-3 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-[#1890FF] focus:border-[#1890FF] placeholder-gray-400 resize-none"
+              style={{ backgroundColor: "white" }}
             />
           </div>
         </div>
@@ -95,7 +97,7 @@ const Location = ({ formData, updateFormData, prevStep, saveToDatabase }) => {
       </div>
 
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-[#f8f8f8]" />
+      <div className="w-1/2 bg-white" />
     </div>
   );
 };

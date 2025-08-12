@@ -1,11 +1,4 @@
-import {
-  ArrowLeft,
-  ChevronDown,
-  Edit2,
-  Trash2,
-  Plus,
-  Check,
-} from "lucide-react";
+import { ArrowLeft, Edit2, Trash2, Plus, Check } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import Select from "react-select";
 import ReactQuill from "react-quill";
@@ -487,16 +480,6 @@ const Qualification = ({
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCourseChange = (e) => {
-    const { value } = e.target;
-    setFormValues((prev) => ({ ...prev, course: value, specialization: "" }));
-
-    // Fetch specializations for the selected course
-    if (value) {
-      fetchSpecializations(value);
-    }
-  };
-
   const handleUniversityChange = (selectedOption) => {
     if (selectedOption.value === "other") {
       setIsOtherSelected(true);
@@ -665,9 +648,9 @@ const Qualification = ({
   }, []);
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-full bg-white Qualification">
       <div
-        className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
+        className={`w-1/2 flex flex-col px-[100px]  ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
         <div>
@@ -890,55 +873,102 @@ const Qualification = ({
                     <label className="block text-[15px] text-gray-900 mb-1">
                       Course*
                     </label>
-                    <div className="relative">
-                      <select
-                        name="course"
-                        value={formValues.course}
-                        onChange={handleCourseChange}
-                        disabled={loading.courses}
-                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                      >
-                        <option value="">
-                          {loading.courses ? "Loading courses..." : "Select"}
-                        </option>
-                        {courses.map((course) => (
-                          <option key={course.value} value={course.value}>
-                            {course.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown
-                        size={20}
-                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-                    </div>
+                    <Select
+                      name="course"
+                      value={courses.find(
+                        (course) => course.value === formValues.course
+                      )}
+                      onChange={(option) => {
+                        setFormValues((prev) => ({
+                          ...prev,
+                          course: option.value,
+                          specialization: "", // Reset specialization when course changes
+                        }));
+                        // Fetch specializations for the selected course
+                        if (option.value) {
+                          fetchSpecializations(option.value);
+                        }
+                      }}
+                      options={courses}
+                      placeholder={
+                        loading.courses ? "Loading courses..." : "Select"
+                      }
+                      isLoading={loading.courses}
+                      isDisabled={loading.courses}
+                      className="text-[13px]"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "48px",
+                          height: "48px",
+                          borderColor: "#e5e7eb",
+                          borderRadius: "0.75rem",
+                          backgroundColor: "",
+                          "&:hover": {
+                            borderColor: "#e5e7eb",
+                          },
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          padding: "0 16px",
+                        }),
+                        input: (base) => ({
+                          ...base,
+                          margin: 0,
+                          padding: 0,
+                        }),
+                      }}
+                    />
                   </div>
                   <div className="w-1/2">
                     <label className="block text-[15px] text-gray-900 mb-1">
                       Passing Year*
                     </label>
-                    <div className="relative">
-                      <select
-                        name="passingYear"
-                        value={formValues.passingYear}
-                        onChange={handleChange}
-                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select</option>
-                        {Array.from({ length: 50 }, (_, i) => {
-                          const year = new Date().getFullYear() - i;
-                          return (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          );
-                        })}
-                      </select>
-                      <ChevronDown
-                        size={20}
-                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-                    </div>
+                    <Select
+                      name="passingYear"
+                      value={
+                        formValues.passingYear
+                          ? {
+                              value: formValues.passingYear,
+                              label: formValues.passingYear,
+                            }
+                          : null
+                      }
+                      onChange={(option) => {
+                        setFormValues((prev) => ({
+                          ...prev,
+                          passingYear: option.value,
+                        }));
+                      }}
+                      options={Array.from({ length: 50 }, (_, i) => {
+                        const year = new Date().getFullYear() - i;
+                        return { value: year, label: year };
+                      })}
+                      placeholder="Select"
+                      className="text-[13px]"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "48px",
+                          height: "48px",
+                          borderColor: "#e5e7eb",
+                          borderRadius: "0.75rem",
+                          backgroundColor: "",
+                          "&:hover": {
+                            borderColor: "#e5e7eb",
+                          },
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          padding: "0 16px",
+                        }),
+                        input: (base) => ({
+                          ...base,
+                          margin: 0,
+                          padding: 0,
+                        }),
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -948,56 +978,104 @@ const Qualification = ({
                     <label className="block text-[15px] text-gray-900 mb-1">
                       Specialization*
                     </label>
-                    <div className="relative">
-                      <select
-                        name="specialization"
-                        value={formValues.specialization}
-                        onChange={handleChange}
-                        disabled={loading.specializations || !formValues.course}
-                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                      >
-                        <option value="">
-                          {loading.specializations
-                            ? "Loading specializations..."
-                            : !formValues.course
-                            ? "Select course first"
-                            : "Select"}
-                        </option>
-                        {specializations.map((spec) => (
-                          <option key={spec.value} value={spec.value}>
-                            {spec.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown
-                        size={20}
-                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-                    </div>
+                    <Select
+                      name="specialization"
+                      value={specializations.find(
+                        (spec) => spec.value === formValues.specialization
+                      )}
+                      onChange={(option) => {
+                        setFormValues((prev) => ({
+                          ...prev,
+                          specialization: option.value,
+                        }));
+                      }}
+                      options={specializations}
+                      placeholder={
+                        loading.specializations
+                          ? "Loading specializations..."
+                          : !formValues.course
+                          ? "Select course first"
+                          : "Select"
+                      }
+                      isLoading={loading.specializations}
+                      isDisabled={loading.specializations || !formValues.course}
+                      className="text-[13px]"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "48px",
+                          height: "48px",
+                          borderColor: "#e5e7eb",
+                          borderRadius: "0.75rem",
+                          backgroundColor: "",
+                          "&:hover": {
+                            borderColor: "#e5e7eb",
+                          },
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          padding: "0 16px",
+                        }),
+                        input: (base) => ({
+                          ...base,
+                          margin: 0,
+                          padding: 0,
+                        }),
+                      }}
+                    />
                   </div>
                   <div className="w-1/2">
                     <label className="block text-[15px] text-gray-900 mb-1">
                       Course Type*
                     </label>
-                    <div className="relative">
-                      <select
-                        name="courseType"
-                        value={formValues.courseType}
-                        onChange={handleChange}
-                        className="appearance-none block w-full h-[48px] rounded-lg border border-gray-200 bg-white px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select</option>
-                        <option value="full-time">Full-time</option>
-                        <option value="part-time">Part-time</option>
-                        <option value="distance">Distance Learning</option>
-                        <option value="online">Online</option>
-                        <option value="correspondence">Correspondence</option>
-                      </select>
-                      <ChevronDown
-                        size={20}
-                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-                    </div>
+                    <Select
+                      name="courseType"
+                      value={
+                        formValues.courseType
+                          ? {
+                              value: formValues.courseType,
+                              label: formValues.courseType,
+                            }
+                          : null
+                      }
+                      onChange={(option) => {
+                        setFormValues((prev) => ({
+                          ...prev,
+                          courseType: option.value,
+                        }));
+                      }}
+                      options={[
+                        { value: "full-time", label: "Full-time" },
+                        { value: "part-time", label: "Part-time" },
+                        { value: "distance", label: "Distance Learning" },
+                        { value: "online", label: "Online" },
+                        { value: "correspondence", label: "Correspondence" },
+                      ]}
+                      placeholder="Select"
+                      className="text-[13px]"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "48px",
+                          height: "48px",
+                          borderColor: "#e5e7eb",
+                          borderRadius: "0.75rem",
+                          backgroundColor: "",
+                          "&:hover": {
+                            borderColor: "#e5e7eb",
+                          },
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          padding: "0 16px",
+                        }),
+                        input: (base) => ({
+                          ...base,
+                          margin: 0,
+                          padding: 0,
+                        }),
+                      }}
+                    />
                   </div>
                 </div>
 

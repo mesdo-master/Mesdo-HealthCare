@@ -560,6 +560,56 @@ const resetPasswordFunc = async (req, res) => {
   }
 };
 
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Delete the user from database
+    const deletedUser = await User.findByIdAndDelete(userId);
+    
+    if (!deletedUser) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    // Clear all authentication cookies
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    };
+
+    res.clearCookie("jwt-mesdo", cookieOptions);
+    res.clearCookie("jwt-mesdo-fallback", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+    });
+    res.clearCookie("jwt-mesdo-legacy", {
+      httpOnly: true,
+      secure: true,
+      path: "/",
+    });
+
+    console.log(`User account deleted successfully - ID: ${userId}, Email: ${deletedUser.email}`);
+
+    res.json({
+      message: "Account deleted successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    res.status(500).json({
+      message: "Failed to delete account",
+      success: false,
+    });
+  }
+};
+
 module.exports = {
   resendVerification,
   verifyEmail,
@@ -571,4 +621,5 @@ module.exports = {
   resetPasswordFunc,
   googleAuth,
   googleAuthCallback,
+  deleteAccount,
 };

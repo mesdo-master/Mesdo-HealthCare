@@ -141,3 +141,41 @@ body[data-route*="onboarding"] .onboarding-container,
     padding-right: 20px;
   }
 }
+
+/* Windows-specific shadow and gradient fixes to prevent cross-platform rendering issues */
+@supports (-ms-ime-align: auto) {
+  /* Remove all problematic shadows */
+  .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: none !important;
+  }
+  
+  /* Remove all problematic gradients */
+  [class*="bg-gradient-"] {
+    background: #f8f9fa !important;
+  }
+  
+  /* Remove backdrop blur effects */
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+  }
+  
+  /* Remove opacity backgrounds */
+  [class*="bg-white/"], [class*="bg-gray/"], [class*="bg-slate/"] {
+    background: #ffffff !important;
+  }
+  
+  /* Remove complex border combinations that cause shadow-like effects */
+  .border.border-gray-200.border-slate-200 {
+    border: 1px solid #e5e7eb !important;
+  }
+  
+  /* Fix any remaining problematic shadows */
+  *[style*="box-shadow"] {
+    box-shadow: none !important;
+  }
+  
+  /* Fix any remaining problematic gradients */
+  *[style*="linear-gradient"] {
+    background: #f8f9fa !important;
+  }
+}
