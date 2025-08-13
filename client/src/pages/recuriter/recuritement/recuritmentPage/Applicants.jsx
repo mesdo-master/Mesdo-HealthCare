@@ -231,10 +231,10 @@ export default function Applicants() {
                 className="bg-[#F5F7FA] rounded-lg min-h-[calc(100vh-120px)]"
                 style={{ padding: layout.padding }}
               >
-                <div className="bg-white rounded-lg border border-gray-200 w-full min-h-[calc(100vh-160px)]">
+                <div className="  w-full min-h-[calc(100vh-160px)]">
                   <div className="p-10 min-h-[calc(100vh-200px)]">
                     {/* TOP BAR */}
-                    <div className="bg-white shadow-sm border-b border-gray-200 mt-[-20px]">
+                    <div className="bg-white border  mt-[-35px] rounded-lg">
                       {/* Row 1: Back arrow + Top Info */}
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-8 pt-4 pb-4">
                         <div className="flex items-start md:items-center gap-3">
@@ -320,7 +320,12 @@ export default function Applicants() {
                           <select
                             value={sortType}
                             onChange={(e) => setSortType(e.target.value)}
-                            className="border border-gray-300 rounded-md px-3 py-3 text-gray-700 bg-white text-sm font-medium"
+                            className="border border-gray-300 rounded-md px-4 py-3 pr-8 text-gray-700 bg-white text-sm font-medium appearance-none bg-no-repeat bg-right pr-8"
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                              backgroundPosition: "right 0.5rem center",
+                              backgroundSize: "1.5em 1.5em",
+                            }}
                           >
                             <option value="matchPercentage">
                               Match Percentage
@@ -330,7 +335,7 @@ export default function Applicants() {
 
                           <button
                             onClick={handleSort}
-                            className="border border-gray-300 rounded-md px-3 py-3 text-gray-700 bg-white flex items-center gap-1 text-sm font-medium"
+                            className="border border-gray-300 rounded-md px-4 py-3 text-gray-700 bg-white flex items-center gap-1 text-sm font-medium"
                           >
                             Sort
                           </button>
@@ -351,7 +356,7 @@ export default function Applicants() {
                                   } // Open drawer with selected applicant
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
-                                  className="bg-[#F5F7FA] shadow-sm rounded-lg px-6 py-4 border border-gray-200 flex items-center cursor-pointer hover:shadow-md transition-all"
+                                  className="bg-white shadow-sm rounded-xl px-6 py-4 border border-gray-200 flex items-center cursor-pointer hover:shadow-md transition-all"
                                 >
                                   {/* COLUMN 1: Profile + Name */}
                                   <div className="min-w-[180px] flex items-center gap-3">

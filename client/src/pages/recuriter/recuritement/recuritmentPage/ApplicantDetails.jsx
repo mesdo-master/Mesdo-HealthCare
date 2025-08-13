@@ -38,10 +38,9 @@ function TopBar({
   const total = applicants.length;
   return (
     <div className="sticky top-0 h-16 bg-white flex items-center justify-between px-8 z-10 border-b border-[#E5E7EB]">
-      {/* Left side: back/forward arrows + "1 out of 10" */}
+      {/* Left side: back/forward arrows */}
       <div className="flex items-center gap-3 ml-2">
         {/* Back Button - Navigates to Applicants Section */}
-
         <button
           className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
           onClick={() => {
@@ -51,14 +50,17 @@ function TopBar({
           disabled={currentIndex === 0}
           aria-label="Previous Applicant"
         >
-          <AiOutlineUp className="w-5 h-5 text-gray-700 rotate-[-90deg]" />
+          <svg
+            width="18"
+            height="18"
+            fill="none"
+            stroke="#4B5563"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
-        <span
-          className="text-sm text-gray-500 font-inter"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
-          {total > 0 ? `${currentIndex + 1} out of ${total}` : "-"}
-        </span>
         <button
           className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
           onClick={() => {
@@ -68,7 +70,16 @@ function TopBar({
           disabled={currentIndex === total - 1}
           aria-label="Next Applicant"
         >
-          <AiOutlineDown className="w-5 h-5 text-gray-700 rotate-[-90deg]" />
+          <svg
+            width="18"
+            height="18"
+            fill="none"
+            stroke="#4B5563"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
       {/* Right side: close icon */}
@@ -148,7 +159,7 @@ function ProfileHeaderWithTabs({
         error.response?.data?.error ||
         error.message ||
         "Unknown error occurred";
-      alert(`Error rejecting application: ${errorMessage}`);
+      alert(`Error accepting application: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -175,7 +186,7 @@ function ProfileHeaderWithTabs({
     // Show Accept/Reject buttons only for "Applied" status
     if (currentStatus === "Applied") {
       return (
-        <div className="flex items-center space-x-2">
+        <div className="flex gap-3 items-center">
           <button
             onClick={handleAcceptApplication}
             disabled={loading}
@@ -212,7 +223,7 @@ function ProfileHeaderWithTabs({
     } else {
       // Show current status badge for all other statuses
       return (
-        <div className="flex items-center space-x-2">
+        <div className="flex gap-3 items-center">
           <div
             className={`flex items-center justify-center rounded-md text-sm font-medium ${getStatusColor(
               currentStatus
@@ -241,9 +252,9 @@ function ProfileHeaderWithTabs({
   };
 
   return (
-    <div className="bg-white shadow-sm border-b border-gray-200 w-full">
+    <div className="bg-white shadow-sm border-b border-gray-200">
       {/* Profile Info */}
-      <div className="flex items-center justify-between px-8 pt-4 pb-2 w-full">
+      <div className="flex items-center justify-between px-8 pt-6 pb-4">
         <div className="flex items-center gap-5 flex-1">
           <img
             src={
@@ -401,7 +412,13 @@ function QualificationSection({ applicant }) {
           {educationList.map((qual, index) => (
             <QualificationItem
               key={index}
-              icon={<img src={schoolIcon} alt="School" className="w-5 h-5" />}
+              icon={
+                <img
+                  src={schoolIcon}
+                  alt="School"
+                  className="w-5 h-5 opacity-70"
+                />
+              }
               title={qual.qualification}
               institute={qual.university}
               date={qual.passingYear}
@@ -466,7 +483,7 @@ function WorkExperienceSection({ applicant }) {
           {experiences.map((exp, index) => (
             <WorkExperienceItem
               key={index}
-              icon={<MdWork className="text-blue-500 text-xl" />}
+              icon={<MdWork className="text-gray-500 text-xl" />}
               title={exp.title}
               organization={exp.institution}
               date={`${exp.type}  | ${exp.startDate} – ${exp.endDate}`}
@@ -542,14 +559,14 @@ function SkillsCertificatesSection({ applicant }) {
           className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          <FaTools className="text-blue-600" /> Skills
+          <FaTools className="text-gray-500" /> Skills
         </h2>
         {skills.length > 0 ? (
           <div className="mt-4 flex flex-wrap gap-3">
             {skills.map((skill, index) => (
               <span
                 key={index}
-                className="inline-block bg-blue-50 text-blue-700 text-sm py-1 px-3 rounded-full font-inter"
+                className="inline-block bg-gray-100 text-gray-700 text-sm py-1 px-3 rounded-full font-inter"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {skill}
@@ -572,7 +589,7 @@ function SkillsCertificatesSection({ applicant }) {
           className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          <SlBadge className="text-yellow-600" /> Certificates &amp; Awards
+          <SlBadge className="text-gray-500" /> Certificates &amp; Awards
         </h2>
         {certifications.length > 0 ? (
           <div className="mt-4 space-y-4">
@@ -582,7 +599,7 @@ function SkillsCertificatesSection({ applicant }) {
                 name={cert.name}
                 issuer={cert.issuedBy}
                 date={cert.year}
-                icon={<SlBadge className="text-yellow-600 mt-1" />}
+                icon={<SlBadge className="text-gray-500 mt-1" />}
               />
             ))}
           </div>
@@ -1113,7 +1130,10 @@ export function ApplicantDetails({
   };
 
   return (
-    <div className="h-full bg-gray-50 font-sans overflow-auto scrollbar-hide">
+    <div
+      className="h-full w-full bg-[#F7F8FA] overflow-y-auto"
+      style={{ minHeight: "100vh" }}
+    >
       <div className="flex flex-col min-h-0">
         <ProfileHeader
           activeTab={activeTab}
@@ -1126,12 +1146,14 @@ export function ApplicantDetails({
           currentIndex={currentIndex}
           onClose={onClose}
         />
+
+        {/* Content Area - Exact same structure as JobDetails */}
         <div className="flex flex-row gap-6 p-6 min-h-0">
           <div className="flex-1 min-w-0 flex flex-col gap-6">
             {/* Content sections moved here */}
-            <div className="mt-2">
+            <div>
               {activeTab === "jobApplication" && (
-                <div className="mt-2 grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <div className="md:col-span-2 space-y-6">
                     <AboutSection applicant={applicant} />
                     <QualificationSection applicant={applicant} />
