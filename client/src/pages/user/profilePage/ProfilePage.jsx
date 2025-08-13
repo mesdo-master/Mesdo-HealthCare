@@ -410,6 +410,11 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Header - Moved outside blurred container for proper control */}
+      <div className={`${isEditing ? "opacity-0 pointer-events-none" : ""}`}>
+        <Header />
+      </div>
+
       <div
         className="flex flex-1 overflow-hidden"
         style={{ paddingTop: layout.topPadding }}
@@ -430,9 +435,6 @@ const ProfilePage = () => {
                 className="bg-[#F5F7FA] rounded-lg"
                 style={{ padding: layout.padding }}
               >
-                <Header
-                  className={isEditing ? "blur-sm pointer-events-none" : ""}
-                />
                 <div
                   className={`flex flex-col mt-6 ${
                     isEditing ? "blur-sm pointer-events-none" : ""

@@ -8,6 +8,17 @@ import { useSelector } from "react-redux";
 import { calculateMatchPercentage } from "../../../../utils/matchPercentage";
 import ReactDOM from "react-dom";
 
+// Hide scrollbar CSS
+const scrollbarHideStyle = `
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
 const progressStages = ["Applied", "Interview", "Offer", "Hired"];
 
 export default function Applicants() {
@@ -68,6 +79,28 @@ export default function Applicants() {
   };
 
   const layout = getResponsiveLayout();
+
+  // ✅ Separate responsive function for header positioning
+  const getHeaderPosition = () => {
+    if (windowWidth <= 1599) {
+      // Small screens - your working value
+      return {
+        marginLeft: "320px",
+      };
+    } else if (windowWidth <= 1920) {
+      // Medium screens
+      return {
+        marginLeft: "500px",
+      };
+    } else {
+      // Large screens
+      return {
+        marginLeft: "520px",
+      };
+    }
+  };
+
+  const headerLayout = getHeaderPosition();
 
   // Prevent background scrolling when ApplicantDetails is open
   useEffect(() => {
@@ -211,6 +244,15 @@ export default function Applicants() {
   }, [jobId]);
 
   const { currentUser } = useSelector((state) => state.auth);
+
+  // Inject scrollbar hide CSS
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = scrollbarHideStyle;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   return (
     <div className="flex flex-col h-screen">
       <div
@@ -218,87 +260,97 @@ export default function Applicants() {
         style={{ paddingTop: layout.topPadding }}
       >
         <div
-          className="flex flex-1 overflow-y-auto"
+          className="flex flex-1 overflow-y-auto scrollbar-hide"
           style={{
             marginLeft: layout.marginLeft,
             paddingLeft: layout.paddingLeft,
             paddingRight: layout.paddingRight,
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* Internet Explorer 10+ */,
           }}
         >
-          <div className="mx-auto w-full max-w-[80rem]">
-            <div className="bg-[#E4E5E8] rounded-lg w-full min-h-[calc(100vh-120px)]">
+          {/* TOP PROFILE HEADER - EDGE TO EDGE */}
+          <div
+            className="fixed top-[-12px] right-0 bg-white border-b z-10 p-7"
+            style={{
+              marginTop: layout.topPadding,
+              marginLeft: headerLayout.marginLeft,
+              width: `calc(100% - ${headerLayout.marginLeft})`,
+            }}
+          >
+            {/* Row 1: Back arrow + Top Info */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between px-8 pt-4 pb-4">
+              <div className="flex items-start md:items-center gap-3">
+                {/* Back Arrow */}
+                <button
+                  onClick={() => navigate(-1)}
+                  className="text-gray-600 hover:text-gray-900 transition"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+
+                {/* Text block with increased spacing */}
+                <div className="flex flex-col justify-center">
+                  {/* "Active Until" line */}
+                  <span className="text-xs text-gray-500 mb-3">
+                    Active Until -{" "}
+                    {new Date(job?.endDate).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Title */}
+                    <h2 className="text-2xl font-medium text-gray-900 leading-tight">
+                      {job?.jobTitle}
+                    </h2>
+                    {/* Active Badge */}
+                    <span className="bg-green-100 text-green-600 text-xs font-medium px-2.5 py-1 rounded-full">
+                      {job?.jobStatus}
+                    </span>
+                    {/* Role */}
+                    <span className="text-xs text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
+                      Doctor
+                    </span>
+                    {/* Creator */}
+                    <span className="text-xs text-gray-500">
+                      Created by {currentUser?.name}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2: Tabs */}
+            <div className="flex gap-9 px-8 border-b text-base font-medium p-3 ml-8">
+              <div className="flex items-center gap-2 cursor-pointer py-3 border-b-2 border-[#222] text-[#222] font-medium">
+                <Users size={18} />
+                Candidates ({totalApplicants})
+              </div>
+              <div className="flex items-center gap-1 cursor-pointer py-3 border-b-2 border-transparent text-gray-500 hover:text-[#222] transition-all">
+                <Briefcase size={18} />
+                Job Info
+              </div>
+              <div className="flex items-center gap-1 cursor-pointer py-3 border-b-2 border-transparent text-gray-500 hover:text-[#222] transition-all">
+                <Search size={18} />
+                Search Candidate
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN CONTENT CONTAINER - Keep exactly as is */}
+          <div
+            className="mx-auto w-full max-w-[80rem]"
+            style={{ marginTop: "150px" }}
+          >
+            <div className="bg-[#E4E5E8] rounded-lg w-full min-h-[calc(100vh-120px)] ml-[-50px]">
               <div
                 className="bg-[#F5F7FA] rounded-lg min-h-[calc(100vh-120px)]"
                 style={{ padding: layout.padding }}
               >
                 <div className="  w-full min-h-[calc(100vh-160px)]">
                   <div className="p-10 min-h-[calc(100vh-200px)]">
-                    {/* TOP BAR */}
-                    <div className="bg-white border  mt-[-35px] rounded-lg">
-                      {/* Row 1: Back arrow + Top Info */}
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between px-8 pt-4 pb-4">
-                        <div className="flex items-start md:items-center gap-3">
-                          {/* Back Arrow */}
-                          <button
-                            onClick={() => navigate(-1)}
-                            className="text-gray-600 hover:text-gray-900 transition"
-                          >
-                            <ArrowLeft size={20} />
-                          </button>
-
-                          {/* Text block with increased spacing */}
-                          <div className="flex flex-col justify-center">
-                            {/* "Active Until" line */}
-                            <span className="text-xs text-gray-500 mb-3">
-                              Active Until -{" "}
-                              {new Date(job?.endDate).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                }
-                              )}
-                            </span>
-                            <div className="flex flex-wrap items-center gap-2">
-                              {/* Title */}
-                              <h2 className="text-2xl font-medium text-gray-900 leading-tight">
-                                {job?.jobTitle}
-                              </h2>
-                              {/* Active Badge */}
-                              <span className="bg-green-100 text-green-600 text-xs font-medium px-2.5 py-1 rounded-full">
-                                {job?.jobStatus}
-                              </span>
-                              {/* Role */}
-                              <span className="text-xs text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
-                                Doctor
-                              </span>
-                              {/* Creator */}
-                              <span className="text-xs text-gray-500">
-                                Created by {currentUser?.name}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Row 2: Tabs */}
-                      <div className="flex gap-9 px-8 border-b text-base font-medium mt-5">
-                        <div className="flex items-center gap-2 cursor-pointer py-3 border-b-2 border-[#222] text-[#222] font-medium">
-                          <Users size={18} />
-                          Candidates ({totalApplicants})
-                        </div>
-                        <div className="flex items-center gap-1 cursor-pointer py-3 border-b-2 border-transparent text-gray-500 hover:text-[#222] transition-all">
-                          <Briefcase size={18} />
-                          Job Info
-                        </div>
-                        <div className="flex items-center gap-1 cursor-pointer py-3 border-b-2 border-transparent text-gray-500 hover:text-[#222] transition-all">
-                          <Search size={18} />
-                          Search Candidate
-                        </div>
-                      </div>
-                    </div>
-
                     {/* APPLICANTS CONTENT */}
                     <div className="mt-6">
                       {/* Top row: Search + Sort */}

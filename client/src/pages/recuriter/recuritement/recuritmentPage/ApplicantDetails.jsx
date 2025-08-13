@@ -16,6 +16,9 @@ import Resume from "./Resume";
 import Message from "./Message";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../../lib/axio";
+import UsersIcon from "../../../../assets/Users.png";
+import MessageIcon from "../../../../assets/Message.png";
+import ResumeIcon from "../../../../assets/Resume.png";
 import {
   calculateMatchPercentage,
   getMatchBreakdown,
@@ -266,13 +269,13 @@ function ProfileHeaderWithTabs({
           />
           <div className="flex flex-col gap-1">
             <span
-              className="text-2xl font-medium text-gray-900 leading-tight font-inter"
+              className="text-2xl font-medium text-gray-900 leading-tight"
               style={{ fontFamily: "Inter, sans-serif" }}
             >
               {applicant.name}
             </span>
             <span
-              className="text-base text-gray-500 font-normal font-inter"
+              className="text-base text-gray-500 font-normal"
               style={{ fontFamily: "Inter, sans-serif" }}
             >
               {applicant.email}
@@ -285,7 +288,7 @@ function ProfileHeaderWithTabs({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-8 px-8 border-b text-base font-medium w-full">
+      <div className="flex gap-8 px-8 border-b text-base font-medium w-full mt-4">
         <button
           className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
             activeTab === "jobApplication"
@@ -295,7 +298,8 @@ function ProfileHeaderWithTabs({
           onClick={() => onTabClick("jobApplication")}
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          <MdWork size={18} /> Job Application
+          <img src={UsersIcon} alt="Job Application" className="w-5 h-5" />
+          Job Application
         </button>
         <button
           className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
@@ -306,7 +310,8 @@ function ProfileHeaderWithTabs({
           onClick={() => onTabClick("Resume")}
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          <SlBadge size={18} /> Resume
+          <img src={ResumeIcon} alt="Resume" className="w-5 h-5" />
+          Resume
         </button>
         <button
           className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
@@ -317,7 +322,8 @@ function ProfileHeaderWithTabs({
           onClick={() => onTabClick("Message")}
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          <FaTools size={18} /> Message
+          <img src={MessageIcon} alt="Message" className="w-5 h-5" />
+          Message
         </button>
       </div>
     </div>
@@ -512,19 +518,16 @@ function WorkExperienceItem({
 }) {
   return (
     <div className="flex items-start space-x-3">
-      {/* Icon on the left */}
       <div className="mt-1">{icon}</div>
-
-      {/* Content */}
-      <div>
-        <p
-          className="text-sm font-medium text-gray-800 font-inter"
+      <div className="flex-1">
+        <h3
+          className="text-base font-medium text-gray-800 mb-1 font-inter"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
           {title}
-        </p>
+        </h3>
         <p
-          className="text-sm text-gray-600 mt-0.5 font-inter"
+          className="text-sm text-gray-600 font-inter"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
           {organization}
@@ -535,83 +538,86 @@ function WorkExperienceItem({
         >
           {date}
         </p>
-
-        <div
-          className="mt-2 text-sm text-gray-600 leading-relaxed space-y-2 font-inter"
-          style={{ fontFamily: "Inter, sans-serif" }}
-          dangerouslySetInnerHTML={{ __html: htmlDescription }}
-        />
+        {htmlDescription && (
+          <div
+            className="mt-2 text-sm text-gray-600 leading-relaxed space-y-2 font-inter"
+            style={{ fontFamily: "Inter, sans-serif" }}
+            dangerouslySetInnerHTML={{ __html: htmlDescription }}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-// Combined Skills and Certificates/Awards container
-function SkillsCertificatesSection({ applicant }) {
+// Separate Skills section
+function SkillsSection({ applicant }) {
   const skills = applicant?.skills || [];
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+      <h2
+        className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
+        Skills
+      </h2>
+      {skills.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-3">
+          {skills.map((skill, index) => (
+            <span
+              key={index}
+              className="inline-block bg-gray-100 text-gray-700 text-sm py-1 px-3 rounded-full font-inter"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              {skill}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p
+          className="text-sm text-gray-500 mt-2 italic font-inter"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          No skills added yet.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// Separate Certificates section
+function CertificatesSection({ applicant }) {
   const certifications = applicant?.certifications || [];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 space-y-8">
-      {/* Skills Section */}
-      <div>
-        <h2
-          className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+      <h2
+        className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      >
+        Certificates &amp; Awards
+      </h2>
+      {certifications.length > 0 ? (
+        <div className="mt-4 space-y-4">
+          {certifications.map((cert, index) => (
+            <CertificateItem
+              key={index}
+              name={cert.name}
+              issuer={cert.issuedBy}
+              date={cert.year}
+              icon={<SlBadge className="text-gray-500 mt-1" />}
+            />
+          ))}
+        </div>
+      ) : (
+        <p
+          className="text-sm text-gray-500 mt-2 italic font-inter"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          <FaTools className="text-gray-500" /> Skills
-        </h2>
-        {skills.length > 0 ? (
-          <div className="mt-4 flex flex-wrap gap-3">
-            {skills.map((skill, index) => (
-              <span
-                key={index}
-                className="inline-block bg-gray-100 text-gray-700 text-sm py-1 px-3 rounded-full font-inter"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p
-            className="text-sm text-gray-500 mt-2 italic font-inter"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            No skills added yet.
-          </p>
-        )}
-      </div>
-
-      {/* Certificates Section */}
-      <div>
-        <h2
-          className="text-lg font-medium text-gray-800 flex items-center gap-2 font-inter"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
-          <SlBadge className="text-gray-500" /> Certificates &amp; Awards
-        </h2>
-        {certifications.length > 0 ? (
-          <div className="mt-4 space-y-4">
-            {certifications.map((cert, index) => (
-              <CertificateItem
-                key={index}
-                name={cert.name}
-                issuer={cert.issuedBy}
-                date={cert.year}
-                icon={<SlBadge className="text-gray-500 mt-1" />}
-              />
-            ))}
-          </div>
-        ) : (
-          <p
-            className="text-sm text-gray-500 mt-2 italic font-inter"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            No certificates or awards added yet.
-          </p>
-        )}
-      </div>
+          No certificates or awards added yet.
+        </p>
+      )}
     </div>
   );
 }
@@ -1158,7 +1164,8 @@ export function ApplicantDetails({
                     <AboutSection applicant={applicant} />
                     <QualificationSection applicant={applicant} />
                     <WorkExperienceSection applicant={applicant} />
-                    <SkillsCertificatesSection applicant={applicant} />
+                    <SkillsSection applicant={applicant} />
+                    <CertificatesSection applicant={applicant} />
                   </div>
                   <div className="md:col-span-1 space-y-6">
                     <ApplicationStatusDropdown

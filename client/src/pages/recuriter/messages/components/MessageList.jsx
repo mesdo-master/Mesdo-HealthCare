@@ -119,7 +119,7 @@ const MessageList = ({
   console.log("Job conversations:", jobConversations);
 
   return (
-    <div className="w-[340px] bg-white/90 flex flex-col rounded-l-2xl h-full">
+    <div className="w-[340px] bg-white/90 flex flex-col rounded-2xl h-full">
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-semibold">Messages</h1>
