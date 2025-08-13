@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Search, X } from "lucide-react";
+import Select from "react-select";
 import axiosInstance from "../../../../lib/axio";
 import { useDispatch } from "react-redux";
 import { setFilteredJobs } from "../../../../store/features/authSlice";
@@ -19,8 +20,7 @@ const FilterModal = ({ isOpen, onClose }) => {
   });
   const [newSkill, setNewSkill] = useState("");
   const [newSpec, setNewSpec] = useState("");
-  const [newJobType, setNewJobType] = useState("");
-  const [newLanguage, setNewLanguage] = useState("");
+  // Removed newJobType and newLanguage since we're using dropdowns now
 
   const dispatch = useDispatch();
 
@@ -216,21 +216,56 @@ const FilterModal = ({ isOpen, onClose }) => {
               <div className="mb-4 text-sm font-medium text-gray-900">
                 Job Type
               </div>
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  value={newJobType}
-                  onChange={(e) => setNewJobType(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag("jobTypes", setNewJobType, newJobType);
-                    }
+              <div className="mb-4">
+                <Select
+                  isMulti
+                  value={filters.jobTypes.map((type) => ({
+                    value: type,
+                    label: type,
+                  }))}
+                  onChange={(selectedOptions) => {
+                    const selectedValues = selectedOptions
+                      ? selectedOptions.map((option) => option.value)
+                      : [];
+                    setFilters((prev) => ({
+                      ...prev,
+                      jobTypes: selectedValues,
+                    }));
                   }}
-                  placeholder="Internship"
-                  className="w-full py-2 pl-4 pr-10 text-sm bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+                  options={[
+                    { value: "Internship", label: "Internship" },
+                    { value: "Part-time", label: "Part-time" },
+                    { value: "Contract", label: "Contract" },
+                    { value: "Full-time", label: "Full-time" },
+                  ]}
+                  placeholder="Select Job Types"
+                  className="text-sm"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: "40px",
+                      borderColor: "#e5e7eb",
+                      borderRadius: "0.5rem",
+                      backgroundColor: "white",
+                      "&:hover": {
+                        borderColor: "#e5e7eb",
+                      },
+                    }),
+                    valueContainer: (base) => ({
+                      ...base,
+                      padding: "0 12px",
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      margin: 0,
+                      padding: 0,
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: "#9ca3af",
+                    }),
+                  }}
                 />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-4 h-4" />
               </div>
               <div className="flex gap-2">
                 {filters.jobTypes.map((type) => (
@@ -332,21 +367,54 @@ const FilterModal = ({ isOpen, onClose }) => {
               <div className="mb-4 text-sm font-medium text-gray-900">
                 Languages
               </div>
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  value={newLanguage}
-                  onChange={(e) => setNewLanguage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag("languages", setNewLanguage, newLanguage);
-                    }
+              <div className="mb-4">
+                <Select
+                  isMulti
+                  value={filters.languages.map((lang) => ({
+                    value: lang,
+                    label: lang,
+                  }))}
+                  onChange={(selectedOptions) => {
+                    const selectedValues = selectedOptions
+                      ? selectedOptions.map((option) => option.value)
+                      : [];
+                    setFilters((prev) => ({
+                      ...prev,
+                      languages: selectedValues,
+                    }));
                   }}
-                  placeholder="Add Language"
-                  className="w-full py-2 pl-4 pr-10 text-sm bg-white outline-none rounded-lg border border-gray-200 placeholder:text-gray-500"
+                  options={[
+                    { value: "Hindi", label: "Hindi" },
+                    { value: "English", label: "English" },
+                  ]}
+                  placeholder="Select Languages"
+                  className="text-sm"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: "40px",
+                      borderColor: "#e5e7eb",
+                      borderRadius: "0.5rem",
+                      backgroundColor: "white",
+                      "&:hover": {
+                        borderColor: "#e5e7eb",
+                      },
+                    }),
+                    valueContainer: (base) => ({
+                      ...base,
+                      padding: "0 12px",
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      margin: 0,
+                      padding: 0,
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: "#9ca3af",
+                    }),
+                  }}
                 />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#1890FF] w-4 h-4" />
               </div>
               <div className="flex gap-2">
                 {filters.languages.map((lang) => (
@@ -356,7 +424,7 @@ const FilterModal = ({ isOpen, onClose }) => {
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filters.languages.includes(lang)
                         ? "bg-[#1890FF] text-white"
-                        : "bg-gray-100 text-gray-700"
+                        : "bg-gray-700"
                     }`}
                   >
                     {lang}

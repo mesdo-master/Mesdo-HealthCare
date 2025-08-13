@@ -430,8 +430,14 @@ const ProfilePage = () => {
                 className="bg-[#F5F7FA] rounded-lg"
                 style={{ padding: layout.padding }}
               >
-                <Header />
-                <div className="flex flex-col mt-6">
+                <Header
+                  className={isEditing ? "blur-sm pointer-events-none" : ""}
+                />
+                <div
+                  className={`flex flex-col mt-6 ${
+                    isEditing ? "blur-sm pointer-events-none" : ""
+                  }`}
+                >
                   {/* Profile Section */}
                   <ProfileHeader
                     userData={userData}

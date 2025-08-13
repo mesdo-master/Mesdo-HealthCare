@@ -46,7 +46,7 @@ const ForgetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-white">
       <div className="w-full max-w-md p-8 bg-white">
         <h2 className="text-center text-2xl font-semibold text-gray-800">
           Forgot Password
@@ -69,7 +69,7 @@ const ForgetPassword = () => {
                 error
                   ? "border-red-500 focus:ring-red-400"
                   : "border-gray-300 focus:ring-blue-400"
-              } text-gray-900 bg-gray-100 text-lg`}
+              } text-gray-900 bg-white text-lg`}
               placeholder="example@mail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -90,7 +90,7 @@ const ForgetPassword = () => {
           <Link to={"/login"}>
             <button
               type="button"
-              className="w-full px-4 py-3 border my-4 border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+              className="w-full px-4 py-3 border my-4 border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 bg-white"
             >
               Back
             </button>

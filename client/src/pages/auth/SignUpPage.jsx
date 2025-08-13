@@ -90,7 +90,7 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-white">
       <div className="w-1/2 hidden md:block">
         <img
           src="https://res.cloudinary.com/dy9voteoc/image/upload/v1742050620/SignUp_py37lz.png"
@@ -99,7 +99,7 @@ const SignUpPage = () => {
         />
       </div>
 
-      <div className="w-full md:w-1/2 flex items-center justify-center px-8">
+      <div className="w-full md:w-1/2 flex items-center justify-center px-8 bg-white">
         <div className="max-w-md w-full">
           <h2 className="text-[#DB4E82] font-bold text-sm">START FOR FREE</h2>
           <h1 className="text-3xl font-bold mt-2">Create new account.</h1>
@@ -116,7 +116,7 @@ const SignUpPage = () => {
               <input
                 className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
                   errors.email ? "border-red-500" : "border-gray-300"
-                }`}
+                } bg-white`}
                 placeholder="example@mail.com"
                 type="email"
                 value={email}
@@ -134,7 +134,7 @@ const SignUpPage = () => {
               <input
                 className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
                   errors.password ? "border-red-500" : "border-gray-300"
-                }`}
+                } bg-white`}
                 placeholder="At least 8 characters"
                 type="password"
                 value={password}
@@ -198,7 +198,7 @@ const SignUpPage = () => {
 
           <button
             onClick={handleGoogleSignup}
-            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 bg-white"
           >
             <FcGoogle className="mr-2 text-xl" />
             Sign Up with Google

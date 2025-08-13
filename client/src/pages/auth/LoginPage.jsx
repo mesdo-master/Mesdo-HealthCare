@@ -78,7 +78,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-white">
       {/* Image Section */}
       <div className="w-1/2 hidden md:block">
         <img
@@ -89,7 +89,7 @@ const Login = () => {
       </div>
 
       {/* Login Form Section */}
-      <div className="w-full md:w-1/2 flex items-center justify-center px-8">
+      <div className="w-full md:w-1/2 flex items-center justify-center px-8 bg-white">
         <div className="max-w-md w-full">
           <h2 className="text-[#DB4E82] font-bold text-sm">Hey!</h2>
           <h1 className="text-3xl font-bold mt-2">Welcome Back</h1>
@@ -103,7 +103,7 @@ const Login = () => {
               <input
                 className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
                   errors.email ? "border-red-500" : "border-gray-300"
-                } text-gray-900 bg-gray-100`}
+                } text-gray-900 bg-white`}
                 placeholder="example@mail.com"
                 type="email"
                 value={email}
@@ -122,7 +122,7 @@ const Login = () => {
               <input
                 className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
                   errors.password ? "border-red-500" : "border-gray-300"
-                } text-gray-900 bg-gray-100`}
+                } text-gray-900 bg-white`}
                 placeholder="Enter Your Password"
                 type="password"
                 value={password}
@@ -166,7 +166,7 @@ const Login = () => {
           {/* Google Login */}
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 bg-white"
           >
             <FcGoogle className="mr-2 text-xl" />
             Log in with Google

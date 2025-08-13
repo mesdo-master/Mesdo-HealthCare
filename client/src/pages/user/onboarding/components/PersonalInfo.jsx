@@ -25,6 +25,9 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
         border-radius: 8px !important;
         outline: none !important;
         box-sizing: border-box !important;
+        /* Keep text visible for regular inputs */
+        color: #374151 !important;
+        caret-color: auto !important;
       }
       
       /* Force override browser defaults for select elements */
@@ -106,42 +109,211 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
         background: #9ca3af !important;
       }
       
-      /* Firefox scrollbar */
-      .PersonalInfo select {
-        scrollbar-width: thin !important;
-        scrollbar-color: #d1d5db #f9fafb !important;
+      /* TARGET ONLY REACT-SELECT ELEMENTS - Don't affect regular inputs */
+      /* React-select specific targeting */
+      .PersonalInfo [class*="react-select"] input,
+      .PersonalInfo [class*="react-select"] * input {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
       }
       
-      /* Ensure consistent text color across browsers */
-      .PersonalInfo input::placeholder {
+      /* Target react-select dropdowns specifically */
+      .PersonalInfo div[class*="react-select"] input,
+      .PersonalInfo span[class*="react-select"] input,
+      .PersonalInfo div[class*="react-select"] * input,
+      .PersonalInfo span[class*="react-select"] * input {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      
+      /* Target the specific input containers that react-select creates */
+      .PersonalInfo div[role="combobox"] input,
+      .PersonalInfo div[role="listbox"] input {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      
+      /* Additional react-select specific targeting */
+      .PersonalInfo [class*="__input"] input,
+      .PersonalInfo [class*="__input-container"] input,
+      .PersonalInfo [class*="__control"] input {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      
+      /* EXTRA AGGRESSIVE TARGETING FOR PLACEHOLDER STATE */
+      /* Target any element that might contain a cursor in react-select */
+      .PersonalInfo [class*="react-select"] *,
+      .PersonalInfo [class*="react-select"] * * {
+        caret-color: transparent !important;
+      }
+      
+      /* Target placeholder text specifically */
+      .PersonalInfo [class*="react-select"] [class*="placeholder"],
+      .PersonalInfo [class*="react-select"] [class*="__placeholder"] {
         color: #9ca3af !important;
-        opacity: 1 !important;
       }
       
-      .PersonalInfo input::-webkit-input-placeholder {
-        color: #9ca3af !important;
-        opacity: 1 !important;
+      /* Target any input element that might be created by react-select */
+      .PersonalInfo [class*="react-select"] input,
+      .PersonalInfo [class*="react-select"] textarea,
+      .PersonalInfo [class*="react-select"] [contenteditable="true"] {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        resize: none !important;
       }
       
-      .PersonalInfo input::-moz-placeholder {
-        color: #9ca3af !important;
-        opacity: 1 !important;
+      /* Target the value container to ensure no cursor appears */
+      .PersonalInfo [class*="react-select"] [class*="value-container"],
+      .PersonalInfo [class*="react-select"] [class*="__value-container"] {
+        caret-color: transparent !important;
       }
       
-      .PersonalInfo input:-ms-input-placeholder {
-        color: #9ca3af !important;
-        opacity: 1 !important;
+      /* Force hide cursor on any element within react-select */
+      .PersonalInfo [class*="react-select"] * {
+        caret-color: transparent !important;
       }
       
-      /* Force consistent border colors */
-      .PersonalInfo input,
-      .PersonalInfo select {
-        border-color: #e5e7eb !important;
+      /* GLOBAL FIX - Target ONLY react-select elements anywhere in the document */
+      [class*="react-select"] input,
+      [class*="react-select"] * input,
+      div[class*="react-select"] input,
+      span[class*="react-select"] input,
+      div[class*="react-select"] * input,
+      span[class*="react-select"] * input {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
       }
       
-      /* Remove any default browser styling */
-      .PersonalInfo * {
-        box-sizing: border-box !important;
+      /* Target any input that might be created by react-select */
+      input[class*="react-select"],
+      input[class*="__input"],
+      input[class*="__input-container"] {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      
+      /* Force hide cursor globally for any react-select related elements */
+      [class*="react-select"] * {
+        caret-color: transparent !important;
+      }
+      
+      /* EXTRA GLOBAL TARGETING FOR PLACEHOLDER STATE */
+      [class*="react-select"] *,
+      [class*="react-select"] * * {
+        caret-color: transparent !important;
+      }
+      
+      /* Target any contenteditable elements that react-select might create */
+      [class*="react-select"] [contenteditable="true"],
+      [class*="react-select"] [contenteditable="true"] * {
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      
+      /* NUCLEAR OPTION - Hide cursor on ANY element that might be created by react-select */
+      [class*="react-select"] *,
+      [class*="react-select"] * *,
+      [class*="react-select"] * * * {
+        caret-color: transparent !important;
+      }
+      
+      /* Target the specific DOM structure that react-select creates */
+      [class*="react-select"] div[class*="__input"],
+      [class*="react-select"] div[class*="__input-container"],
+      [class*="react-select"] div[class*="__control"],
+      [class*="react-select"] div[class*="__value-container"] {
+        caret-color: transparent !important;
+      }
+      
+      /* Force hide cursor on any element that might contain text input */
+      [class*="react-select"] div[class*="__input"] *,
+      [class*="react-select"] div[class*="__input-container"] *,
+      [class*="react-select"] div[class*="__control"] *,
+      [class*="react-select"] div[class*="__value-container"] * {
+        caret-color: transparent !important;
+      }
+      
+      /* Target any element that might be focusable */
+      [class*="react-select"] [tabindex],
+      [class*="react-select"] [tabindex] * {
+        caret-color: transparent !important;
+      }
+      
+      /* COMPLETE ELIMINATION OF REACT-SELECT INPUT ELEMENTS */
+      [class*="react-select"] input,
+      [class*="react-select"] textarea,
+      [class*="react-select"] [contenteditable="true"] {
+        display: none !important;
+        width: 0px !important;
+        height: 0px !important;
+        opacity: 0 !important;
+        position: absolute !important;
+        pointer-events: none !important;
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        resize: none !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+        z-index: -9999 !important;
+      }
+      
+      /* Force hide any remaining input elements */
+      [class*="react-select"] * input,
+      [class*="react-select"] * textarea,
+      [class*="react-select"] * [contenteditable="true"] {
+        display: none !important;
+        width: 0px !important;
+        height: 0px !important;
+        opacity: 0 !important;
+        position: absolute !important;
+        pointer-events: none !important;
+        caret-color: transparent !important;
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        resize: none !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+        z-index: -9999 !important;
       }
     `;
     document.head.appendChild(style);
@@ -337,6 +509,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                     { value: "Other", label: "Other" },
                   ]}
                   placeholder="Select"
+                  isSearchable={false}
                   className="text-[13px]"
                   styles={{
                     control: (base) => ({
@@ -345,7 +518,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                       height: "48px",
                       borderColor: "#e5e7eb",
                       borderRadius: "0.75rem",
-                      backgroundColor: "",
+                      backgroundColor: "white",
                       "&:hover": {
                         borderColor: "#e5e7eb",
                       },
@@ -358,6 +531,22 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                       ...base,
                       margin: 0,
                       padding: 0,
+                      caretColor: "transparent",
+                      color: "transparent",
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      boxShadow: "none",
+                      display: "none",
+                      width: "0px",
+                      height: "0px",
+                      opacity: 0,
+                      position: "absolute",
+                      pointerEvents: "none",
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: "#9ca3af",
                     }),
                   }}
                 />
@@ -408,6 +597,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                     label: state.name,
                   }))}
                   placeholder="Select"
+                  isSearchable={false}
                   className="text-[13px]"
                   styles={{
                     control: (base) => ({
@@ -416,7 +606,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                       height: "48px",
                       borderColor: "#e5e7eb",
                       borderRadius: "0.75rem",
-                      backgroundColor: "",
+                      backgroundColor: "white",
                       "&:hover": {
                         borderColor: "#e5e7eb",
                       },
@@ -429,6 +619,22 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                       ...base,
                       margin: 0,
                       padding: 0,
+                      caretColor: "transparent",
+                      color: "transparent",
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      boxShadow: "none",
+                      display: "none",
+                      width: "0px",
+                      height: "0px",
+                      opacity: 0,
+                      position: "absolute",
+                      pointerEvents: "none",
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: "#9ca3af",
                     }),
                   }}
                 />
@@ -456,6 +662,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                   }))}
                   placeholder="Select"
                   isDisabled={!formData.state}
+                  isSearchable={false}
                   className="text-[13px]"
                   styles={{
                     control: (base) => ({
@@ -464,7 +671,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                       height: "48px",
                       borderColor: "#e5e7eb",
                       borderRadius: "0.75rem",
-                      backgroundColor: "",
+                      backgroundColor: "white",
                       "&:hover": {
                         borderColor: "#e5e7eb",
                       },
@@ -478,6 +685,22 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
                       ...base,
                       margin: 0,
                       padding: 0,
+                      caretColor: "transparent",
+                      color: "transparent",
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      boxShadow: "none",
+                      display: "none",
+                      width: "0px",
+                      height: "0px",
+                      opacity: 0,
+                      position: "absolute",
+                      pointerEvents: "none",
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: "#9ca3af",
                     }),
                   }}
                 />

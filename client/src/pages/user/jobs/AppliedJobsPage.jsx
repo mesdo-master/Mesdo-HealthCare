@@ -351,12 +351,12 @@ const AppliedJob = ({ inUserProfile }) => {
 
                   {/* Main Content */}
                   <motion.div
-                    className="max-w-7xl mx-auto"
+                    className="max-w-7xl mx-auto mt-8"
                     variants={itemVariants}
                   >
                     {/* Header Controls */}
                     <motion.div
-                      className="flex justify-between items-center mb-8"
+                      className="flex justify-between items-center mb-12"
                       variants={itemVariants}
                     >
                       <p className="text-sm text-slate-500">

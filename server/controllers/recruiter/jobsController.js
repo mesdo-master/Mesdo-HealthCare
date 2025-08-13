@@ -219,32 +219,37 @@ const sendMessage = async (req, res) => {
     console.log("🎯 JOBS CONTROLLER: sendMessage called with:", req.body);
     console.log("🎯 JOBS CONTROLLER: req.user:", req.user);
     const { receiverId, text, conversationId } = req.body;
-    
+
     // ✅ FIXED: Determine correct sender ID for recruiters
     let actualSenderId = req.user._id;
-    let senderUserType = 'User';
-    
-    if (req.user.role === 'recruiter') {
+    let senderUserType = "User";
+
+    if (req.user.role === "recruiter") {
       const Business = require("../../models/recruiter/BusinessProfile");
       const businessProfile = await Business.findOne({ userId: req.user._id });
       if (businessProfile) {
         actualSenderId = businessProfile._id;
-        senderUserType = 'BusinessProfile';
-        console.log("✅ JOBS CONTROLLER: Using business profile ID:", actualSenderId);
+        senderUserType = "BusinessProfile";
+        console.log(
+          "✅ JOBS CONTROLLER: Using business profile ID:",
+          actualSenderId
+        );
       } else {
-        console.warn("⚠️ JOBS CONTROLLER: No business profile found, using user ID");
+        console.warn(
+          "⚠️ JOBS CONTROLLER: No business profile found, using user ID"
+        );
       }
     }
-    
+
     console.log("🎯 JOBS CONTROLLER: Final sender info:", {
       userRole: req.user?.role,
       actualSenderId,
       senderUserType,
-      userIdFromToken: req.user?._id
+      userIdFromToken: req.user?._id,
     });
 
     if (!actualSenderId) {
-      return res.status(401).json({ error: 'User not authenticated.' });
+      return res.status(401).json({ error: "User not authenticated." });
     }
 
     if (!text && !req.file) {
@@ -277,11 +282,13 @@ const sendMessage = async (req, res) => {
       return res.status(404).json({ error: "Conversation not found." });
     }
 
-    const receiver = await User.findById(receiverId) || await Business.findById(receiverId);
+    const receiver =
+      (await User.findById(receiverId)) ||
+      (await Business.findById(receiverId));
     if (!receiver) {
       return res.status(404).json({ error: "Receiver not found." });
     }
-    const receiverUserType = receiver.businessName ? 'BusinessProfile' : 'User';
+    const receiverUserType = receiver.businessName ? "BusinessProfile" : "User";
 
     // 3. Create the message
     const newMessage = await Message.create({
@@ -289,12 +296,12 @@ const sendMessage = async (req, res) => {
       receiver: { user: receiverId, userType: receiverUserType },
       message: text,
       conversationId: conversation._id,
-      category: 'Recruitment',
+      category: "Recruitment",
     });
 
     const populatedMessage = await Message.findById(newMessage._id).lean();
 
-    // 4. Update conversation metadata  
+    // 4. Update conversation metadata
     conversation.lastMessage = populatedMessage.message;
     conversation.lastMessageTime = Date.now();
     conversation.lastMessageSender = actualSenderId; // Use actualSenderId

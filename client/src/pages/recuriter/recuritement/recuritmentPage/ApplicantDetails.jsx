@@ -41,13 +41,7 @@ function TopBar({
       {/* Left side: back/forward arrows + "1 out of 10" */}
       <div className="flex items-center gap-3 ml-2">
         {/* Back Button - Navigates to Applicants Section */}
-        <button
-          className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
-          onClick={() => navigate("/applicants/:jobTitle")}
-          aria-label="Back to Applicants"
-        >
-          <AiOutlineArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
+
         <button
           className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-50"
           onClick={() => {
@@ -247,9 +241,9 @@ function ProfileHeaderWithTabs({
   };
 
   return (
-    <div className="bg-white shadow-sm border-b border-gray-200">
+    <div className="bg-white shadow-sm border-b border-gray-200 w-full">
       {/* Profile Info */}
-      <div className="flex items-center justify-between px-8 pt-6 pb-4">
+      <div className="flex items-center justify-between px-8 pt-4 pb-2 w-full">
         <div className="flex items-center gap-5 flex-1">
           <img
             src={
@@ -280,7 +274,7 @@ function ProfileHeaderWithTabs({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-8 px-8 border-b text-base font-medium">
+      <div className="flex gap-8 px-8 border-b text-base font-medium w-full">
         <button
           className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
             activeTab === "jobApplication"
@@ -301,18 +295,18 @@ function ProfileHeaderWithTabs({
           onClick={() => onTabClick("Resume")}
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          Resume
+          <SlBadge size={18} /> Resume
         </button>
         <button
           className={`flex items-center gap-2 py-3 border-b-2 transition-all font-inter ${
-            activeTab === "Messages"
+            activeTab === "Message"
               ? "border-[#222] text-[#222]"
               : "border-transparent text-gray-500 hover:text-[#222]"
           }`}
-          onClick={() => onTabClick("Messages")}
+          onClick={() => onTabClick("Message")}
           style={{ fontFamily: "Inter, sans-serif" }}
         >
-          Messages
+          <FaTools size={18} /> Message
         </button>
       </div>
     </div>
@@ -347,18 +341,6 @@ function ProfileHeader({
   currentIndex = 0,
   onClose,
 }) {
-  const [applicantStatus, setApplicantStatus] = useState(
-    applicant.status || "Applied"
-  );
-
-  const handleStatusUpdate = (userId, newStatus) => {
-    setApplicantStatus(newStatus);
-    // Call the parent's onStatusUpdate function
-    if (onStatusUpdate) {
-      onStatusUpdate(userId, newStatus);
-    }
-  };
-
   return (
     <div>
       <TopBar
@@ -372,32 +354,8 @@ function ProfileHeader({
         onTabClick={onTabClick}
         applicant={applicant}
         jobId={jobId}
-        onStatusUpdate={handleStatusUpdate}
+        onStatusUpdate={onStatusUpdate}
       />
-      <div className="mt-6">
-        {activeTab === "jobApplication" && (
-          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="md:col-span-2 space-y-6">
-              <AboutSection applicant={applicant} />
-              <QualificationSection applicant={applicant} />
-              <WorkExperienceSection applicant={applicant} />
-              <SkillsCertificatesSection applicant={applicant} />
-            </div>
-            <div className="md:col-span-1 space-y-6">
-              <ApplicationStatusDropdown
-                applicant={applicant}
-                jobId={jobId}
-                currentStatus={applicantStatus}
-                onStatusUpdate={handleStatusUpdate}
-              />
-              <PersonalInformation applicant={applicant} />
-              <MatchPercentage applicant={applicant} jobId={jobId} />
-            </div>
-          </div>
-        )}
-        {activeTab === "Resume" && <Resume applicant={applicant} />}
-        {activeTab === "Messages" && <Message applicant={applicant} />}
-      </div>
     </div>
   );
 }
@@ -1155,20 +1113,47 @@ export function ApplicantDetails({
   };
 
   return (
-    <div className="h-full bg-gray-50 font-sans overflow-auto">
-      <div className="flex flex-row gap-6 p-6 min-h-0">
-        <div className="flex-1 min-w-0 flex flex-col gap-6">
-          <ProfileHeader
-            activeTab={activeTab}
-            onTabClick={handleTabClick}
-            applicant={applicant}
-            setSelectedApplicant={setSelectedApplicant}
-            jobId={jobId}
-            onStatusUpdate={onStatusUpdate}
-            applicants={applicants}
-            currentIndex={currentIndex}
-            onClose={onClose}
-          />
+    <div className="h-full bg-gray-50 font-sans overflow-auto scrollbar-hide">
+      <div className="flex flex-col min-h-0">
+        <ProfileHeader
+          activeTab={activeTab}
+          onTabClick={handleTabClick}
+          applicant={applicant}
+          setSelectedApplicant={setSelectedApplicant}
+          jobId={jobId}
+          onStatusUpdate={onStatusUpdate}
+          applicants={applicants}
+          currentIndex={currentIndex}
+          onClose={onClose}
+        />
+        <div className="flex flex-row gap-6 p-6 min-h-0">
+          <div className="flex-1 min-w-0 flex flex-col gap-6">
+            {/* Content sections moved here */}
+            <div className="mt-2">
+              {activeTab === "jobApplication" && (
+                <div className="mt-2 grid grid-cols-1 gap-6 md:grid-cols-3">
+                  <div className="md:col-span-2 space-y-6">
+                    <AboutSection applicant={applicant} />
+                    <QualificationSection applicant={applicant} />
+                    <WorkExperienceSection applicant={applicant} />
+                    <SkillsCertificatesSection applicant={applicant} />
+                  </div>
+                  <div className="md:col-span-1 space-y-6">
+                    <ApplicationStatusDropdown
+                      applicant={applicant}
+                      jobId={jobId}
+                      currentStatus={applicant.status || "Applied"}
+                      onStatusUpdate={onStatusUpdate}
+                    />
+                    <PersonalInformation applicant={applicant} />
+                    <MatchPercentage applicant={applicant} jobId={jobId} />
+                  </div>
+                </div>
+              )}
+              {activeTab === "Resume" && <Resume applicant={applicant} />}
+              {activeTab === "Message" && <Message applicant={applicant} />}
+            </div>
+          </div>
         </div>
       </div>
     </div>

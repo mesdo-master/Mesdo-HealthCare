@@ -52,7 +52,9 @@ const ResetPassword = () => {
 
         {isResetSuccessful ? (
           <div className="text-center">
-            <p className="text-green-500 text-lg">Password successfully changed!</p>
+            <p className="text-green-500 text-lg">
+              Password successfully changed!
+            </p>
             <p>Redirecting to login...</p>
           </div>
         ) : (
@@ -65,7 +67,7 @@ const ResetPassword = () => {
                 type="password"
                 className={`mt-2 block w-full px-4 py-3 border rounded-md shadow-sm focus:outline-none ${
                   error ? "border-red-500" : "border-gray-300"
-                } text-gray-900 bg-gray-100 text-lg`}
+                } text-gray-900 bg-white text-lg`}
                 placeholder="Enter new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -81,7 +83,7 @@ const ResetPassword = () => {
             </button>
             <button
               type="button"
-              className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+              className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 bg-white"
               onClick={() => navigate("/login")}
             >
               Cancel

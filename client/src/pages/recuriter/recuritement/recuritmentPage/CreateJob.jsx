@@ -368,7 +368,7 @@ export default function CreateJob() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 40 }}
               transition={{ duration: 0.4, type: "spring" }}
-              className="bg-white border border-emerald-200 shadow-2xl rounded-2xl px-12 py-10 flex flex-col items-center gap-4"
+              className="bg-white border border-emerald-200 rounded-2xl px-12 py-10 flex flex-col items-center gap-4"
               style={{ minWidth: 340 }}
             >
               <svg
@@ -412,7 +412,7 @@ export default function CreateJob() {
         }}
       >
         <div
-          className="max-w-4.6xl mx-auto bg-white shadow-md rounded-xl p-6 border border-[#DDE4EE] overflow-hidden"
+          className="max-w-4.6xl mx-auto bg-white rounded-xl p-6 border border-[#DDE4EE] overflow-hidden"
           style={{
             marginLeft: layout.marginLeft,
             paddingLeft: layout.paddingLeft,
@@ -436,7 +436,7 @@ export default function CreateJob() {
           {/* Back Confirmation Modal */}
           {showBackModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-              <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-auto flex flex-col items-center">
+              <div className="bg-white rounded-xl p-8 max-w-md w-full mx-auto flex flex-col items-center">
                 <h3 className="text-xl font-semibold mb-2 text-gray-900 text-center">
                   Save Your Progress
                 </h3>

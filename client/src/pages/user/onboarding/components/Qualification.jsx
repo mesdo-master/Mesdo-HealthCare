@@ -648,9 +648,9 @@ const Qualification = ({
   }, []);
 
   return (
-    <div className="flex h-full bg-white Qualification">
+    <div className="flex h-screen bg-white Qualification">
       <div
-        className={`w-1/2 flex flex-col px-[100px]  ${getResponsiveTopSpacing()}`}
+        className={`w-1/2 flex flex-col px-[100px] h-full  ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
       >
         <div>

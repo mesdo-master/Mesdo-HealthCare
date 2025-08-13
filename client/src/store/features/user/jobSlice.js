@@ -1,22 +1,19 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../../lib/axio";
 
-
-
-
 const initialState = {
-    currentJobOrganisationData:null
+  currentJobOrganisationData: null,
 };
 
 const jobSlice = createSlice({
-    name: "job",
-    initialState,
-    reducers: {
-        setCurrentJobOrganisationData: (state, action) => {
-            state.currentJobOrganisationData = action.payload;
-        }
+  name: "job",
+  initialState,
+  reducers: {
+    setCurrentJobOrganisationData: (state, action) => {
+      state.currentJobOrganisationData = action.payload;
     },
-    extraReducers: (builder) => {},
+  },
+  extraReducers: (builder) => {},
 });
 
 // Export actions

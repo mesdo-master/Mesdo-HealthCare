@@ -130,7 +130,7 @@ const EmailVerificationPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-white">
       <div className="w-1/2 hidden md:block">
         <img
           src="https://res.cloudinary.com/dy9voteoc/image/upload/v1742050620/SignUp_py37lz.png"
@@ -139,7 +139,7 @@ const EmailVerificationPage = () => {
         />
       </div>
 
-      <div className="w-full md:w-1/2 flex items-center justify-center px-8">
+      <div className="w-full md:w-1/2 flex items-center justify-center px-8 bg-white">
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <div className="mx-auto w-16 h-16 bg-[#E6F3FF] rounded-full flex items-center justify-center mb-4">
@@ -186,7 +186,7 @@ const EmailVerificationPage = () => {
                     value={digit}
                     onChange={(e) => handleCodeChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-[#1890FF] ${
+                    className={`w-12 h-12 text-center text-xl font-bold border rounded-md focus:outline-none focus:ring-2 focus:ring-[#1890FF] bg-white ${
                       errors.code ? "border-red-500" : "border-gray-300"
                     }`}
                     maxLength={1}

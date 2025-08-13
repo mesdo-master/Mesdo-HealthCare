@@ -52,28 +52,16 @@ const SkillsSpecialization = ({
     }
   };
 
-  // ✅ Validation logic: check if form has any content
+  // ✅ Validation logic: skills are optional, so always allow proceeding
   const hasFormContent = () => {
-    return formValues.skills.length > 0;
+    // Skills are optional, so users can always proceed
+    return true;
   };
 
   // ✅ Handle skip all - goes directly to Interest page
   const handleSkipAll = () => {
-    if (hasFormContent()) {
-      // If form has content, ask user if they want to save or clear
-      if (
-        window.confirm(
-          "You have selected some skills. Do you want to save them before skipping?"
-        )
-      ) {
-        // Save current data and proceed to Interest page
-        onSkipAll();
-      }
-      // If they click cancel, stay on the page
-    } else {
-      // If form is empty, allow skip to Interest page
-      onSkipAll();
-    }
+    // Always allow skip since skills are optional
+    onSkipAll();
   };
 
   // Initialize form values with existing data when component mounts
@@ -166,7 +154,7 @@ const SkillsSpecialization = ({
             <StepProgressCircle currentStep={6} totalSteps={8} />
           </div>
           <p className="text-sm text-gray-500 mb-6">
-            Include all of your relevant experience and dates in this section.
+            Add your key skills and specializations to showcase your expertise.
           </p>
 
           {/* Input Field */}
@@ -232,12 +220,7 @@ const SkillsSpecialization = ({
           <button
             type="button"
             onClick={onNext}
-            disabled={!hasFormContent()}
-            className={`w-[180px] h-[48px] text-[15px] font-medium rounded-lg transition-all shadow-none ${
-              hasFormContent()
-                ? "bg-[#1890FF] text-white hover:bg-blue-600"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
+            className="w-[180px] h-[48px] bg-[#1890FF] text-white text-[15px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
           >
             Next
           </button>

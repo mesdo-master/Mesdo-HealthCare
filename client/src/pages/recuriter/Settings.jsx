@@ -69,6 +69,19 @@ const RecruiterSettings = () => {
     about: "",
   });
 
+  // ✅ Add state to track original form data for change detection
+  const [originalFormData, setOriginalFormData] = useState({
+    name: "",
+    email: "",
+    city: "",
+    state: "",
+    orgLogo: "",
+    about: "",
+  });
+
+  // ✅ Track if form has unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   // ✅ Track window resize for responsive design
   useEffect(() => {
     const handleResize = () => {
@@ -119,8 +132,7 @@ const RecruiterSettings = () => {
   useEffect(() => {
     console.log("businessProfile in Settings:", businessProfile);
     console.log("currentUser in Settings:", currentUser);
-    setFormData((prev) => ({
-      ...prev,
+    const newFormData = {
       name: businessProfile?.name || "",
       email:
         businessProfile?.orgEmail ||
@@ -131,8 +143,29 @@ const RecruiterSettings = () => {
       state: businessProfile?.locationAddress || businessProfile?.state || "",
       orgLogo: businessProfile?.orgLogo || "",
       about: businessProfile?.about || "",
-    }));
+    };
+
+    setFormData(newFormData);
+    // ✅ Set original form data for change detection
+    setOriginalFormData(newFormData);
   }, [businessProfile, currentUser]);
+
+  // ✅ Function to check if form has unsaved changes
+  const checkForChanges = (currentData) => {
+    const hasChanges =
+      currentData.name !== originalFormData.name ||
+      currentData.city !== originalFormData.city ||
+      currentData.state !== originalFormData.state ||
+      currentData.about !== originalFormData.about ||
+      currentData.orgLogo !== originalFormData.orgLogo;
+
+    setHasUnsavedChanges(hasChanges);
+  };
+
+  // ✅ Update change detection whenever formData changes
+  useEffect(() => {
+    checkForChanges(formData);
+  }, [formData, originalFormData]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -169,12 +202,22 @@ const RecruiterSettings = () => {
       //   about: formData.about
       // });
       toast.success("Settings saved successfully");
+
+      // ✅ Update original form data after successful save
+      setOriginalFormData(formData);
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error saving settings:", error);
       toast.error("Failed to save settings");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // ✅ Function to handle cancel - reset form to original values
+  const handleCancel = () => {
+    setFormData(originalFormData);
+    setHasUnsavedChanges(false);
   };
 
   const handleDeleteAccount = async () => {
@@ -387,23 +430,26 @@ const RecruiterSettings = () => {
                               Please update your profile settings here
                             </p>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              disabled={isSaving}
-                              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
-                            >
-                              Cancel
-                              <X className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={handleSave}
-                              disabled={isSaving}
-                              className="px-3 py-1.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 flex items-center gap-2 bg-[#1890FF] hover:bg-[#1570EF]"
-                            >
-                              {isSaving ? "Saving..." : "Save"}
-                              <Check className="w-4 h-4" />
-                            </button>
-                          </div>
+                          {/* ✅ Only show Save/Cancel buttons when there are unsaved changes */}
+                          {hasUnsavedChanges && (
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={handleCancel}
+                                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+                              >
+                                Cancel
+                                <X className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="px-3 py-1.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 flex items-center gap-2 bg-[#1890FF] hover:bg-[#1570EF]"
+                              >
+                                {isSaving ? "Saving..." : "Save"}
+                                <Check className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         <div className="border-t border-gray-200 pt-6">

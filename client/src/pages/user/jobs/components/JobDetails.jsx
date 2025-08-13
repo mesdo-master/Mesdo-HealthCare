@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from "react";
 import { useParams, useOutletContext, useNavigate } from "react-router-dom";
+import ReactDOM from "react-dom";
 import {
   MapPin,
   Briefcase,
@@ -1613,58 +1614,80 @@ const JobDetails = ({ onClose }) => {
         )}
       </motion.div>
 
-      {/* Apply Modal with Framer Motion */}
-      <AnimatePresence>
-        {showApplyModal && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
+      {/* Apply Modal with Framer Motion - Rendered via Portal */}
+      {showApplyModal &&
+        ReactDOM.createPortal(
+          <AnimatePresence>
             <motion.div
-              className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-auto flex flex-col items-center"
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-30"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                position: "fixed",
+                top: "0px",
+                left: "0px",
+                right: "0px",
+                bottom: "0px",
+                width: "100vw",
+                height: "100vh",
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <h3 className="text-xl font-medium mb-2 text-gray-900 text-center">
-                Apply to {organizationData.name || "Hospital"}
-              </h3>
-              <p className="text-gray-500 text-center mb-6">
-                Check what recruiter will see your profile like →
-              </p>
-              <div className="w-full mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Add Note
-                </label>
-                <textarea
-                  className="w-full h-24 border border-gray-200 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Add a note (optional)"
-                  value={applyNote}
-                  onChange={(e) => setApplyNote(e.target.value)}
-                />
-              </div>
-              <div className="flex w-full gap-3 mt-2">
-                <button
-                  onClick={() => setShowApplyModal(false)}
-                  className="flex-1 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleApplyJob}
-                  className="flex-1 py-2 rounded-lg bg-[#1890FF] text-white font-medium hover:bg-[#1570EF] transition"
-                >
-                  Apply
-                </button>
-              </div>
+              <motion.div
+                className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-auto flex flex-col items-center"
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                style={{
+                  position: "relative",
+                  zIndex: 10000,
+                  maxWidth: "28rem",
+                  width: "90vw",
+                  margin: "0 auto",
+                }}
+              >
+                <h3 className="text-xl font-medium mb-2 text-gray-900 text-center">
+                  Apply to {organizationData.name || "Hospital"}
+                </h3>
+                <p className="text-gray-500 text-center mb-6">
+                  Check what recruiter will see your profile like →
+                </p>
+                <div className="w-full mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Add Note
+                  </label>
+                  <textarea
+                    className="w-full h-24 border border-gray-200 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Add a note (optional)"
+                    value={applyNote}
+                    onChange={(e) => setApplyNote(e.target.value)}
+                  />
+                </div>
+                <div className="flex w-full gap-3 mt-2">
+                  <button
+                    onClick={() => setShowApplyModal(false)}
+                    className="flex-1 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleApplyJob}
+                    className="flex-1 py-2 rounded-lg bg-[#1890FF] text-white font-medium hover:bg-[#1570EF] transition"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </motion.div>
   );
 };
