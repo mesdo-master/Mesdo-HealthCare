@@ -9,15 +9,30 @@ import {
   Check,
   X,
   MoreHorizontal,
+  Clock,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentUser } from "../../../../store/features/authSlice";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSocket } from "../../../../context/SocketProvider";
+import {
+  setCurrentUser,
+  addFollowRequest,
+  removeFollowRequest,
+  addConnection,
+  removeConnection,
+  removePendingRequest,
+} from "../../../../store/features/authSlice";
 import Loader from "../../../../components/Loader";
 
 const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.auth);
+  const { socket } = useSocket();
+  const navigate = useNavigate();
+  const { userId } = useParams();
 
   // Simple logic: trust the isOwnProfile prop from parent
   const showEditButtons = isOwnProfile;
@@ -45,10 +60,44 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     userData?.Banner ||
       "https://images.unsplash.com/photo-1579546929518-9e396f3cc809"
   );
-  const [connectionStatus, setConnectionStatus] = useState("none"); // none, pending, connected, received
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStatus, setFollowStatus] = useState("not_following");
+  const [isLoading, setIsLoading] = useState(false);
   const [isUploadingProfile, setIsUploadingProfile] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+
+  // ✅ Initialize follow status based on Redux state
+  useEffect(() => {
+    if (!currentUser || !userData?._id || isOwnProfile) return;
+
+    console.log("🔍 ProfileHeader - Initializing follow status");
+    console.log("🔍 currentUser.connections:", currentUser.connections);
+    console.log("🔍 currentUser.sentRequests:", currentUser.sentRequests);
+    console.log("🔍 currentUser.pendingRequests:", currentUser.pendingRequests);
+    console.log("🔍 userData._id:", userData._id);
+
+    if (currentUser.connections?.includes(userData._id)) {
+      setFollowStatus("following");
+      console.log("🔍 Status set to: following");
+    } else if (currentUser.sentRequests?.includes(userData._id)) {
+      setFollowStatus("pending");
+      console.log("🔍 Status set to: pending");
+    } else if (currentUser.pendingRequests?.includes(userData._id)) {
+      setFollowStatus("accept_or_reject");
+      console.log("🔍 Status set to: accept_or_reject");
+    } else {
+      setFollowStatus("not_following");
+      console.log("🔍 Status set to: not_following");
+    }
+  }, [currentUser, userData?._id, isOwnProfile]);
+
+  // ✅ Debug logging
+  useEffect(() => {
+    console.log("🔍 ProfileHeader Debug Info:");
+    console.log("🔍 isOwnProfile:", isOwnProfile);
+    console.log("🔍 followStatus:", followStatus);
+    console.log("🔍 showFollowButtons:", showFollowButtons);
+    console.log("🔍 userData?.username:", userData?.username);
+  }, [isOwnProfile, followStatus, showFollowButtons, userData]);
 
   // File input refs for direct upload
   const profileImageInputRef = useRef(null);
@@ -276,41 +325,156 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
     });
   };
 
-  const handleConnect = () => {
-    switch (connectionStatus) {
-      case "none":
-        setConnectionStatus("pending");
-        break;
-      case "pending":
-        setConnectionStatus("none");
-        break;
-      case "received":
-        setConnectionStatus("connected");
-        break;
-      case "connected":
-        setConnectionStatus("none");
-        break;
-      default:
-        console.warn("Unexpected connectionStatus:", connectionStatus);
-        break;
+  const handleSendConnectionRequest = async () => {
+    console.log("🔵 Sending connection request to:", userData?.username);
+    console.log("🔵 Current follow status:", followStatus);
+
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.post("/follow/request", {
+        username: userData?.username,
+      });
+      console.log("🟢 Connection request sent successfully:", response.data);
+      setFollowStatus("pending");
+
+      // ✅ Update Redux state
+      dispatch(addFollowRequest(userData._id));
+
+      // ✅ Emit socket event for real-time update
+      if (socket) {
+        socket.emit("sendFollowRequest", {
+          senderId: currentUser._id,
+          recipientId: userData._id,
+          senderName: currentUser.name,
+          senderUsername: currentUser.username,
+          senderProfilePicture: currentUser.profilePicture,
+        });
+      }
+    } catch (error) {
+      console.error("🔴 Error sending connection request:", error);
+      alert("Error sending connection request");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing);
+  const handleWithdrawRequest = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.post(
+        `/follow/withdraw/${userData?.username}`
+      );
+      if (response.data.success) {
+        setFollowStatus("not_following");
+        dispatch(removeFollowRequest(userData._id));
+
+        if (socket) {
+          socket.emit("withdrawFollowRequest", {
+            senderId: currentUser._id,
+            recipientId: userData._id,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error withdrawing request:", error);
+      alert("Error withdrawing request");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDecline = () => {
-    setConnectionStatus("none");
+  const handleUnfollow = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.post(
+        `/follow/unfollow/${userData?.username}`
+      );
+      if (response.data.success) {
+        setFollowStatus("not_following");
+        dispatch(removeConnection(userData._id));
+
+        if (socket) {
+          socket.emit("unfollowUser", {
+            unfollowerId: currentUser._id,
+            targetId: userData._id,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error unfollowing:", error);
+      alert("Error unfollowing");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAcceptRequest = async () => {
+    setIsLoading(true);
+    try {
+      // Find the notification ID for this request
+      const notificationsResponse = await axiosInstance.get(
+        `/notifications/?mode=individual`
+      );
+      const notification = notificationsResponse.data.data.find(
+        (n) => n.type === "FOLLOW_REQUEST" && n.sender === userData._id
+      );
+
+      if (notification) {
+        const response = await axiosInstance.post(`/follow/accept`, {
+          notificationId: notification._id,
+        });
+
+        if (response.status === 200) {
+          setFollowStatus("following");
+          dispatch(addConnection(userData._id));
+          dispatch(removePendingRequest(userData._id));
+        }
+      }
+    } catch (error) {
+      console.error("Error accepting request:", error);
+      alert("Error accepting request");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRejectRequest = async () => {
+    setIsLoading(true);
+    try {
+      // Find the notification ID for this request
+      const notificationsResponse = await axiosInstance.get(
+        `/notifications/?mode=individual`
+      );
+      const notification = notificationsResponse.data.data.find(
+        (n) => n.type === "FOLLOW_REQUEST" && n.sender === userData._id
+      );
+
+      if (notification) {
+        const response = await axiosInstance.post(`/follow/reject`, {
+          notificationId: notification._id,
+        });
+
+        if (response.status === 200) {
+          setFollowStatus("not_following");
+          dispatch(removePendingRequest(userData._id));
+        }
+      }
+    } catch (error) {
+      console.error("Error rejecting request:", error);
+      alert("Error rejecting request");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderConnectionButton = () => {
-    switch (connectionStatus) {
-      case "none":
+    switch (followStatus) {
+      case "not_following":
         return (
           <button
-            onClick={handleConnect}
+            onClick={handleSendConnectionRequest}
             className="h-10 bg-[#1890FF] text-white px-5 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors font-medium"
+            disabled={isLoading}
           >
             <UserPlus className="w-4 h-4" />
             <span>Connect</span>
@@ -318,41 +482,55 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
         );
       case "pending":
         return (
-          <button
-            onClick={handleConnect}
-            className="h-10 bg-gray-200 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition-colors font-medium"
-          >
-            <Check className="w-4 h-4" />
-            <span>Pending</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleWithdrawRequest}
+              className="h-10 bg-gray-200 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition-colors font-medium"
+              disabled={isLoading}
+            >
+              <X className="w-4 h-4" />
+              <span>Withdraw</span>
+            </button>
+            <button
+              onClick={handleAcceptRequest}
+              className="h-10 bg-[#1890FF] text-white px-5 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors font-medium"
+              disabled={isLoading}
+            >
+              <Check className="w-4 h-4" />
+              <span>Accept</span>
+            </button>
+          </div>
         );
-      case "received":
+      case "accept_or_reject":
         return (
           <div className="flex gap-2">
             <button
-              onClick={handleConnect}
+              onClick={handleAcceptRequest}
               className="h-10 bg-[#1890FF] text-white px-5 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors font-medium"
+              disabled={isLoading}
             >
               <Check className="w-4 h-4" />
               <span>Accept</span>
             </button>
             <button
-              onClick={handleDecline}
+              onClick={handleRejectRequest}
               className="h-10 bg-gray-200 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition-colors font-medium"
+              disabled={isLoading}
             >
               <X className="w-4 h-4" />
               <span>Decline</span>
             </button>
           </div>
         );
-      case "connected":
+      case "following":
         return (
           <button
-            onClick={handleConnect}
+            onClick={handleUnfollow}
             className="h-10 bg-gray-200 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-300 transition-colors font-medium"
+            disabled={isLoading}
           >
             <Users className="w-4 h-4" />
-            <span>Connected</span>
+            <span>Following</span>
           </button>
         );
       default:
@@ -511,24 +689,9 @@ const ProfileHeader = ({ userData, isOwnProfile, openModal, onDataUpdate }) => {
             {showFollowButtons && (
               <>
                 <button
-                  onClick={isFollowing ? handleFollow : handleFollow}
-                  className={`h-10 min-w-4 px-5 rounded-lg flex items-center gap-2 font-medium transition-colors ${
-                    isFollowing
-                      ? "bg-gray-200 text-gray-900 hover:bg-gray-300"
-                      : "bg-[#1890FF] text-white hover:bg-blue-600"
-                  }`}
+                  onClick={() => navigate(`/messages`)}
+                  className="h-10 bg-gray-100 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors font-medium"
                 >
-                  {isFollowing ? (
-                    "Following"
-                  ) : (
-                    <>
-                      <span className="text-lg leading-none">+</span>
-                      Follow
-                    </>
-                  )}
-                </button>
-
-                <button className="h-10 bg-gray-100 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors font-medium">
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </button>

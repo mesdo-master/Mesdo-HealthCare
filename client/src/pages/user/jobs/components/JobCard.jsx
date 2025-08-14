@@ -5,7 +5,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { Flag, Share2, EyeOff, CheckCircle } from "lucide-react";
 import axiosInstance from "../../../../lib/axio";
-import { setCurrentUser } from "../../../../store/features/authSlice";
+import {
+  setCurrentUser,
+  addSavedJob,
+  removeSavedJob,
+  addHiddenJob,
+} from "../../../../store/features/authSlice";
 import SavedIcon from "../../../../assets/SavedIcon.png";
 import BookMarkIcon from "../../../../assets/Bookmark.png";
 import Loader from "../../../../components/Loader";
@@ -27,11 +32,25 @@ const getTagIcon = (tag) => {
 };
 
 const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
-  const [isSaved, setIsSaved] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [isHiding, setIsHiding] = useState(false);
   const dropdownRef = useRef(null);
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.auth);
+
+  // ✅ Initialize isSaved based on Redux state
+  const [isSaved, setIsSaved] = useState(
+    currentUser?.savedJobs?.includes(job._id) || false
+  );
+
+  // ✅ Sync isSaved state when savedJobs changes in Redux
+  useEffect(() => {
+    if (currentUser?.savedJobs) {
+      setIsSaved(currentUser.savedJobs.includes(job._id));
+    }
+  }, [currentUser?.savedJobs, job._id]);
+
   // useEffect(() => {
   //   const checkSave = async () => {
   //     try {
@@ -49,7 +68,17 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
       const response = await axiosInstance.post("/userSide/saveJob", {
         jobId: job._id,
       });
+
+      const wasSaved = isSaved;
       setIsSaved(!isSaved);
+
+      // Dispatch appropriate action to update Redux state
+      if (wasSaved) {
+        dispatch(removeSavedJob(job._id));
+      } else {
+        dispatch(addSavedJob(job._id));
+      }
+
       console.log(response);
     } catch (error) {
       console.log(error);
@@ -139,6 +168,9 @@ const JobCard = ({ job, small, fullWidth, onJobHidden }) => {
       });
 
       console.log("Job hidden successfully:", response.data);
+
+      // Dispatch action to update Redux state
+      dispatch(addHiddenJob(job._id));
 
       // Show success toast
       setToast("Job hidden successfully!");

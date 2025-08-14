@@ -1,17 +1,27 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import axiosInstance from "../../../lib/axio";
 import ProfileHeader from "./components/ProfileHeader";
 import OverviewTab from "./components/OverviewTab";
 import EditModal from "./components/EditModal";
 import Header from "../../../components/Header";
 import Loader from "../../../components/Loader";
+import { useSocket } from "../../../context/SocketProvider";
+// ✅ Import follow actions from Redux
+import {
+  addFollowRequest,
+  removeFollowRequest,
+  addConnection,
+  removeConnection,
+} from "../../../store/features/authSlice";
 
 const ProfilePage = () => {
   const params = useParams();
   const { userId } = params;
   const { currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { socket } = useSocket();
 
   // Add CSS to hide scrollbars
   useEffect(() => {
@@ -55,6 +65,9 @@ const ProfilePage = () => {
   // Suggested users state
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [suggestedUsersLoading, setSuggestedUsersLoading] = useState(true);
+  // ✅ Add follow states for suggested users
+  const [followStates, setFollowStates] = useState({});
+  const [followLoadingStates, setFollowLoadingStates] = useState({});
 
   // Additional state for qualification and experience management
   const [editingQualification, setEditingQualification] = useState(null);
@@ -65,6 +78,56 @@ const ProfilePage = () => {
   const [editingAchievement, setEditingAchievement] = useState(null);
   const [activeAchievementTab, setActiveAchievementTab] = useState("Preview");
 
+  // ✅ Socket listeners for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleConnectionUpdate = (data) => {
+      console.log("🔄 Connection update received:", data);
+
+      // Update userData if it's the profile being viewed
+      if (data.userId === userData?._id) {
+        setUserData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            connections: data.connections || prev.connections,
+          };
+        });
+      }
+
+      // Update suggested users follow states if needed
+      if (data.type === "follow_accepted") {
+        setFollowStates((prev) => ({
+          ...prev,
+          [data.senderId]: "following",
+        }));
+      }
+    };
+
+    const handleFollowRequestAccepted = (data) => {
+      console.log("🎉 Follow request accepted:", data);
+      // Update the profile connection count in real-time
+      if (data.recipientId === userData?._id) {
+        setUserData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            connections: [...(prev.connections || []), data.senderId],
+          };
+        });
+      }
+    };
+
+    socket.on("connectionUpdate", handleConnectionUpdate);
+    socket.on("followRequestAccepted", handleFollowRequestAccepted);
+
+    return () => {
+      socket.off("connectionUpdate", handleConnectionUpdate);
+      socket.off("followRequestAccepted", handleFollowRequestAccepted);
+    };
+  }, [socket, userData?._id]);
+
   // ✅ Track window resize for responsive design
   useEffect(() => {
     const handleResize = () => {
@@ -74,6 +137,106 @@ const ProfilePage = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // ✅ Helper function to determine follow status based on current user data
+  const getFollowStatus = (userId) => {
+    if (!currentUser) return "none";
+
+    if (currentUser.connections?.includes(userId)) {
+      return "following";
+    } else if (currentUser.sentRequests?.includes(userId)) {
+      return "pending";
+    } else if (currentUser.pendingRequests?.includes(userId)) {
+      return "requested";
+    }
+    return "none";
+  };
+
+  // ✅ Handle follow button click for suggested users
+  const handleFollowUser = async (user) => {
+    const userId = user._id;
+    const currentStatus = followStates[userId] || "none";
+
+    setFollowLoadingStates((prev) => ({ ...prev, [userId]: true }));
+
+    try {
+      if (currentStatus === "none") {
+        // Send follow request
+        const response = await axiosInstance.post("/follow/request", {
+          username: user.username,
+        });
+
+        if (response.data) {
+          setFollowStates((prev) => ({ ...prev, [userId]: "pending" }));
+          dispatch(addFollowRequest(userId));
+          console.log(`✅ Follow request sent to ${user.name}`);
+        }
+      } else if (currentStatus === "pending") {
+        // Withdraw follow request
+        const response = await axiosInstance.post(
+          `/follow/withdraw/${user.username}`
+        );
+
+        if (response.data) {
+          setFollowStates((prev) => ({ ...prev, [userId]: "none" }));
+          dispatch(removeFollowRequest(userId));
+          console.log(`✅ Follow request withdrawn from ${user.name}`);
+        }
+      } else if (currentStatus === "following") {
+        // Unfollow user
+        const response = await axiosInstance.post(
+          `/follow/unfollow/${user.username}`
+        );
+
+        if (response.data) {
+          setFollowStates((prev) => ({ ...prev, [userId]: "none" }));
+          dispatch(removeConnection(userId));
+          console.log(`✅ Unfollowed ${user.name}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error handling follow action:", error);
+    } finally {
+      setFollowLoadingStates((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  // ✅ Get button text and style based on follow status
+  const getFollowButtonConfig = (userId) => {
+    const status = followStates[userId] || "none";
+    const isLoading = followLoadingStates[userId];
+
+    switch (status) {
+      case "following":
+        return {
+          text: "Following",
+          className:
+            "text-[12px] bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white font-medium px-3 py-1 rounded-lg transition-colors",
+          hoverText: "Unfollow",
+        };
+      case "pending":
+        return {
+          text: "Pending",
+          className:
+            "text-[12px] bg-yellow-100 text-yellow-700 hover:bg-yellow-200 font-medium px-3 py-1 rounded-lg transition-colors",
+          hoverText: "Cancel",
+        };
+      case "requested":
+        return {
+          text: "Requested",
+          className:
+            "text-[12px] bg-blue-100 text-blue-700 font-medium px-3 py-1 rounded-lg cursor-not-allowed",
+          hoverText: "Requested",
+        };
+      default:
+        return {
+          text: isLoading ? "..." : "+ Follow",
+          className:
+            "text-[12px] bg-[#1890FF] text-white hover:bg-[#1570EF] font-medium px-3 py-1 rounded-lg transition-colors",
+          hoverText: "+ Follow",
+        };
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -207,6 +370,13 @@ const ProfilePage = () => {
         if (response.data.success) {
           console.log("📋 Suggested users data:", response.data.suggestedUsers);
           setSuggestedUsers(response.data.suggestedUsers);
+
+          // ✅ Initialize follow states for each suggested user
+          const initialFollowStates = {};
+          for (const user of response.data.suggestedUsers) {
+            initialFollowStates[user._id] = getFollowStatus(user._id);
+          }
+          setFollowStates(initialFollowStates);
         }
       } catch (err) {
         console.error("Error fetching suggested users:", err);
@@ -221,6 +391,22 @@ const ProfilePage = () => {
       fetchSuggestedUsers();
     }
   }, [isOwnProfile]);
+
+  // ✅ Update follow states when currentUser connection data changes
+  useEffect(() => {
+    if (currentUser && suggestedUsers.length > 0) {
+      const updatedFollowStates = {};
+      for (const user of suggestedUsers) {
+        updatedFollowStates[user._id] = getFollowStatus(user._id);
+      }
+      setFollowStates(updatedFollowStates);
+    }
+  }, [
+    currentUser?.connections,
+    currentUser?.sentRequests,
+    currentUser?.pendingRequests,
+    suggestedUsers,
+  ]);
 
   const openModal = (tab) => {
     setActiveModalTab(tab);
@@ -1176,51 +1362,61 @@ const ProfilePage = () => {
                             </h3>
                           </div>
                           <div className="space-y-4">
-                            {suggestedUsers.slice(0, 4).map((person, index) => (
-                              <div
-                                key={person._id || index}
-                                className="flex items-center justify-between"
-                              >
-                                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                                  <img
-                                    src={
-                                      person.profilePicture ||
-                                      person.image ||
-                                      "/default-avatar.png"
-                                    }
-                                    alt={person.name}
-                                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                                    onError={(e) => {
-                                      e.target.src = "/default-avatar.png";
-                                    }}
-                                  />
-                                  <div className="flex-1 min-w-0 max-w-[180px]">
-                                    <h4 className="text-[14px] font-medium text-gray-900 truncate">
-                                      {person.name ||
-                                        person.username ||
-                                        `User ${index + 1}`}
-                                    </h4>
-                                    <p className="text-[12px] text-gray-500 truncate">
-                                      {person.headline ||
-                                        person.role ||
-                                        person.title ||
-                                        "Professional"}
-                                      {person.company &&
-                                        ` at ${person.company}`}
-                                    </p>
-                                  </div>
-                                </div>
-                                <button
-                                  className="text-[12px] bg-[#1890FF] text-white hover:bg-[#1570EF] font-medium px-3 py-1 rounded-lg transition-colors"
-                                  onClick={() => {
-                                    // TODO: Implement follow functionality
-                                    console.log(`Following ${person.name}`);
-                                  }}
+                            {suggestedUsers.slice(0, 4).map((person, index) => {
+                              const buttonConfig = getFollowButtonConfig(
+                                person._id
+                              );
+                              const isLoading = followLoadingStates[person._id];
+
+                              return (
+                                <div
+                                  key={person._id || index}
+                                  className="flex items-center justify-between"
                                 >
-                                  + Follow
-                                </button>
-                              </div>
-                            ))}
+                                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                    <img
+                                      src={
+                                        person.profilePicture ||
+                                        person.image ||
+                                        "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                                      }
+                                      alt={person.name}
+                                      className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                                      onError={(e) => {
+                                        e.target.src =
+                                          "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
+                                      }}
+                                    />
+                                    <div className="flex-1 min-w-0 max-w-[180px]">
+                                      <h4 className="text-[14px] font-medium text-gray-900 truncate">
+                                        {person.name ||
+                                          person.username ||
+                                          `User ${index + 1}`}
+                                      </h4>
+                                      <p className="text-[12px] text-gray-500 truncate">
+                                        {person.headline ||
+                                          person.role ||
+                                          person.title ||
+                                          "Professional"}
+                                        {person.company &&
+                                          ` at ${person.company}`}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    className={buttonConfig.className}
+                                    onClick={() => handleFollowUser(person)}
+                                    disabled={
+                                      isLoading ||
+                                      followStates[person._id] === "requested"
+                                    }
+                                    title={buttonConfig.hoverText}
+                                  >
+                                    {buttonConfig.text}
+                                  </button>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -1238,54 +1434,65 @@ const ProfilePage = () => {
                               <div className="space-y-4">
                                 {suggestedUsers
                                   .slice(0, 4)
-                                  .map((person, index) => (
-                                    <div
-                                      key={person._id || index}
-                                      className="flex items-center justify-between"
-                                    >
-                                      <div className="flex items-center space-x-3 min-w-0 flex-1">
-                                        <img
-                                          src={
-                                            person.profilePicture ||
-                                            person.image ||
-                                            "/default-avatar.png"
-                                          }
-                                          alt={person.name}
-                                          className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                                          onError={(e) => {
-                                            e.target.src =
-                                              "/default-avatar.png";
-                                          }}
-                                        />
-                                        <div className="flex-1 min-w-0 max-w-[180px]">
-                                          <h4 className="text-[14px] font-medium text-gray-900 truncate">
-                                            {person.name ||
-                                              person.username ||
-                                              `User ${index + 1}`}
-                                          </h4>
-                                          <p className="text-[12px] text-gray-500 truncate">
-                                            {person.headline ||
-                                              person.role ||
-                                              person.title ||
-                                              "Professional"}
-                                            {person.company &&
-                                              ` at ${person.company}`}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <button
-                                        className="text-[12px] bg-[#1890FF] text-white hover:bg-[#1570EF] font-medium px-3 py-1 rounded-lg transition-colors"
-                                        onClick={() => {
-                                          // TODO: Implement follow functionality
-                                          console.log(
-                                            `Following ${person.name}`
-                                          );
-                                        }}
+                                  .map((person, index) => {
+                                    const buttonConfig = getFollowButtonConfig(
+                                      person._id
+                                    );
+                                    const isLoading =
+                                      followLoadingStates[person._id];
+
+                                    return (
+                                      <div
+                                        key={person._id || index}
+                                        className="flex items-center justify-between"
                                       >
-                                        + Follow
-                                      </button>
-                                    </div>
-                                  ))}
+                                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                          <img
+                                            src={
+                                              person.profilePicture ||
+                                              person.image ||
+                                              "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                                            }
+                                            alt={person.name}
+                                            className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                                            onError={(e) => {
+                                              e.target.src =
+                                                "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
+                                            }}
+                                          />
+                                          <div className="flex-1 min-w-0 max-w-[180px]">
+                                            <h4 className="text-[14px] font-medium text-gray-900 truncate">
+                                              {person.name ||
+                                                person.username ||
+                                                `User ${index + 1}`}
+                                            </h4>
+                                            <p className="text-[12px] text-gray-500 truncate">
+                                              {person.headline ||
+                                                person.role ||
+                                                person.title ||
+                                                "Professional"}
+                                              {person.company &&
+                                                ` at ${person.company}`}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <button
+                                          className={buttonConfig.className}
+                                          onClick={() =>
+                                            handleFollowUser(person)
+                                          }
+                                          disabled={
+                                            isLoading ||
+                                            followStates[person._id] ===
+                                              "requested"
+                                          }
+                                          title={buttonConfig.hoverText}
+                                        >
+                                          {buttonConfig.text}
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             ) : (
                               // Empty state

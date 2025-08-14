@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Bell, Search, X, Clock, Loader2, ChevronDown } from "lucide-react";
@@ -43,17 +43,70 @@ const Header = ({ className = "" }) => {
     };
   }, [dropdownOpen]);
 
+  const [requests, setRequests] = useState([]);
+
+  // ✅ Wrap in useCallback to prevent dependency issues
+  const fetchUnreadNotifications = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/notifications/unread?mode=${mode}`
+      );
+      // console.log(response)
+      setUnreadCount(response?.data?.data?.length);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  }, [mode]);
+
   useEffect(() => {
     if (!socket) return;
+
     socket.on("newNotification", () => {
       setUnreadCount((prevCount) => prevCount + 1);
     });
 
-    // Clean up the event listener when the component unmounts
+    // ✅ Listen for follow-related notifications
+    socket.on("followRequestReceived", () => {
+      setUnreadCount((prevCount) => prevCount + 1);
+    });
+
+    socket.on("followAccepted", () => {
+      setUnreadCount((prevCount) => prevCount + 1);
+    });
+
+    socket.on("followRejected", () => {
+      // No notification for rejection, just update states
+    });
+
+    // ✅ Listen for follow request processing to refresh count
+    socket.on("followRequestAccepted", () => {
+      console.log("🎉 Follow request accepted - refreshing notification count");
+      fetchUnreadNotifications(); // Refresh the count
+    });
+
+    socket.on("followRequestRejected", () => {
+      console.log("❌ Follow request rejected - refreshing notification count");
+      fetchUnreadNotifications(); // Refresh the count
+    });
+
+    // ✅ Listen for notifications marked as read
+    socket.on("notificationsMarkedAsRead", () => {
+      console.log("📖 Notifications marked as read - updating count");
+      setUnreadCount(0); // Reset count immediately
+      fetchUnreadNotifications(); // Also refresh from server
+    });
+
+    // Clean up the event listeners when the component unmounts
     return () => {
       socket.off("newNotification");
+      socket.off("followRequestReceived");
+      socket.off("followAccepted");
+      socket.off("followRejected");
+      socket.off("followRequestAccepted");
+      socket.off("followRequestRejected");
+      socket.off("notificationsMarkedAsRead");
     };
-  }, [socket]); // Include socket in the dependency array if it can change
+  }, [socket, fetchUnreadNotifications]); // Include fetchUnreadNotifications in dependency array
 
   // Handle click outside to close popup
   useEffect(() => {
@@ -74,20 +127,6 @@ const Header = ({ className = "" }) => {
     };
   }, []);
 
-  const [requests, setRequests] = useState([]);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      const response = await axiosInstance.get(
-        `/notifications/unread?mode=${mode}`
-      );
-      // console.log(response)
-      setUnreadCount(response?.data?.data?.length);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  };
-
   useEffect(() => {
     if (!currentUser) return;
 
@@ -100,7 +139,7 @@ const Header = ({ className = "" }) => {
     console.log("========================");
 
     fetchUnreadNotifications();
-  }, [currentUser, mode]);
+  }, [currentUser, mode, fetchUnreadNotifications]);
 
   // --- Search State ---
   const [searchInput, setSearchInput] = useState("");

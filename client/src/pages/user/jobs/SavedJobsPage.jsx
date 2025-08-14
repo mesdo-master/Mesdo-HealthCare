@@ -6,7 +6,8 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import axiosInstance from "../../../lib/axio";
 import JobCard from "./components/JobCard";
 import { calculateMatchPercentage } from "../../../utils/matchPercentage";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { removeSavedJob } from "../../../store/features/authSlice";
 import Loader from "../../../components/Loader";
 
 // CSS for hiding scrollbar
@@ -68,6 +69,7 @@ const SavedJobs = ({ inUserProfile }) => {
   const dropdownRef = useRef(null);
   const currentUser = useSelector((state) => state.auth.user);
   const authState = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   // ✅ Add window size tracking for responsive design
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -379,6 +381,7 @@ const SavedJobs = ({ inUserProfile }) => {
       setUnsavingJobId(jobId);
       await axiosInstance.post("/userSide/unsave-job", { jobId });
       setSavedJobs(savedJobs.filter((job) => job._id !== jobId));
+      dispatch(removeSavedJob(jobId));
     } catch (error) {
       console.log("Error unsaving job:", error);
     } finally {

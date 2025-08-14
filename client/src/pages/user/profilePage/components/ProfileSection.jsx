@@ -1,17 +1,68 @@
-import { Camera, CameraIcon, MessageCircle, MoreHorizontal, Pencil } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { uploadCoverPic, uploadProfilePic } from "../../../../store/features/user/profileSlice";
-import { useEffect, useState } from "react";
+import {
+  Camera,
+  CameraIcon,
+  MessageCircle,
+  MoreHorizontal,
+  Pencil,
+} from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  uploadCoverPic,
+  uploadProfilePic,
+} from "../../../../store/features/user/profileSlice";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../../../lib/axio";
+import { useSocket } from "../../../../context/SocketProvider";
+import {
+  addFollowRequest,
+  removeFollowRequest,
+  addConnection,
+  removeConnection,
+  removePendingRequest,
+} from "../../../../store/features/authSlice";
 
 const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
-  const [profileData, setProfileData] = useState(userData);
-  const [followStatus, setFollowStatus] = useState("not_following");
-  const [isLoading, setIsLoading] = useState(false);
+  const { currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { socket } = useSocket();
+  const navigate = useNavigate();
   const { username } = useParams();
 
-  const dispatch = useDispatch()
+  const [profileData, setProfileData] = useState(userData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [followStatus, setFollowStatus] = useState("not_following");
+  const [profileImage, setProfileImage] = useState(userData?.profilePicture);
+  const [backgroundImage, setBackgroundImage] = useState(
+    userData?.backgroundImage
+  );
+  const [file, setFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // ✅ Initialize follow status based on Redux state
+  useEffect(() => {
+    if (!currentUser || !userData?._id) return;
+
+    if (currentUser.connections?.includes(userData._id)) {
+      setFollowStatus("following");
+    } else if (currentUser.sentRequests?.includes(userData._id)) {
+      setFollowStatus("pending");
+    } else if (currentUser.pendingRequests?.includes(userData._id)) {
+      setFollowStatus("accept_or_reject");
+    } else {
+      setFollowStatus("not_following");
+    }
+  }, [currentUser, userData?._id]);
+
+  // ✅ Debug logging
+  useEffect(() => {
+    console.log("🔍 Debug Info:");
+    console.log("🔍 isOwnProfile:", isOwnProfile);
+    console.log("🔍 followStatus:", followStatus);
+    console.log("🔍 currentUser:", currentUser?.username);
+    console.log("🔍 userData:", userData?.username);
+    console.log("🔍 Should show button:", !isOwnProfile);
+  }, [isOwnProfile, followStatus, currentUser, userData]);
 
   useEffect(() => {
     setProfileData(userData);
@@ -19,7 +70,9 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
 
   const fetchFollowStatus = async () => {
     try {
+      console.log("Fetching follow status for username:", username);
       const response = await axiosInstance.get(`/follow/status/${username}`);
+      console.log("Follow status response:", response.data);
       setFollowStatus(response.data.status);
     } catch (error) {
       console.error("Failed to fetch follow status", error);
@@ -27,17 +80,16 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
   };
 
   useEffect(() => {
-    if (username) {
+    if (username && !isOwnProfile) {
       fetchFollowStatus();
     }
-  }, [username]);
-
+  }, [username, isOwnProfile]);
 
   const handleImageUpload = async (e, type) => {
     const image = e.target.files[0];
 
     if (!image) {
-      alert('Please select an image to upload.');
+      alert("Please select an image to upload.");
       return;
     }
     if (type === "profile") {
@@ -58,14 +110,34 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
   };
 
   const handleSendConnectionRequest = async () => {
+    console.log("🔵 Sending connection request to:", username);
+    console.log("🔵 Current follow status:", followStatus);
+    console.log("🔵 User data:", userData);
+
     setIsLoading(true);
     try {
-      const response = await axiosInstance.post('/follow/request', { username });
-      console.log(response);
+      const response = await axiosInstance.post("/follow/request", {
+        username,
+      });
+      console.log("🟢 Connection request sent successfully:", response.data);
       setFollowStatus("pending");
+
+      // ✅ Update Redux state
+      dispatch(addFollowRequest(userData._id));
+
+      // ✅ Emit socket event for real-time update
+      if (socket) {
+        socket.emit("sendFollowRequest", {
+          senderId: currentUser._id,
+          recipientId: userData._id,
+          senderName: currentUser.name,
+          senderUsername: currentUser.username,
+          senderProfilePicture: currentUser.profilePicture,
+        });
+      }
     } catch (error) {
+      console.error("🔴 Error sending connection request:", error);
       alert("Error sending connection request");
-      console.log(error)
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +149,17 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
       const response = await axiosInstance.post(`/follow/withdraw/${username}`);
       if (response.data.success) {
         setFollowStatus("not_following");
+
+        // ✅ Update Redux state
+        dispatch(removeFollowRequest(userData._id));
+
+        // ✅ Emit socket event for real-time update
+        if (socket) {
+          socket.emit("withdrawFollowRequest", {
+            senderId: currentUser._id,
+            recipientId: userData._id,
+          });
+        }
       }
     } catch (error) {
       alert("Error withdrawing request");
@@ -86,13 +169,23 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
     }
   };
 
-
   const handleUnfollow = async () => {
     setIsLoading(true);
     try {
       const response = await axiosInstance.post(`/follow/unfollow/${username}`);
       if (response.data.success) {
         setFollowStatus("not_following");
+
+        // ✅ Update Redux state
+        dispatch(removeConnection(userData._id));
+
+        // ✅ Emit socket event for real-time update
+        if (socket) {
+          socket.emit("unfollowUser", {
+            unfollowerId: currentUser._id,
+            targetId: userData._id,
+          });
+        }
       }
     } catch (error) {
       console.log(error);
@@ -102,13 +195,18 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
     }
   };
 
-
   const handleAcceptRequest = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.post(`/connections/accept/${username}`);
+      const response = await axiosInstance.post(
+        `/connections/accept/${username}`
+      );
       if (response.success) {
         setFollowStatus("following");
+
+        // ✅ Update Redux state
+        dispatch(addConnection(userData._id));
+        dispatch(removePendingRequest(userData._id));
       }
     } catch (error) {
       alert("Error accepting request");
@@ -120,9 +218,14 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
   const handleRejectRequest = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.post(`/connections/reject/${username}`);
+      const response = await axiosInstance.post(
+        `/connections/reject/${username}`
+      );
       if (response.success) {
         setFollowStatus("not_following");
+
+        // ✅ Update Redux state
+        dispatch(removePendingRequest(userData._id));
       }
     } catch (error) {
       alert("Error rejecting request");
@@ -130,26 +233,30 @@ const ProfileSection = ({ isOwnProfile, userData, openModal }) => {
       setIsLoading(false);
     }
   };
-  const navigate = useNavigate();
 
   // Frontend (React)
-const handleMessageClick = async () => {
-  try {
-    const res = await axiosInstance.post("/chats/initiate", { username: username });
-    const conversationId = res.data.conversationId;
-    navigate(`/messages/${conversationId}`);
-  } catch (error) {
-    console.error("Error initiating chat:", error);
-  }
- };
-
+  const handleMessageClick = async () => {
+    try {
+      const res = await axiosInstance.post("/chats/initiate", {
+        username: username,
+      });
+      const conversationId = res.data.conversationId;
+      navigate(`/messages/${conversationId}`);
+    } catch (error) {
+      console.error("Error initiating chat:", error);
+    }
+  };
 
   return (
     <div className="w-full">
       {/* Cover Photo */}
       <div className="h-[200px] relative">
         <img
-          src={profileData?.Banner ? profileData?.Banner : "https://res.cloudinary.com/dy9voteoc/image/upload/v1743862508/archimedis_digital_cover_tm7zro.jpg"}
+          src={
+            profileData?.Banner
+              ? profileData?.Banner
+              : "https://res.cloudinary.com/dy9voteoc/image/upload/v1743862508/archimedis_digital_cover_tm7zro.jpg"
+          }
           alt="Cover"
           className="w-full h-full object-cover"
         />
@@ -177,7 +284,11 @@ const handleMessageClick = async () => {
             {/* Profile Picture */}
             <div className="relative -mt-16">
               <img
-                src={profileData?.profilePicture ? profileData?.profilePicture : "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"}
+                src={
+                  profileData?.profilePicture
+                    ? profileData?.profilePicture
+                    : "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                }
                 alt="Dr. Rahul Sharma"
                 className="w-[140px] h-[140px] rounded-full border-4 border-white object-cover"
               />
@@ -202,9 +313,7 @@ const handleMessageClick = async () => {
               <h1 className="text-2xl font-semibold text-gray-900">
                 {profileData?.name}
               </h1>
-              <p className="text-gray-600 mt-1">
-                {profileData?.headline}
-              </p>
+              <p className="text-gray-600 mt-1">{profileData?.headline}</p>
               <p className="text-blue-500 mt-2 text-sm font-semibold cursor-pointer hover:underline">
                 {profileData?.connections?.length} Connections
               </p>
@@ -234,16 +343,32 @@ const handleMessageClick = async () => {
                   </div>
                 ) : (
                   <button
-                    className={`h-10 px-5 rounded-lg flex items-center gap-2 font-medium transition-colors ${followStatus === "not_following"
-                      ? "bg-[#1890FF] text-white hover:bg-blue-600"
-                      : followStatus === "pending"
+                    className={`h-10 px-5 rounded-lg flex items-center gap-2 font-medium transition-colors ${
+                      followStatus === "not_following"
+                        ? "bg-[#1890FF] text-white hover:bg-blue-600"
+                        : followStatus === "pending"
                         ? "bg-gray-300 text-gray-700 hover:bg-gray-400"
                         : "bg-red-100 text-red-600 hover:bg-red-200"
-                      }`}
-                    onClick={() => {
-                      if (followStatus === "not_following") handleSendConnectionRequest();
-                      else if (followStatus === "pending") handleWithdrawRequest();
-                      else if (followStatus === "following") handleUnfollow();
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      console.log(
+                        "🔵 Button clicked! Follow status:",
+                        followStatus
+                      );
+                      console.log("🔵 Is loading:", isLoading);
+                      console.log("🔵 Is own profile:", isOwnProfile);
+
+                      if (followStatus === "not_following") {
+                        console.log("🔵 Calling handleSendConnectionRequest");
+                        handleSendConnectionRequest();
+                      } else if (followStatus === "pending") {
+                        console.log("🔵 Calling handleWithdrawRequest");
+                        handleWithdrawRequest();
+                      } else if (followStatus === "following") {
+                        console.log("🔵 Calling handleUnfollow");
+                        handleUnfollow();
+                      }
                     }}
                     disabled={isLoading}
                   >
@@ -272,7 +397,8 @@ const handleMessageClick = async () => {
                       <>
                         {followStatus === "not_following" && (
                           <>
-                            <span className="text-lg leading-none">+</span> Follow
+                            <span className="text-lg leading-none">+</span>{" "}
+                            Follow
                           </>
                         )}
                         {followStatus === "pending" && "Pending"}
@@ -282,13 +408,15 @@ const handleMessageClick = async () => {
                   </button>
                 )}
 
-                <button onClick={handleMessageClick} className="h-10 bg-gray-100 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors font-medium">
+                <button
+                  onClick={handleMessageClick}
+                  className="h-10 bg-gray-100 text-gray-900 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-200 transition-colors font-medium"
+                >
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </button>
               </>
             )}
-
           </div>
         </div>
       </div>

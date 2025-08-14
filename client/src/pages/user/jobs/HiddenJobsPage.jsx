@@ -6,7 +6,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import axiosInstance from "../../../lib/axio";
 import JobCard from "./components/JobCard";
 import { calculateMatchPercentage } from "../../../utils/matchPercentage";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { removeHiddenJob } from "../../../store/features/authSlice";
 import Loader from "../../../components/Loader";
 
 // CSS for hiding scrollbar
@@ -273,6 +274,7 @@ const HiddenJobs = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const currentUser = useSelector((state) => state.auth.user);
+  const dispatch = useDispatch();
 
   // ✅ Add window size tracking for responsive design
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -371,6 +373,7 @@ const HiddenJobs = () => {
 
       // Remove the job from hidden jobs list with animation
       setHiddenJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
+      dispatch(removeHiddenJob(jobId));
 
       // Show success feedback
       console.log("Job unhidden successfully");

@@ -35,6 +35,7 @@ import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
 import Loader from "../../../../components/Loader";
+import { addAppliedJob } from "../../../../store/features/authSlice";
 
 const BLUE = "#1890FF";
 
@@ -662,6 +663,7 @@ const JobDetails = ({ onClose }) => {
       setShowApplyModal(false);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 2000);
+      dispatch(addAppliedJob(jobId));
     } catch (error) {
       console.error("Error applying for job:", error);
     }

@@ -203,6 +203,107 @@ const authSlice = createSlice({
     setBusinessProfile: (state, action) => {
       state.businessProfile = action.payload;
     },
+    // ✅ Real-time job updates
+    addAppliedJob: (state, action) => {
+      if (
+        state.currentUser &&
+        !state.currentUser.appliedJobs?.includes(action.payload)
+      ) {
+        if (!state.currentUser.appliedJobs) {
+          state.currentUser.appliedJobs = [];
+        }
+        state.currentUser.appliedJobs.push(action.payload);
+      }
+    },
+    addSavedJob: (state, action) => {
+      if (
+        state.currentUser &&
+        !state.currentUser.savedJobs?.includes(action.payload)
+      ) {
+        if (!state.currentUser.savedJobs) {
+          state.currentUser.savedJobs = [];
+        }
+        state.currentUser.savedJobs.push(action.payload);
+      }
+    },
+    removeSavedJob: (state, action) => {
+      if (state.currentUser && state.currentUser.savedJobs) {
+        state.currentUser.savedJobs = state.currentUser.savedJobs.filter(
+          (jobId) => jobId !== action.payload
+        );
+      }
+    },
+    addHiddenJob: (state, action) => {
+      if (
+        state.currentUser &&
+        !state.currentUser.hiddenJobs?.includes(action.payload)
+      ) {
+        if (!state.currentUser.hiddenJobs) {
+          state.currentUser.hiddenJobs = [];
+        }
+        state.currentUser.hiddenJobs.push(action.payload);
+      }
+    },
+    removeHiddenJob: (state, action) => {
+      if (state.currentUser && state.currentUser.hiddenJobs) {
+        state.currentUser.hiddenJobs = state.currentUser.hiddenJobs.filter(
+          (jobId) => jobId !== action.payload
+        );
+      }
+    },
+    // ✅ Real-time follow updates
+    addFollowRequest: (state, action) => {
+      if (state.currentUser) {
+        if (!state.currentUser.sentRequests) {
+          state.currentUser.sentRequests = [];
+        }
+        if (!state.currentUser.sentRequests.includes(action.payload)) {
+          state.currentUser.sentRequests.push(action.payload);
+        }
+      }
+    },
+    removeFollowRequest: (state, action) => {
+      if (state.currentUser && state.currentUser.sentRequests) {
+        state.currentUser.sentRequests = state.currentUser.sentRequests.filter(
+          (userId) => userId !== action.payload
+        );
+      }
+    },
+    addConnection: (state, action) => {
+      if (state.currentUser) {
+        if (!state.currentUser.connections) {
+          state.currentUser.connections = [];
+        }
+        if (!state.currentUser.connections.includes(action.payload)) {
+          state.currentUser.connections.push(action.payload);
+        }
+      }
+    },
+    removeConnection: (state, action) => {
+      if (state.currentUser && state.currentUser.connections) {
+        state.currentUser.connections = state.currentUser.connections.filter(
+          (userId) => userId !== action.payload
+        );
+      }
+    },
+    addPendingRequest: (state, action) => {
+      if (state.currentUser) {
+        if (!state.currentUser.pendingRequests) {
+          state.currentUser.pendingRequests = [];
+        }
+        if (!state.currentUser.pendingRequests.includes(action.payload)) {
+          state.currentUser.pendingRequests.push(action.payload);
+        }
+      }
+    },
+    removePendingRequest: (state, action) => {
+      if (state.currentUser && state.currentUser.pendingRequests) {
+        state.currentUser.pendingRequests =
+          state.currentUser.pendingRequests.filter(
+            (userId) => userId !== action.payload
+          );
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -419,6 +520,19 @@ export const {
   setCurrentUser,
   setFilteredJobs,
   setBusinessProfile,
+  // ✅ Real-time job updates
+  addAppliedJob,
+  addSavedJob,
+  removeSavedJob,
+  addHiddenJob,
+  removeHiddenJob,
+  // ✅ Real-time follow updates
+  addFollowRequest,
+  removeFollowRequest,
+  addConnection,
+  removeConnection,
+  addPendingRequest,
+  removePendingRequest,
 } = authSlice.actions;
 
 export default authSlice.reducer;
