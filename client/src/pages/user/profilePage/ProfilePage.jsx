@@ -65,6 +65,7 @@ const ProfilePage = () => {
   // Suggested users state
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [suggestedUsersLoading, setSuggestedUsersLoading] = useState(true);
+  const [showAllSuggestedUsers, setShowAllSuggestedUsers] = useState(false);
   // ✅ Add follow states for suggested users
   const [followStates, setFollowStates] = useState({});
   const [followLoadingStates, setFollowLoadingStates] = useState({});
@@ -365,7 +366,7 @@ const ProfilePage = () => {
     const fetchSuggestedUsers = async () => {
       try {
         setSuggestedUsersLoading(true);
-        const response = await axiosInstance.get("/getSuggestedUsers?limit=6");
+        const response = await axiosInstance.get("/getSuggestedUsers?limit=10");
 
         if (response.data.success) {
           console.log("📋 Suggested users data:", response.data.suggestedUsers);
@@ -1360,9 +1361,26 @@ const ProfilePage = () => {
                             <h3 className="text-[16px] font-medium text-gray-900">
                               Suggested Users
                             </h3>
+                            {suggestedUsers.length > 5 && (
+                              <button
+                                onClick={() =>
+                                  setShowAllSuggestedUsers(
+                                    !showAllSuggestedUsers
+                                  )
+                                }
+                                className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                              >
+                                {showAllSuggestedUsers
+                                  ? "Show Less"
+                                  : `Show All (${suggestedUsers.length})`}
+                              </button>
+                            )}
                           </div>
                           <div className="space-y-4">
-                            {suggestedUsers.slice(0, 4).map((person, index) => {
+                            {(showAllSuggestedUsers
+                              ? suggestedUsers
+                              : suggestedUsers.slice(0, 5)
+                            ).map((person, index) => {
                               const buttonConfig = getFollowButtonConfig(
                                 person._id
                               );
@@ -1432,67 +1450,63 @@ const ProfilePage = () => {
                           <div className="space-y-4">
                             {suggestedUsers.length > 0 ? (
                               <div className="space-y-4">
-                                {suggestedUsers
-                                  .slice(0, 4)
-                                  .map((person, index) => {
-                                    const buttonConfig = getFollowButtonConfig(
-                                      person._id
-                                    );
-                                    const isLoading =
-                                      followLoadingStates[person._id];
+                                {suggestedUsers.map((person, index) => {
+                                  const buttonConfig = getFollowButtonConfig(
+                                    person._id
+                                  );
+                                  const isLoading =
+                                    followLoadingStates[person._id];
 
-                                    return (
-                                      <div
-                                        key={person._id || index}
-                                        className="flex items-center justify-between"
-                                      >
-                                        <div className="flex items-center space-x-3 min-w-0 flex-1">
-                                          <img
-                                            src={
-                                              person.profilePicture ||
-                                              person.image ||
-                                              "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-                                            }
-                                            alt={person.name}
-                                            className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                                            onError={(e) => {
-                                              e.target.src =
-                                                "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
-                                            }}
-                                          />
-                                          <div className="flex-1 min-w-0 max-w-[180px]">
-                                            <h4 className="text-[14px] font-medium text-gray-900 truncate">
-                                              {person.name ||
-                                                person.username ||
-                                                `User ${index + 1}`}
-                                            </h4>
-                                            <p className="text-[12px] text-gray-500 truncate">
-                                              {person.headline ||
-                                                person.role ||
-                                                person.title ||
-                                                "Professional"}
-                                              {person.company &&
-                                                ` at ${person.company}`}
-                                            </p>
-                                          </div>
+                                  return (
+                                    <div
+                                      key={person._id || index}
+                                      className="flex items-center justify-between"
+                                    >
+                                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                        <img
+                                          src={
+                                            person.profilePicture ||
+                                            person.image ||
+                                            "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
+                                          }
+                                          alt={person.name}
+                                          className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                                          onError={(e) => {
+                                            e.target.src =
+                                              "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif";
+                                          }}
+                                        />
+                                        <div className="flex-1 min-w-0 max-w-[180px]">
+                                          <h4 className="text-[14px] font-medium text-gray-900 truncate">
+                                            {person.name ||
+                                              person.username ||
+                                              `User ${index + 1}`}
+                                          </h4>
+                                          <p className="text-[12px] text-gray-500 truncate">
+                                            {person.headline ||
+                                              person.role ||
+                                              person.title ||
+                                              "Professional"}
+                                            {person.company &&
+                                              ` at ${person.company}`}
+                                          </p>
                                         </div>
-                                        <button
-                                          className={buttonConfig.className}
-                                          onClick={() =>
-                                            handleFollowUser(person)
-                                          }
-                                          disabled={
-                                            isLoading ||
-                                            followStates[person._id] ===
-                                              "requested"
-                                          }
-                                          title={buttonConfig.hoverText}
-                                        >
-                                          {buttonConfig.text}
-                                        </button>
                                       </div>
-                                    );
-                                  })}
+                                      <button
+                                        className={buttonConfig.className}
+                                        onClick={() => handleFollowUser(person)}
+                                        disabled={
+                                          isLoading ||
+                                          followStates[person._id] ===
+                                            "requested"
+                                        }
+                                        title={buttonConfig.hoverText}
+                                      >
+                                        {buttonConfig.text}
+                                      </button>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             ) : (
                               // Empty state

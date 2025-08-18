@@ -59,6 +59,9 @@ export function NotificationPopup({ setShowPreview }) {
             mode: mode,
           });
         }
+
+        // Refresh notifications from server
+        fetchUnreadNotifications();
       }
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
@@ -66,6 +69,35 @@ export function NotificationPopup({ setShowPreview }) {
       setMarkingAllRead(false);
     }
   };
+
+  // ✅ Add socket listeners for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNotificationsMarkedAsRead = () => {
+      console.log("📖 [Popup] Notifications marked as read - refreshing");
+      fetchUnreadNotifications();
+    };
+
+    const handleNewNotification = () => {
+      console.log("🔔 [Popup] New notification - refreshing");
+      fetchUnreadNotifications();
+    };
+
+    socket.on("notificationsMarkedAsRead", handleNotificationsMarkedAsRead);
+    socket.on("newNotification", handleNewNotification);
+    socket.on("followRequestReceived", fetchUnreadNotifications);
+    socket.on("followRequestAccepted", fetchUnreadNotifications);
+    socket.on("followRequestRejected", fetchUnreadNotifications);
+
+    return () => {
+      socket.off("notificationsMarkedAsRead", handleNotificationsMarkedAsRead);
+      socket.off("newNotification", handleNewNotification);
+      socket.off("followRequestReceived", fetchUnreadNotifications);
+      socket.off("followRequestAccepted", fetchUnreadNotifications);
+      socket.off("followRequestRejected", fetchUnreadNotifications);
+    };
+  }, [socket]);
 
   const handleAcceptRequest = async (notificationId) => {
     try {

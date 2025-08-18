@@ -41,62 +41,6 @@ export default function NotificationPage() {
   // ✅ Add window size tracking for responsive design
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  // ✅ Auto mark all as read when component mounts (opening notifications page)
-  useEffect(() => {
-    const autoMarkAllAsRead = async () => {
-      try {
-        console.log("📖 Auto-marking all notifications as read...");
-        const response = await axiosInstance.put(
-          `/notifications/mark-all-read?mode=${mode}`
-        );
-        if (response.data.success) {
-          console.log(
-            `✅ Marked ${response.data.modifiedCount} notifications as read`
-          );
-          // Update local state to mark all as read
-          setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-        }
-      } catch (error) {
-        console.error("Error auto-marking notifications as read:", error);
-      }
-    };
-
-    // Auto-mark as read when page loads
-    if (notifications.length > 0) {
-      autoMarkAllAsRead();
-    }
-  }, [mode]); // Run when mode changes or component mounts
-
-  // ✅ Manual mark all as read function
-  const handleMarkAllAsRead = async () => {
-    try {
-      setMarkingAllRead(true);
-      console.log("📖 Manually marking all notifications as read...");
-      const response = await axiosInstance.put(
-        `/notifications/mark-all-read?mode=${mode}`
-      );
-      if (response.data.success) {
-        console.log(
-          `✅ Marked ${response.data.modifiedCount} notifications as read`
-        );
-        // Update local state to mark all as read
-        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-
-        // Emit socket event to update header count
-        if (socket) {
-          socket.emit("notificationsMarkedAsRead", {
-            userId: currentUser._id,
-            mode: mode,
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error marking all notifications as read:", error);
-    } finally {
-      setMarkingAllRead(false);
-    }
-  };
-
   // ✅ Enhanced real-time socket listeners for notifications
   useEffect(() => {
     if (!socket) return;
@@ -235,7 +179,42 @@ export default function NotificationPage() {
       console.log("📋 Fetched notifications:", response.data);
       if (response.data && response.data.success) {
         // ✅ Fix: Use response.data.data instead of response.data.notifications
-        setNotifications(response.data.data || []);
+        const fetchedNotifications = response.data.data || [];
+        setNotifications(fetchedNotifications);
+
+        // ✅ Auto-mark as read immediately after fetching if there are unread notifications
+        const hasUnreadNotifications = fetchedNotifications.some(
+          (n) => !n.isRead
+        );
+        if (hasUnreadNotifications) {
+          console.log("📖 Found unread notifications, auto-marking as read...");
+          setTimeout(async () => {
+            try {
+              const markResponse = await axiosInstance.put(
+                `/notifications/mark-all-read?mode=${mode}`
+              );
+              if (markResponse.data.success) {
+                console.log(
+                  `✅ Auto-marked ${markResponse.data.modifiedCount} notifications as read`
+                );
+                // Update local state to mark all as read
+                setNotifications((prev) =>
+                  prev.map((n) => ({ ...n, isRead: true }))
+                );
+
+                // Emit socket event to update header count
+                if (socket) {
+                  socket.emit("notificationsMarkedAsRead", {
+                    userId: currentUser._id,
+                    mode: mode,
+                  });
+                }
+              }
+            } catch (error) {
+              console.error("Error auto-marking notifications as read:", error);
+            }
+          }, 500); // Small delay to ensure UI is rendered
+        }
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -248,6 +227,36 @@ export default function NotificationPage() {
   useEffect(() => {
     fetchAllNotifications();
   }, [mode]);
+
+  // ✅ Manual mark all as read function
+  const handleMarkAllAsRead = async () => {
+    try {
+      setMarkingAllRead(true);
+      console.log("📖 Manually marking all notifications as read...");
+      const response = await axiosInstance.put(
+        `/notifications/mark-all-read?mode=${mode}`
+      );
+      if (response.data.success) {
+        console.log(
+          `✅ Marked ${response.data.modifiedCount} notifications as read`
+        );
+        // Update local state to mark all as read
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+        // Emit socket event to update header count
+        if (socket) {
+          socket.emit("notificationsMarkedAsRead", {
+            userId: currentUser._id,
+            mode: mode,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    } finally {
+      setMarkingAllRead(false);
+    }
+  };
 
   // ✅ Refresh notifications when page becomes visible
   useEffect(() => {
