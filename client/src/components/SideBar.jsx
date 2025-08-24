@@ -20,6 +20,7 @@ import {
   Search,
   BarChart,
   Power,
+  Rss,
 } from "lucide-react";
 
 export default function Sidebar({ className = "" }) {
@@ -217,6 +218,17 @@ export default function Sidebar({ className = "" }) {
                       /> */}
                       <NavItem
                         icon={
+                          <Rss color="#7F7F7F" strokeWidth={1.8} size={22} />
+                        }
+                        text="Feed"
+                        navTo={"/organization/feed"}
+                        onNavigate={handleNavigation}
+                        isActive={location.pathname.startsWith(
+                          "/organization/feed"
+                        )}
+                      />
+                      <NavItem
+                        icon={
                           <MessageCircle
                             color="#7F7F7F"
                             strokeWidth={1.8}
@@ -346,6 +358,15 @@ export default function Sidebar({ className = "" }) {
                       />
                       <NavItem
                         icon={
+                          <Rss color="#7F7F7F" strokeWidth={1.8} size={22} />
+                        }
+                        text="Feed"
+                        navTo={"/feed"}
+                        onNavigate={handleNavigation}
+                        isActive={location.pathname.startsWith("/feed")}
+                      />
+                      <NavItem
+                        icon={
                           <MessageCircle
                             color="#7F7F7F"
                             strokeWidth={1.8}
@@ -401,7 +422,6 @@ export default function Sidebar({ className = "" }) {
                         onNavigate={handleNavigation}
                         isActive={location.pathname.startsWith("/help")}
                       />
-
                       <li>
                         <button
                           onClick={handleLogout}

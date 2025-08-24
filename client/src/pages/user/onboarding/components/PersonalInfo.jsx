@@ -323,6 +323,29 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
     };
   }, []);
 
+  // ✅ Inject CSS to ensure white background for entire page
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      body {
+        background-color: white !important;
+      }
+      .onboarding-container {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+      .PersonalInfo {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Initialize selectedState with existing data when component mounts
   useEffect(() => {
     if (formData && formData.state) {
@@ -412,7 +435,10 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
   };
 
   return (
-    <div className="flex h-screen bg-white PersonalInfo">
+    <div
+      className="flex h-screen bg-white PersonalInfo min-h-screen fixed inset-0 overflow-auto"
+      style={{ backgroundColor: "white !important" }}
+    >
       <div
         className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
         style={{ minWidth: 560 }}
@@ -708,7 +734,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
             </div>
 
             {/* Buttons */}
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-end pt-4">
               <button
                 type="button"
                 onClick={onNext}
@@ -727,7 +753,7 @@ const PersonalInfo = ({ formData, updateFormData, onNext, onPrevious }) => {
       </div>
 
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-white" />
+      <div className="w-1/2 bg-white min-h-screen h-full" />
     </div>
   );
 };

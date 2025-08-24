@@ -30,6 +30,29 @@ const ProfessionalSummary = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // ✅ Inject CSS to ensure white background for entire page
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      body {
+        background-color: white !important;
+      }
+      .onboarding-container {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+      .ProfessionalSummary {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // ✅ Responsive top spacing for different screen sizes
   const getResponsiveTopSpacing = () => {
     if (windowWidth <= 1599) {
@@ -161,7 +184,10 @@ const ProfessionalSummary = ({
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div
+      className="flex h-screen bg-white ProfessionalSummary min-h-screen fixed inset-0 overflow-auto"
+      style={{ backgroundColor: "white !important" }}
+    >
       {/* Left Side - Form */}
       <div
         className={`w-1/2 flex flex-col px-[100px] ${getResponsiveTopSpacing()}`}
@@ -176,7 +202,7 @@ const ProfessionalSummary = ({
             Professional Summary
           </h1>
           {/* Progress Circle */}
-          <StepProgressCircle currentStep={3} totalSteps={8} />
+          <StepProgressCircle currentStep={1} totalSteps={8} />
         </div>
 
         <p className="text-[13px] font-sm text-[#8C8C8C] mb-8">
@@ -222,7 +248,7 @@ const ProfessionalSummary = ({
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-between pt-8 mt-8">
+          <div className="flex justify-between pt-1">
             <button
               type="button"
               onClick={handleSkipAll}
@@ -247,7 +273,7 @@ const ProfessionalSummary = ({
       </div>
 
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-white" />
+      <div className="w-1/2 bg-white min-h-screen h-full" />
     </div>
   );
 };

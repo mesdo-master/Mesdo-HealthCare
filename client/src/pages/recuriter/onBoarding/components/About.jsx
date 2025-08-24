@@ -1,6 +1,6 @@
 import { ArrowLeft, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const About = ({
   formData,
@@ -10,6 +10,29 @@ const About = ({
   prevStep,
 }) => {
   const [error, setError] = useState("");
+
+  // ✅ Inject CSS to ensure white background for entire page
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      body {
+        background-color: white !important;
+      }
+      .onboarding-container {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+      .About {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const handleContinue = () => {
     // Check if all required fields are filled
@@ -52,7 +75,10 @@ const About = ({
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div
+      className="flex h-screen bg-white About min-h-screen fixed inset-0 overflow-auto"
+      style={{ backgroundColor: "white !important" }}
+    >
       {/* Left Side - Form */}
       <div
         className="w-1/2 flex flex-col px-[100px] py-[60px] mt-[-20px]"
@@ -164,7 +190,7 @@ const About = ({
       </div>
 
       {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-white" />
+      <div className="w-1/2 bg-white min-h-screen h-full" />
     </div>
   );
 };

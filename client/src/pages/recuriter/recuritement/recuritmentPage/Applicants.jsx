@@ -7,6 +7,7 @@ import axiosInstance from "../../../../lib/axio";
 import { useSelector } from "react-redux";
 import { calculateMatchPercentage } from "../../../../utils/matchPercentage";
 import ReactDOM from "react-dom";
+import LeftArrowIcon from "../../../../assets/LeftArrow.png";
 
 // Hide scrollbar CSS
 const scrollbarHideStyle = `
@@ -26,7 +27,8 @@ export default function Applicants() {
   const [job, setJob] = useState(null);
   const [applicants, setApplicants] = useState([]);
   const [sortType, setSortType] = useState("matchPercentage");
-  const totalApplicants = applicants?.length || 0;
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [jobStatus, setJobStatus] = useState("Active");
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -137,6 +139,14 @@ export default function Applicants() {
     setApplicants(sortedApplicants);
   };
 
+  // Filter applicants based on status
+  const filteredApplicants = applicants.filter((applicant) => {
+    if (statusFilter === "all") return true;
+    return applicant.status === statusFilter;
+  });
+
+  const totalApplicants = filteredApplicants?.length || 0;
+
   const { jobId } = useParams();
 
   // Function to calculate progress based on status
@@ -233,6 +243,8 @@ export default function Applicants() {
 
         setApplicants(applicantsData);
         setJob(response.data);
+        // Initialize job status from fetched data
+        setJobStatus(response.data.jobStatus || "Active");
       } catch (error) {
         console.error("Error fetching applicants:", error);
       }
@@ -244,6 +256,65 @@ export default function Applicants() {
   }, [jobId]);
 
   const { currentUser } = useSelector((state) => state.auth);
+
+  // Handle job status change
+  const handleJobStatusChange = async (newStatus) => {
+    try {
+      await axiosInstance.put(`/jobs/${jobId}`, {
+        formData: { ...job, jobStatus: newStatus },
+        description: job.jobDescription,
+      });
+      setJobStatus(newStatus);
+      // Update the job object as well
+      setJob((prev) => ({ ...prev, jobStatus: newStatus }));
+    } catch (error) {
+      console.error("Error updating job status:", error);
+      alert("Failed to update job status. Please try again.");
+    }
+  };
+
+  // Get status colors based on job status
+  const getStatusColors = (status) => {
+    switch (status) {
+      case "Active":
+        return {
+          bg: "bg-green-100",
+          text: "text-green-600",
+          ring: "focus:ring-green-500",
+          arrow: "#16a34a",
+        };
+      case "Inactive":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          ring: "focus:ring-red-500",
+          arrow: "#dc2626",
+        };
+      case "Paused":
+        return {
+          bg: "bg-yellow-100",
+          text: "text-yellow-600",
+          ring: "focus:ring-yellow-500",
+          arrow: "#ca8a04",
+        };
+      case "Closed":
+        return {
+          bg: "bg-gray-100",
+          text: "text-gray-600",
+          ring: "focus:ring-gray-500",
+          arrow: "#6b7280",
+        };
+      default:
+        return {
+          bg: "bg-green-100",
+          text: "text-green-600",
+          ring: "focus:ring-green-500",
+          arrow: "#16a34a",
+        };
+    }
+  };
+
+  const statusColors = getStatusColors(jobStatus);
 
   // Inject scrollbar hide CSS
   useEffect(() => {
@@ -286,13 +357,13 @@ export default function Applicants() {
                   onClick={() => navigate(-1)}
                   className="text-gray-600 hover:text-gray-900 transition"
                 >
-                  <ArrowLeft size={20} />
+                  <img src={LeftArrowIcon} alt="Back" className="w-6 h-6" />
                 </button>
 
                 {/* Text block with increased spacing */}
                 <div className="flex flex-col justify-center">
                   {/* "Active Until" line */}
-                  <span className="text-xs text-gray-500 mb-3">
+                  <span className="text-xs text-gray-500 mb-1">
                     Active Until -{" "}
                     {new Date(job?.endDate).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -305,14 +376,48 @@ export default function Applicants() {
                     <h2 className="text-2xl font-medium text-gray-900 leading-tight">
                       {job?.jobTitle}
                     </h2>
-                    {/* Active Badge */}
-                    <span className="bg-green-100 text-green-600 text-xs font-medium px-2.5 py-1 rounded-full">
-                      {job?.jobStatus}
-                    </span>
+
+                    {/* Active Status Dropdown */}
+                    <div className="relative">
+                      <select
+                        value={jobStatus}
+                        onChange={(e) => handleJobStatusChange(e.target.value)}
+                        className={`${statusColors.bg} ${statusColors.text} text-xs font-medium px-2.5 py-1 pr-5 rounded-full border-0 appearance-none ${statusColors.ring} focus:outline-none cursor-pointer`}
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Paused">Paused</option>
+                        <option value="Closed">Closed</option>
+                      </select>
+                      {/* Custom Dropdown Arrow */}
+                      <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke={statusColors.arrow}
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Small Divider */}
+                    <div className="w-px h-4 bg-gray-300"></div>
+
                     {/* Role */}
                     <span className="text-xs text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
                       Doctor
                     </span>
+
+                    {/* Small Divider */}
+                    <div className="w-px h-4 bg-gray-300"></div>
+
                     {/* Creator */}
                     <span className="text-xs text-gray-500">
                       Created by {currentUser?.name}
@@ -323,7 +428,7 @@ export default function Applicants() {
             </div>
 
             {/* Row 2: Tabs */}
-            <div className="flex gap-9 px-8 border-b text-base font-medium p-3 ml-8">
+            <div className="flex gap-9 px-8 border-b text-base font-medium p-3 ml-2">
               <div className="flex items-center gap-2 cursor-pointer py-3 border-b-2 border-[#222] text-[#222] font-medium">
                 <Users size={18} />
                 Candidates ({totalApplicants})
@@ -360,7 +465,7 @@ export default function Applicants() {
                           <input
                             type="text"
                             placeholder="Search Candidate"
-                            className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-4 py-3 pl-10 border-0 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                           />
                           <Search
                             size={16}
@@ -372,8 +477,13 @@ export default function Applicants() {
                           <select
                             value={sortType}
                             onChange={(e) => setSortType(e.target.value)}
-                            className="border border-gray-300 rounded-md px-4 py-3 pr-8 text-gray-700 bg-white text-sm font-medium appearance-none bg-no-repeat bg-right pr-8"
+                            className="border-0 rounded-xl px-4 py-3 pr-8 text-gray-700 bg-white appearance-none bg-no-repeat bg-right pr-8 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             style={{
+                              fontFamily: "Inter",
+                              fontWeight: 400,
+                              fontSize: "14px",
+                              lineHeight: "100%",
+                              letterSpacing: "2%",
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundPosition: "right 0.5rem center",
                               backgroundSize: "1.5em 1.5em",
@@ -385,12 +495,28 @@ export default function Applicants() {
                             <option value="name">Name</option>
                           </select>
 
-                          <button
-                            onClick={handleSort}
-                            className="border border-gray-300 rounded-md px-4 py-3 text-gray-700 bg-white flex items-center gap-1 text-sm font-medium"
+                          <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="border-0 rounded-xl px-4 py-3 pr-8 text-gray-700 bg-white appearance-none bg-no-repeat bg-right pr-8 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{
+                              fontFamily: "Inter",
+                              fontWeight: 400,
+                              fontSize: "14px",
+                              lineHeight: "100%",
+                              letterSpacing: "2%",
+                              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                              backgroundPosition: "right 0.5rem center",
+                              backgroundSize: "1.5em 1.5em",
+                            }}
                           >
-                            Sort
-                          </button>
+                            <option value="all">All Status</option>
+                            <option value="Applied">Applied</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Interview">Interview</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                          </select>
                         </div>
                       </div>
 
@@ -398,9 +524,10 @@ export default function Applicants() {
                       <div className="min-h-[400px]">
                         <div className="relative">
                           {/* Applicants List */}
-                          {applicants && applicants.length > 0 ? (
+                          {filteredApplicants &&
+                          filteredApplicants.length > 0 ? (
                             <div className="space-y-6">
-                              {applicants.map((applicant) => (
+                              {filteredApplicants.map((applicant) => (
                                 <motion.div
                                   key={applicant.id}
                                   onClick={() =>
@@ -465,14 +592,14 @@ export default function Applicants() {
 
                                   {/* COLUMN 3: Email */}
                                   <div className="ml-8 min-w-[180px]">
-                                    <span className="text-sm text-[#4B9BD4]">
+                                    <span className="text-sm text-[#4B9BD4] bg-[#F8FAFC] px-3 py-2 rounded-lg border border-gray-100">
                                       {applicant.email || "No email"}
                                     </span>
                                   </div>
 
                                   {/* COLUMN 4: Phone */}
                                   <div className="ml-8 min-w-[120px]">
-                                    <span className="text-sm text-[#4B9BD4]">
+                                    <span className="text-sm text-[#4B9BD4] bg-[#F8FAFC] px-3 py-2 rounded-lg border border-gray-100">
                                       {applicant.phoneNo || "No phone"}
                                     </span>
                                   </div>

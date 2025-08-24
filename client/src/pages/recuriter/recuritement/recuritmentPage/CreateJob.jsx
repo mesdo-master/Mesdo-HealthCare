@@ -119,23 +119,49 @@ export default function CreateJob() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // ✅ Remove shadows from ReactQuill component
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .ql-toolbar.ql-snow {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important;
+        border-bottom: none !important;
+      }
+      .ql-container.ql-snow {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important;
+      }
+      .ql-editor {
+        box-shadow: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // ✅ Consistent left spacing, adaptive layout
   const getResponsiveLayout = () => {
     if (windowWidth <= 1599) {
       // Small/normal screens - consistent left spacing
       return {
-        marginLeft: "160px", // Fixed left spacing for 13" Mac and smaller screens
-        paddingLeft: "32px",
-        paddingRight: "32px",
+        marginLeft: "150px", // Fixed left spacing for 13" Mac and smaller screens
+        paddingLeft: "60px",
+        paddingRight: "48px",
         padding: "40px",
+        topPadding: "pt-[15vh]", // pt-15vh for small screens
       };
     } else if (windowWidth <= 1920) {
       // Medium screens
       return {
-        marginLeft: "120px", // Same left spacing for medium screens
-        paddingLeft: "32px",
+        marginLeft: "100px", // Same left spacing for medium screens
+        paddingLeft: "55px",
         paddingRight: "32px",
         padding: "40px",
+        topPadding: "pt-[13vh]", // pt-13vh for medium screens
       };
     } else {
       // Large screens
@@ -144,6 +170,7 @@ export default function CreateJob() {
         paddingLeft: "32px",
         paddingRight: "32px",
         padding: "40px",
+        topPadding: "pt-[13vh]", // pt-13vh for large screens
       };
     }
   };
@@ -406,7 +433,7 @@ export default function CreateJob() {
         )}
       </AnimatePresence>
       <div
-        className="w-[80%] py-[10vh] pt-[13vh]"
+        className={`w-[80%] py-[10vh] ${layout.topPadding}`}
         style={{
           marginLeft: layout.marginLeft,
         }}
@@ -466,26 +493,50 @@ export default function CreateJob() {
           <div className="relative flex items-center mb-10">
             {["Job Information", "Additional Information", "Review"].map(
               (label, index) => (
-                <div key={index} className="relative flex-1">
-                  {/* Step Line */}
-                  <div
-                    className={`h-0.5 w-full transition-colors duration-300 ${
-                      step > index + 1
-                        ? "bg-green-500" // Completed step
-                        : step === index + 1
-                        ? "bg-blue-500" // In-progress step
-                        : "bg-gray-200" // Incomplete step
-                    }`}
-                  ></div>
+                <div key={index} className="relative flex-1 mt-2">
+                  {/* Step Line - Extended to connect with next segment */}
+                  {index < 2 && ( // Only for first two steps, not the Review step
+                    <div
+                      className={`h-px transition-colors duration-300 ${
+                        // Step 1 line (index 0): green when step 1 is completed (step > 1)
+                        // Step 2 line (index 1): green when we are on step 2 or step 2 is completed (step >= 2)
+                        (index === 0 && step > 1) || (index === 1 && step >= 2)
+                          ? "bg-[#73D13D]" // Green for completed step 1 or when on/completed step 2
+                          : "bg-gray-200" // Default gray
+                      } ${
+                        index === 0
+                          ? "ml-8 w-full" // First step: start from left margin, extend full width to connect
+                          : "w-full mr-8" // Second step: full width but end before right margin
+                      }`}
+                    ></div>
+                  )}
+
+                  {/* Line extending from left side of Step 3 (Review) pointer */}
+                  {index === 2 && (
+                    <div
+                      className={`h-px transition-colors duration-300 ml-0 mr-8 ${
+                        step >= 3
+                          ? "bg-[#73D13D]" // When on step 3, show green connection to step 3
+                          : "bg-gray-200" // Default gray
+                      }`}
+                      style={{ width: "calc(100% - 32px)" }}
+                    ></div>
+                  )}
 
                   {/* Step Indicator */}
                   <div
-                    className={`absolute -top-3 left-1/2 transform -translate-x-1/2 flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-200 ${
+                    className={`absolute -top-3 flex items-center justify-center w-6 h-6 rounded-full border transition-all duration-200 ${
+                      index === 0
+                        ? "left-8" // Step 1 moved slightly to the right
+                        : index === 2
+                        ? "right-8" // Step 3 moved slightly to the left
+                        : "left-1/2 transform -translate-x-1/2" // Step 2 centered between Step 1 and 3
+                    } ${
                       step > index + 1
-                        ? "bg-green-500 text-white border-green-500 shadow-sm" // Completed step
+                        ? "bg-[#73D13D] text-white border-[#73D13D]" // Completed step - green #73D13D
                         : step === index + 1
-                        ? "bg-white text-blue-500 border-blue-500 shadow-md" // In-progress step
-                        : "bg-white text-gray-400 border-gray-200" // Incomplete step
+                        ? "bg-white text-blue-400 border-blue-400" // Active/current step - white fill with light blue border and text
+                        : "bg-white text-gray-400 border-gray-200" // Inactive step - white fill with gray text and border
                     }`}
                   >
                     {step > index + 1 ? (
@@ -508,14 +559,22 @@ export default function CreateJob() {
                   </div>
 
                   {/* Step Label */}
-                  <div className="text-center mt-3">
+                  <div
+                    className={`mt-3 ${
+                      index === 0
+                        ? "text-left " // Step 1 label starts before the circle pointer
+                        : index === 2
+                        ? "text-right mr-4 " // Step 3 label ends before the circle pointer
+                        : "text-center" // Step 2 centered
+                    }`}
+                  >
                     <div
                       className={`text-sm font-medium transition-colors duration-200 ${
                         step > index + 1
-                          ? "text-green-600"
+                          ? "text-[#73D13D]" // Completed step - green text #73D13D
                           : step === index + 1
-                          ? "text-blue-600"
-                          : "text-gray-500"
+                          ? "text-blue-400" // Active step - light blue text to match the border
+                          : "text-gray-400" // Inactive step - light gray text
                       }`}
                     >
                       {label}
@@ -529,83 +588,122 @@ export default function CreateJob() {
           {/* Step Content */}
           {/* STEP 1 */}
           {step === 1 && (
-            <div className="grid grid-cols-3 gap-8 text-sm min-h-[600px]">
+            <div className="w-full text-sm min-h-[600px]">
               {/* Job Information */}
-              <div className="col-span-2">
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-600">
-                    Job Title
-                  </label>
-                  <input
-                    type="text"
-                    name="jobTitle"
-                    value={formData.jobTitle}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Job Title
+                </label>
+                <input
+                  type="text"
+                  name="jobTitle"
+                  value={formData.jobTitle}
+                  onChange={handleChange}
+                  className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                  placeholder="Enter job title"
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Job Description
+                </label>
+                <ReactQuill
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Add job description"
+                  className="rounded-lg border border-gray-200 mt-1 [&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:min-h-[180px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:text-gray-700 [&_.ql-toolbar]:shadow-none [&_.ql-container]:shadow-none [&_.ql-editor]:shadow-none"
+                />
+              </div>
+
+              {/* Employment Type Field */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Employment Type
+                </label>
+                <div className="flex space-x-4 mt-1">
+                  {["fulltime", "parttime", "internship", "contract"].map(
+                    (type) => (
+                      <label
+                        key={type}
+                        className="flex items-center space-x-2 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="employmentType"
+                          value={type}
+                          checked={formData.employmentType === type}
+                          onChange={handleChange}
+                          className="form-radio text-blue-500"
+                        />
+                        <span className="text-gray-700 capitalize">{type}</span>
+                      </label>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Experience Required - Full Width */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Experience Required
+                </label>
+                <div className="relative">
+                  <select
+                    name="experience"
+                    value={formData.experience}
                     onChange={handleChange}
-                    className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                    placeholder="Enter job title"
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-600">
-                    Job Description
-                  </label>
-                  <ReactQuill
-                    value={description}
-                    onChange={setDescription}
-                    placeholder="Add job description"
-                    className="rounded-lg border border-gray-200 mt-1 [&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:min-h-[180px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:text-gray-700"
-                  />
-                </div>
-
-                {/* Employment Type Field */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-600">
-                    Employment Type
-                  </label>
-                  <div className="flex space-x-4 mt-1">
-                    {["fulltime", "parttime", "internship", "contract"].map(
-                      (type) => (
-                        <label
-                          key={type}
-                          className="flex items-center space-x-2 cursor-pointer"
-                        >
-                          <input
-                            type="radio"
-                            name="employmentType"
-                            value={type}
-                            checked={formData.employmentType === type}
-                            onChange={handleChange}
-                            className="form-radio text-blue-500"
-                          />
-                          <span className="text-gray-700 capitalize">
-                            {type}
-                          </span>
-                        </label>
-                      )
-                    )}
+                    className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
+                  >
+                    <option value="">Select experience</option>
+                    {[...Array(10)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                    <option value="10+">10+</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg
+                      className="w-4 h-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </div>
                 </div>
+              </div>
 
-                {/* Experience Required as Dropdown */}
-                <div className="mb-6">
+              {/* Job Category and Number of Openings - Half and Half */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
                   <label className="block text-sm font-medium text-gray-600">
-                    Experience Required
+                    Job Category
                   </label>
                   <div className="relative">
                     <select
-                      name="experience"
-                      value={formData.experience}
+                      name="jobCategory"
+                      value={formData.jobCategory}
                       onChange={handleChange}
                       className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
                     >
-                      <option value="">Select experience</option>
-                      {[...Array(10)].map((_, i) => (
-                        <option key={i + 1} value={i + 1}>
-                          {i + 1}
-                        </option>
-                      ))}
-                      <option value="10+">10+</option>
+                      <option value="">Select job category</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="Technology">Technology</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Education">Education</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Sales">Sales</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Design">Design</option>
+                      <option value="Other">Other</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <svg
@@ -625,141 +723,96 @@ export default function CreateJob() {
                   </div>
                 </div>
 
-                {/* Job Category */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Job Category
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="jobCategory"
-                        value={formData.jobCategory}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
+                {/* Number of Openings with Custom Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Number of Openings
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="openings"
+                      value={formData.openings}
+                      onChange={handleChange}
+                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
+                    >
+                      <option value="">Select openings</option>
+                      {[...Array(10)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {i + 1}
+                        </option>
+                      ))}
+                      <option value="custom">Custom</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <option value="">Select job category</option>
-                        <option value="Healthcare">Healthcare</option>
-                        <option value="Technology">Technology</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Education">Education</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Sales">Sales</option>
-                        <option value="Engineering">Engineering</option>
-                        <option value="Design">Design</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
                     </div>
                   </div>
 
-                  {/* Number of Openings with Custom Input */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Number of Openings
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="openings"
-                        value={formData.openings}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
-                      >
-                        <option value="">Select openings</option>
-                        {[...Array(10)].map((_, i) => (
-                          <option key={i + 1} value={i + 1}>
-                            {i + 1}
-                          </option>
-                        ))}
-                        <option value="custom">Custom</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-
-                    {formData.openings === "custom" && (
-                      <input
-                        type="number"
-                        name="customOpenings"
-                        value={formData.customOpenings || ""}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                        placeholder="Enter custom number of openings"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Location and Salary */}
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Location
-                    </label>
+                  {formData.openings === "custom" && (
                     <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
+                      type="number"
+                      name="customOpenings"
+                      value={formData.customOpenings || ""}
+                      onChange={handleChange}
+                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 mt-2"
+                      placeholder="Enter custom number of openings"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Location - Full Width */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                  placeholder="Search"
+                />
+              </div>
+
+              {/* Salary Range - Full Width */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Salary Range
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <input
+                      type="number"
+                      name="salaryRangeFrom"
+                      value={formData.salaryRangeFrom}
                       onChange={handleChange}
                       className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                      placeholder="Enter location"
+                      placeholder="0"
                     />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600">
-                        Salary Range (From)
-                      </label>
-                      <input
-                        type="number"
-                        name="salaryRangeFrom"
-                        value={formData.salaryRangeFrom}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                        placeholder="Enter minimum salary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600">
-                        Salary Range (To)
-                      </label>
-                      <input
-                        type="number"
-                        name="salaryRangeTo"
-                        value={formData.salaryRangeTo}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                        placeholder="Enter maximum salary"
-                      />
-                    </div>
+                  <div>
+                    <input
+                      type="number"
+                      name="salaryRangeTo"
+                      value={formData.salaryRangeTo}
+                      onChange={handleChange}
+                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                      placeholder="10000"
+                    />
                   </div>
                 </div>
               </div>
@@ -768,247 +821,253 @@ export default function CreateJob() {
 
           {/* STEP 2 */}
           {step === 2 && (
-            <div className="grid grid-cols-3 gap-8 text-sm min-h-[600px]">
-              <div className="col-span-2">
-                {/* Skills */}
-                <div className="mb-6">
+            <div className="w-full text-sm min-h-[600px]">
+              {/* Skills */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Skills
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="skillInput"
+                    value={formData.skillInput}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                    placeholder="Type a skill and press Enter"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    onClick={handleKeyDown}
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Show the small message only if there is some text in the input */}
+                {formData.skillInput.trim().length > 0 && (
+                  <small className="text-gray-500">
+                    Press Enter to add to skills
+                  </small>
+                )}
+
+                {/* Display the skill chips */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {formData.skills.map((skill, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-md"
+                    >
+                      <span>{skill}</span>
+                      <button
+                        type="button"
+                        className="ml-2 text-gray-700"
+                        onClick={() => removeSkill(index)}
+                      >
+                        x
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Specializations Required - Full Width */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Specializations Required
+                </label>
+                <input
+                  type="text"
+                  name="specialization"
+                  value={formData.specialization}
+                  onChange={handleChange}
+                  className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                  placeholder="Search"
+                />
+              </div>
+
+              {/* Qualification Required & Department - Half and Half */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
                   <label className="block text-sm font-medium text-gray-600">
-                    Skills
+                    Qualification Required
+                  </label>
+                  <input
+                    type="text"
+                    name="qualification"
+                    value={formData.qualification}
+                    onChange={handleChange}
+                    className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                    placeholder="Select"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Department
                   </label>
                   <div className="relative">
-                    <input
-                      type="text"
-                      name="skillInput"
-                      value={formData.skillInput}
+                    <select
+                      name="department"
+                      value={formData.department}
                       onChange={handleChange}
-                      onKeyDown={handleKeyDown}
-                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                      placeholder="Type a skill and press Enter"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
-                      onClick={handleKeyDown}
+                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
                     >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Show the small message only if there is some text in the input */}
-                  {formData.skillInput.trim().length > 0 && (
-                    <small className="text-gray-500">
-                      Press Enter to add to skills
-                    </small>
-                  )}
-
-                  {/* Display the skill chips */}
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {formData.skills.map((skill, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-md"
+                      <option value="">Select</option>
+                      <option value="Human Resources">Human Resources</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Sales">Sales</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Design">Design</option>
+                      <option value="Operations">Operations</option>
+                      <option value="Customer Support">Customer Support</option>
+                      <option value="Legal">Legal</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <span>{skill}</span>
-                        <button
-                          type="button"
-                          className="ml-2 text-gray-700"
-                          onClick={() => removeSkill(index)}
-                        >
-                          x
-                        </button>
-                      </div>
-                    ))}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shift & Preferred Language - Half and Half */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Shift
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="Shift"
+                      value={formData.Shift}
+                      onChange={handleChange}
+                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
+                    >
+                      <option value="">Select Shift</option>
+                      <option value="Day Shift">Day Shift</option>
+                      <option value="Night Shift">Night Shift</option>
+                      <option value="Evening Shift">Evening Shift</option>
+                      <option value="Morning Shift">Morning Shift</option>
+                      <option value="Rotating Shift">Rotating Shift</option>
+                      <option value="Flexible">Flexible</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
-                {/* Other Fields */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Qualification required */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Qualification required
-                    </label>
-                    <input
-                      type="text"
-                      name="qualification"
-                      value={formData.qualification}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    Preferred Language
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="language"
+                      value={formData.language}
                       onChange={handleChange}
-                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                      placeholder="Qualifications"
-                    />
-                  </div>
-
-                  {/* Department */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Department
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="department"
-                        value={formData.department}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
+                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
+                    >
+                      <option value="">Select</option>
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi</option>
+                      <option value="Spanish">Spanish</option>
+                      <option value="French">French</option>
+                      <option value="German">German</option>
+                      <option value="Chinese">Chinese</option>
+                      <option value="Japanese">Japanese</option>
+                      <option value="Arabic">Arabic</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <option value="">Select department</option>
-                        <option value="Human Resources">Human Resources</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Sales">Sales</option>
-                        <option value="Engineering">Engineering</option>
-                        <option value="Design">Design</option>
-                        <option value="Operations">Operations</option>
-                        <option value="Customer Support">
-                          Customer Support
-                        </option>
-                        <option value="Legal">Legal</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  {/* Shift */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Shift
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="Shift"
-                        value={formData.Shift}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
-                      >
-                        <option value="">Select shift</option>
-                        <option value="Day Shift">Day Shift</option>
-                        <option value="Night Shift">Night Shift</option>
-                        <option value="Evening Shift">Evening Shift</option>
-                        <option value="Morning Shift">Morning Shift</option>
-                        <option value="Rotating Shift">Rotating Shift</option>
-                        <option value="Flexible">Flexible</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Preferred Language */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Preferred Language
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="language"
-                        value={formData.language}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
-                      >
-                        <option value="">Select language</option>
-                        <option value="English">English</option>
-                        <option value="Hindi">Hindi</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="Chinese">Chinese</option>
-                        <option value="Japanese">Japanese</option>
-                        <option value="Arabic">Arabic</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Specialization Required */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Specialization Required
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="specialization"
-                        value={formData.specialization}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
-                      >
-                        <option value="">Select specialization</option>
-                        <option value="Software Development">
-                          Software Development
-                        </option>
-                        <option value="Data Science">Data Science</option>
-                        <option value="UI/UX Design">UI/UX Design</option>
-                        <option value="Product Management">
-                          Product Management
-                        </option>
-                        <option value="Digital Marketing">
-                          Digital Marketing
-                        </option>
-                        <option value="Content Writing">Content Writing</option>
-                        <option value="Graphic Design">Graphic Design</option>
-                        <option value="Business Analysis">
-                          Business Analysis
-                        </option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
+              {/* Specialization Required - Full Width */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-600">
+                  Specialization Required
+                </label>
+                <div className="relative">
+                  <select
+                    name="specialization"
+                    value={formData.specialization}
+                    onChange={handleChange}
+                    className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 pr-10 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 appearance-none"
+                  >
+                    <option value="">Select</option>
+                    <option value="Software Development">
+                      Software Development
+                    </option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="UI/UX Design">UI/UX Design</option>
+                    <option value="Product Management">
+                      Product Management
+                    </option>
+                    <option value="Digital Marketing">Digital Marketing</option>
+                    <option value="Content Writing">Content Writing</option>
+                    <option value="Graphic Design">Graphic Design</option>
+                    <option value="Business Analysis">Business Analysis</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg
+                      className="w-4 h-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -1017,13 +1076,9 @@ export default function CreateJob() {
 
           {/* STEP 3: Review */}
           {step === 3 && (
-            <div className="grid grid-cols-3 gap-8 text-sm min-h-[600px]">
+            <div className="w-full text-sm min-h-[600px]">
               {/* LEFT: Review Information */}
-              <div className="col-span-2">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Review Information
-                </h3>
-
+              <div className="w-full">
                 <div className="space-y-4">
                   <ReviewRow label="Job Title" value={formData.jobTitle} />
                   <ReviewRow label="Job Description">

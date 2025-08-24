@@ -37,6 +37,7 @@ const Qualification = ({
   });
   const [qualList, setQualList] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [editIdx, setEditIdx] = useState(null);
   const [error, setError] = useState("");
   const [skills, setSkills] = useState([]);
@@ -74,15 +75,21 @@ const Qualification = ({
 
   // Initialize qualifications with existing data when component mounts
   useEffect(() => {
-    if (
-      formData &&
-      formData.qualifications &&
-      formData.qualifications.length > 0
-    ) {
-      setQualList(formData.qualifications);
-      setShowPreview(true);
+    // Set initialization state immediately
+    if (!isInitialized) {
+      if (
+        formData &&
+        formData.qualifications &&
+        formData.qualifications.length > 0
+      ) {
+        setQualList(formData.qualifications);
+        setShowPreview(true);
+      } else {
+        setShowPreview(false);
+      }
+      setIsInitialized(true);
     }
-  }, [formData]);
+  }, [formData, isInitialized]);
 
   const modules = {
     toolbar: [
@@ -470,6 +477,29 @@ const Qualification = ({
     fetchCourses();
   }, []);
 
+  // ✅ Inject CSS to ensure white background for entire page
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      body {
+        background-color: white !important;
+      }
+      .onboarding-container {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+      .Qualification {
+        background-color: white !important;
+        min-height: 100vh !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     updateFormData({ qualifications: qualList });
     // eslint-disable-next-line
@@ -648,539 +678,590 @@ const Qualification = ({
   }, []);
 
   return (
-    <div className="flex h-screen bg-white Qualification">
-      <div
-        className={`w-1/2 flex flex-col px-[100px] h-full  ${getResponsiveTopSpacing()}`}
-        style={{ minWidth: 560 }}
-      >
-        <div>
-          <button className="mb-8 mt-2 text-left" onClick={onPrevious}>
-            <ArrowLeft size={28} className="text-black" />
-          </button>
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="font-inter font-semibold text-[32px] leading-[130%] tracking-[0px] mb-1">
-              Qualifications
-            </h1>
-            <StepProgressCircle currentStep={1} totalSteps={5} />
-          </div>
-          <p className="text-[13px] font-sm text-[#8C8C8C] mb-8">
-            Include all of your qualification in this section.
-          </p>
-          <div className="flex-1">
-            {showPreview ? (
-              <>
-                {qualList.map((q, idx) => (
-                  <div key={idx} className="mb-8">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-[20px] font-semibold text-black leading-tight mb-1">
-                          {q.qualification} {q.course && `| ${q.course}`}
-                        </div>
-                        <div className="text-[15px] text-[#8C8C8C] mb-1">
-                          {q.university}{" "}
-                          {q.specialization && `| ${q.specialization}`}{" "}
-                          {q.courseType && `| ${q.courseType}`}
-                        </div>
-                        <div className="text-[13px] text-[#8C8C8C] mb-2">
-                          {q.passingYear}
-                        </div>
+    <div
+      className="flex h-screen bg-white Qualification min-h-screen fixed inset-0 overflow-auto"
+      style={{ backgroundColor: "white !important" }}
+    >
+      {!isInitialized ? (
+        // Show loading or blank state until initialized
+        <div className="w-full h-full bg-white" />
+      ) : (
+        <>
+          <div
+            className={`w-1/2 flex flex-col px-[100px] h-full bg-white ${getResponsiveTopSpacing()}`}
+            style={{ minWidth: 560 }}
+          >
+            <div>
+              <button className="mb-8 mt-2 text-left" onClick={onPrevious}>
+                <ArrowLeft size={28} className="text-black" />
+              </button>
+              <div className="flex items-center justify-between mb-1">
+                <h1 className="font-inter font-semibold text-[32px] leading-[130%] tracking-[0px] mb-1">
+                  Qualifications
+                </h1>
+                <StepProgressCircle currentStep={1} totalSteps={5} />
+              </div>
+              <p className="text-[13px] font-sm text-[#8C8C8C] mb-8">
+                Include all of your qualification in this section.
+              </p>
+              <div className="flex-1">
+                {showPreview ? (
+                  <>
+                    {qualList.filter(
+                      (q) =>
+                        q.qualification ||
+                        q.university ||
+                        q.course ||
+                        q.passingYear ||
+                        q.specialization ||
+                        q.courseType ||
+                        (q.skills && q.skills.length > 0) ||
+                        q.description
+                    ).length > 0 ? (
+                      qualList
+                        .filter(
+                          (q) =>
+                            q.qualification ||
+                            q.university ||
+                            q.course ||
+                            q.passingYear ||
+                            q.specialization ||
+                            q.courseType ||
+                            (q.skills && q.skills.length > 0) ||
+                            q.description
+                        )
+                        .map((q, idx) => (
+                          <div key={idx} className="mb-8">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-[20px] font-semibold text-black leading-tight mb-1">
+                                  {q.qualification}{" "}
+                                  {q.course && `| ${q.course}`}
+                                </div>
+                                <div className="text-[15px] text-[#8C8C8C] mb-1">
+                                  {q.university}{" "}
+                                  {q.specialization && `| ${q.specialization}`}{" "}
+                                  {q.courseType && `| ${q.courseType}`}
+                                </div>
+                                <div className="text-[13px] text-[#8C8C8C] mb-2">
+                                  {q.passingYear}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 mt-[-45px]">
+                                <button
+                                  type="button"
+                                  className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white  flex items-center justify-center hover:bg-gray-100"
+                                  onClick={() => handleEdit(idx)}
+                                >
+                                  <Edit2 size={18} className="text-[#8C8C8C]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:bg-gray-100"
+                                  onClick={() => handleDelete(idx)}
+                                >
+                                  <Trash2
+                                    size={18}
+                                    className="text-[#8C8C8C]"
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                            {q.description && (
+                              <ul className="list-disc pl-5 mt-2 text-[15px] text-black">
+                                {q.description
+                                  .replace(/<(.|\n)*?>/g, "")
+                                  .split(/\n|•|\r/)
+                                  .filter((line) => line.trim())
+                                  .map((line, i) => (
+                                    <li key={i}>{line.trim()}</li>
+                                  ))}
+                              </ul>
+                            )}
+                            {q.skills &&
+                              Array.isArray(q.skills) &&
+                              q.skills.length > 0 && (
+                                <div className="flex gap-2 mt-2 flex-wrap">
+                                  {q.skills.map((skill, i) => (
+                                    <span
+                                      key={i}
+                                      className="px-3 py-1 rounded-md border border-[#DCDCDC] text-[13px] bg-[#F5F5F5]"
+                                    >
+                                      {skill}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            {q.skills &&
+                              typeof q.skills === "string" &&
+                              q.skills.trim() && (
+                                <div className="flex gap-2 mt-2 flex-wrap">
+                                  {q.skills.split(",").map((skill, i) => (
+                                    <span
+                                      key={i}
+                                      className="px-3 py-1 rounded-md border border-[#DCDCDC] text-[13px] bg-[#F5F5F5]"
+                                    >
+                                      {skill.trim()}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                          </div>
+                        ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-[#8C8C8C] mb-4">
+                          No qualifications added yet.
+                        </p>
                       </div>
-                      <div className="flex gap-2 mt-[-45px]">
-                        <button
-                          type="button"
-                          className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white  flex items-center justify-center hover:bg-gray-100"
-                          onClick={() => handleEdit(idx)}
-                        >
-                          <Edit2 size={18} className="text-[#8C8C8C]" />
-                        </button>
-                        <button
-                          type="button"
-                          className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:bg-gray-100"
-                          onClick={() => handleDelete(idx)}
-                        >
-                          <Trash2 size={18} className="text-[#8C8C8C]" />
-                        </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleAddNew}
+                      className="flex items-center gap-3 mb-8 mt-2"
+                    >
+                      <span className="w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#8C8C8C]">
+                        <Plus size={28} className="text-[#23272E]" />
+                      </span>
+                      <span className="text-[15px] font-medium text-[#23272E]">
+                        Add Qualification
+                      </span>
+                    </button>
+                  </>
+                ) : (
+                  <form className="space-y-6">
+                    {/* Qualification & University */}
+                    <div className="flex gap-6">
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Qualification*
+                        </label>
+                        <Select
+                          name="qualification"
+                          value={qualifications.find(
+                            (q) => q.value === formValues.qualification
+                          )}
+                          onChange={(option) => {
+                            setFormValues((prev) => ({
+                              ...prev,
+                              qualification: option.value,
+                            }));
+                          }}
+                          options={qualifications}
+                          placeholder={
+                            loading.qualifications
+                              ? "Loading qualifications..."
+                              : "Select"
+                          }
+                          isLoading={loading.qualifications}
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.5rem",
+                              backgroundColor: "",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          University*
+                        </label>
+                        <Select
+                          options={universities}
+                          value={universities.find(
+                            (uni) => uni.value === formValues.university
+                          )}
+                          onChange={handleUniversityChange}
+                          placeholder={
+                            loading.universities
+                              ? "Loading universities..."
+                              : "Select"
+                          }
+                          isLoading={loading.universities}
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.5rem",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                        {isOtherSelected && (
+                          <div className="flex gap-2 mt-2">
+                            <input
+                              type="text"
+                              placeholder="Enter university name"
+                              value={customUniversity}
+                              onChange={(e) =>
+                                setCustomUniversity(e.target.value)
+                              }
+                              className="block w-full h-[48px] rounded-lg border border-gray-200 bg-gray-50 px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleAddOtherUniversity}
+                              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                            >
+                              Add
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {q.description && (
-                      <ul className="list-disc pl-5 mt-2 text-[15px] text-black">
-                        {q.description
-                          .replace(/<(.|\n)*?>/g, "")
-                          .split(/\n|•|\r/)
-                          .filter((line) => line.trim())
-                          .map((line, i) => (
-                            <li key={i}>{line.trim()}</li>
-                          ))}
-                      </ul>
-                    )}
-                    {q.skills &&
-                      Array.isArray(q.skills) &&
-                      q.skills.length > 0 && (
-                        <div className="flex gap-2 mt-2 flex-wrap">
-                          {q.skills.map((skill, i) => (
-                            <span
-                              key={i}
-                              className="px-3 py-1 rounded-md border border-[#DCDCDC] text-[13px] bg-[#F5F5F5]"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    {q.skills &&
-                      typeof q.skills === "string" &&
-                      q.skills.trim() && (
-                        <div className="flex gap-2 mt-2 flex-wrap">
-                          {q.skills.split(",").map((skill, i) => (
-                            <span
-                              key={i}
-                              className="px-3 py-1 rounded-md border border-[#DCDCDC] text-[13px] bg-[#F5F5F5]"
-                            >
-                              {skill.trim()}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddNew}
-                  className="flex items-center gap-3 mb-8 mt-2"
-                >
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#8C8C8C]">
-                    <Plus size={28} className="text-[#23272E]" />
-                  </span>
-                  <span className="text-[15px] font-medium text-[#23272E]">
-                    Add Qualification
-                  </span>
-                </button>
-              </>
-            ) : (
-              <form className="space-y-6">
-                {/* Qualification & University */}
-                <div className="flex gap-6">
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Qualification*
-                    </label>
-                    <Select
-                      name="qualification"
-                      value={qualifications.find(
-                        (q) => q.value === formValues.qualification
-                      )}
-                      onChange={(option) => {
-                        setFormValues((prev) => ({
-                          ...prev,
-                          qualification: option.value,
-                        }));
-                      }}
-                      options={qualifications}
-                      placeholder={
-                        loading.qualifications
-                          ? "Loading qualifications..."
-                          : "Select"
-                      }
-                      isLoading={loading.qualifications}
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.5rem",
-                          backgroundColor: "",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      University*
-                    </label>
-                    <Select
-                      options={universities}
-                      value={universities.find(
-                        (uni) => uni.value === formValues.university
-                      )}
-                      onChange={handleUniversityChange}
-                      placeholder={
-                        loading.universities
-                          ? "Loading universities..."
-                          : "Select"
-                      }
-                      isLoading={loading.universities}
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.5rem",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                    {isOtherSelected && (
-                      <div className="flex gap-2 mt-2">
+
+                    {/* Course & Passing Year */}
+                    <div className="flex gap-6">
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Course*
+                        </label>
+                        <Select
+                          name="course"
+                          value={courses.find(
+                            (course) => course.value === formValues.course
+                          )}
+                          onChange={(option) => {
+                            setFormValues((prev) => ({
+                              ...prev,
+                              course: option.value,
+                              specialization: "", // Reset specialization when course changes
+                            }));
+                            // Fetch specializations for the selected course
+                            if (option.value) {
+                              fetchSpecializations(option.value);
+                            }
+                          }}
+                          options={courses}
+                          placeholder={
+                            loading.courses ? "Loading courses..." : "Select"
+                          }
+                          isLoading={loading.courses}
+                          isDisabled={loading.courses}
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.75rem",
+                              backgroundColor: "",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Passing Year*
+                        </label>
+                        <Select
+                          name="passingYear"
+                          value={
+                            formValues.passingYear
+                              ? {
+                                  value: formValues.passingYear,
+                                  label: formValues.passingYear,
+                                }
+                              : null
+                          }
+                          onChange={(option) => {
+                            setFormValues((prev) => ({
+                              ...prev,
+                              passingYear: option.value,
+                            }));
+                          }}
+                          options={Array.from({ length: 50 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return { value: year, label: year };
+                          })}
+                          placeholder="Select"
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.75rem",
+                              backgroundColor: "",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Specialization & Course Type */}
+                    <div className="flex gap-6">
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Specialization*
+                        </label>
+                        <Select
+                          name="specialization"
+                          value={specializations.find(
+                            (spec) => spec.value === formValues.specialization
+                          )}
+                          onChange={(option) => {
+                            setFormValues((prev) => ({
+                              ...prev,
+                              specialization: option.value,
+                            }));
+                          }}
+                          options={specializations}
+                          placeholder={
+                            loading.specializations
+                              ? "Loading specializations..."
+                              : !formValues.course
+                              ? "Select course first"
+                              : "Select"
+                          }
+                          isLoading={loading.specializations}
+                          isDisabled={
+                            loading.specializations || !formValues.course
+                          }
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.75rem",
+                              backgroundColor: "",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Course Type*
+                        </label>
+                        <Select
+                          name="courseType"
+                          value={
+                            formValues.courseType
+                              ? {
+                                  value: formValues.courseType,
+                                  label: formValues.courseType,
+                                }
+                              : null
+                          }
+                          onChange={(option) => {
+                            setFormValues((prev) => ({
+                              ...prev,
+                              courseType: option.value,
+                            }));
+                          }}
+                          options={[
+                            { value: "full-time", label: "Full-time" },
+                            { value: "part-time", label: "Part-time" },
+                            { value: "distance", label: "Distance Learning" },
+                            { value: "online", label: "Online" },
+                            {
+                              value: "correspondence",
+                              label: "Correspondence",
+                            },
+                          ]}
+                          placeholder="Select"
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.75rem",
+                              backgroundColor: "",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Skills */}
+                    <div>
+                      <label className="block text-[15px] text-gray-900 mb-1">
+                        Skills*
+                      </label>
+                      <div className="relative w-full">
                         <input
                           type="text"
-                          placeholder="Enter university name"
-                          value={customUniversity}
-                          onChange={(e) => setCustomUniversity(e.target.value)}
-                          className="block w-full h-[48px] rounded-lg border border-gray-200 bg-gray-50 px-4 text-[#8C8C8C] text-[13px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          name="skills"
+                          value={skillInput}
+                          onChange={handleSkillInputChange}
+                          onKeyDown={handleSkillInputKeyDown}
+                          placeholder="Add skill and press enter"
+                          className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 pr-10"
                         />
-                        <button
-                          type="button"
-                          onClick={handleAddOtherUniversity}
-                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                        >
-                          Add
-                        </button>
+                        {skillInput.trim() && (
+                          <button
+                            type="button"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 hover:text-green-800"
+                            onClick={addSkill}
+                            tabIndex={-1}
+                          >
+                            <Check size={20} />
+                          </button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Course & Passing Year */}
-                <div className="flex gap-6">
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Course*
-                    </label>
-                    <Select
-                      name="course"
-                      value={courses.find(
-                        (course) => course.value === formValues.course
-                      )}
-                      onChange={(option) => {
-                        setFormValues((prev) => ({
-                          ...prev,
-                          course: option.value,
-                          specialization: "", // Reset specialization when course changes
-                        }));
-                        // Fetch specializations for the selected course
-                        if (option.value) {
-                          fetchSpecializations(option.value);
-                        }
-                      }}
-                      options={courses}
-                      placeholder={
-                        loading.courses ? "Loading courses..." : "Select"
-                      }
-                      isLoading={loading.courses}
-                      isDisabled={loading.courses}
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.75rem",
-                          backgroundColor: "",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Passing Year*
-                    </label>
-                    <Select
-                      name="passingYear"
-                      value={
-                        formValues.passingYear
-                          ? {
-                              value: formValues.passingYear,
-                              label: formValues.passingYear,
-                            }
-                          : null
-                      }
-                      onChange={(option) => {
-                        setFormValues((prev) => ({
-                          ...prev,
-                          passingYear: option.value,
-                        }));
-                      }}
-                      options={Array.from({ length: 50 }, (_, i) => {
-                        const year = new Date().getFullYear() - i;
-                        return { value: year, label: year };
-                      })}
-                      placeholder="Select"
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.75rem",
-                          backgroundColor: "",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Specialization & Course Type */}
-                <div className="flex gap-6">
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Specialization*
-                    </label>
-                    <Select
-                      name="specialization"
-                      value={specializations.find(
-                        (spec) => spec.value === formValues.specialization
-                      )}
-                      onChange={(option) => {
-                        setFormValues((prev) => ({
-                          ...prev,
-                          specialization: option.value,
-                        }));
-                      }}
-                      options={specializations}
-                      placeholder={
-                        loading.specializations
-                          ? "Loading specializations..."
-                          : !formValues.course
-                          ? "Select course first"
-                          : "Select"
-                      }
-                      isLoading={loading.specializations}
-                      isDisabled={loading.specializations || !formValues.course}
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.75rem",
-                          backgroundColor: "",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Course Type*
-                    </label>
-                    <Select
-                      name="courseType"
-                      value={
-                        formValues.courseType
-                          ? {
-                              value: formValues.courseType,
-                              label: formValues.courseType,
-                            }
-                          : null
-                      }
-                      onChange={(option) => {
-                        setFormValues((prev) => ({
-                          ...prev,
-                          courseType: option.value,
-                        }));
-                      }}
-                      options={[
-                        { value: "full-time", label: "Full-time" },
-                        { value: "part-time", label: "Part-time" },
-                        { value: "distance", label: "Distance Learning" },
-                        { value: "online", label: "Online" },
-                        { value: "correspondence", label: "Correspondence" },
-                      ]}
-                      placeholder="Select"
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.75rem",
-                          backgroundColor: "",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Skills */}
-                <div>
-                  <label className="block text-[15px] text-gray-900 mb-1">
-                    Skills*
-                  </label>
-                  <div className="relative w-full">
-                    <input
-                      type="text"
-                      name="skills"
-                      value={skillInput}
-                      onChange={handleSkillInputChange}
-                      onKeyDown={handleSkillInputKeyDown}
-                      placeholder="Add skill and press enter"
-                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 pr-10"
-                    />
-                    {skillInput.trim() && (
-                      <button
-                        type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 hover:text-green-800"
-                        onClick={addSkill}
-                        tabIndex={-1}
-                      >
-                        <Check size={20} />
-                      </button>
-                    )}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {skills.map((skill, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded flex items-center"
-                      >
-                        {skill}
-                        <button
-                          type="button"
-                          onClick={() => handleSkillRemove(idx)}
-                          className="ml-2 text-blue-600 hover:text-blue-800"
-                        >
-                          ×
-                        </button>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {skills.map((skill, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded flex items-center"
+                          >
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => handleSkillRemove(idx)}
+                              className="ml-2 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-[15px] text-gray-900 mb-1">
-                    Description
-                  </label>
-                  <ReactQuill
-                    theme="snow"
-                    value={formValues.description}
-                    onChange={(value) => {
-                      setFormValues((prev) => ({
-                        ...prev,
-                        description: value,
-                      }));
-                    }}
-                    modules={modules}
-                    className="[&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:h-[200px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:text-gray-700"
-                  />
-                </div>
+                    {/* Description */}
+                    <div>
+                      <label className="block text-[15px] text-gray-900 mb-1">
+                        Description
+                      </label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formValues.description}
+                        onChange={(value) => {
+                          setFormValues((prev) => ({
+                            ...prev,
+                            description: value,
+                          }));
+                        }}
+                        modules={modules}
+                        className="[&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:h-[200px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:text-gray-700"
+                      />
+                    </div>
 
-                {/* Buttons */}
-                {error && (
-                  <div className="text-red-500 text-sm mb-2">{error}</div>
+                    {/* Buttons */}
+                    {error && (
+                      <div className="text-red-500 text-sm mb-2">{error}</div>
+                    )}
+                  </form>
                 )}
-              </form>
-            )}
+              </div>
+            </div>
+            {/* Bottom Buttons - always at the bottom */}
+            <div className="flex justify-between items-center pb-8 pt-8">
+              <button
+                type="button"
+                onClick={onSkipAll}
+                className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[15px] font-medium rounded-lg hover:bg-gray-200 transition-all"
+              >
+                Skip All
+              </button>
+              {showPreview ? (
+                <button
+                  type="button"
+                  onClick={onNext}
+                  className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleAddOrUpdate}
+                  className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
+                >
+                  Next
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-        {/* Bottom Buttons - always at the bottom */}
-        <div className="flex justify-between items-center pb-8 pt-4">
-          <button
-            type="button"
-            onClick={onSkipAll}
-            className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[15px] font-medium rounded-lg hover:bg-gray-200 transition-all"
-          >
-            Skip All
-          </button>
-          {showPreview ? (
-            <button
-              type="button"
-              onClick={onNext}
-              className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAddOrUpdate}
-              className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
-            >
-              Next
-            </button>
-          )}
-        </div>
-      </div>
-      {/* Right Side - Empty Space */}
-      <div className="w-1/2 bg-white" />
+          {/* Right Side - Empty Space */}
+          <div className="w-1/2 bg-white min-h-screen h-full" />
+        </>
+      )}
     </div>
   );
 };

@@ -27,6 +27,7 @@ const WorkExperience = ({
   });
   const [expList, setExpList] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [editIdx, setEditIdx] = useState(null);
   const [error, setError] = useState("");
   const [skillInput, setSkillInput] = useState("");
@@ -145,15 +146,21 @@ const WorkExperience = ({
 
   // Initialize work experience with existing data when component mounts
   useEffect(() => {
-    if (
-      formData &&
-      formData.workExperience &&
-      formData.workExperience.length > 0
-    ) {
-      setExpList(formData.workExperience);
-      setShowPreview(true);
+    // Set initialization state immediately
+    if (!isInitialized) {
+      if (
+        formData &&
+        formData.workExperience &&
+        formData.workExperience.length > 0
+      ) {
+        setExpList(formData.workExperience);
+        setShowPreview(true);
+      } else {
+        setShowPreview(false);
+      }
+      setIsInitialized(true);
     }
-  }, [formData]);
+  }, [formData, isInitialized]);
 
   // ReactQuill Modules
   const modules = {
@@ -1288,395 +1295,445 @@ const WorkExperience = ({
 
   return (
     <div className="flex h-screen bg-white WorkExperience">
-      {/* Left (scrollable) */}
-      <div
-        className={`w-1/2 flex flex-col px-[100px] h-screen overflow-y-auto workexperience-scroll-container ${getResponsiveTopSpacing()}`}
-        style={{ minWidth: 560 }}
-      >
-        <div>
-          <button className="mb-8 mt-2 text-left" onClick={onPrevious}>
-            <ArrowLeft size={28} className="text-black" />
-          </button>
-          <div className="flex items-center justify-between mb-1 mt-[10px] ">
-            <h1 className="font-inter font-semibold text-[32px] leading-[130%] tracking-[0px] mb-1">
-              Work Experience
-            </h1>
-            <StepProgressCircle currentStep={2} totalSteps={5} />
-          </div>
-          <p className="text-[13px] font-sm text-[#8C8C8C] mb-8">
-            Include all of your relevant experience and dates in this section.
-          </p>
-          <div className="flex-1">
-            {showPreview ? (
-              <>
-                {expList.map((exp, idx) => (
-                  <div key={idx} className="mb-8 ">
-                    <div className="flex items-center justify-between ">
-                      <div>
-                        <div className="text-[20px] font-semibold text-black leading-tight mb-1">
-                          {exp.jobTitle} {exp.hospital && `| ${exp.hospital}`}
-                        </div>
-                        <div className="text-[15px] text-[#8C8C8C] mb-1">
-                          {exp.location}{" "}
-                          {exp.employmentType && `| ${exp.employmentType}`}
-                        </div>
-                        <div className="text-[13px] text-[#8C8C8C] mb-2">
-                          {exp.startDate && exp.endDate
-                            ? `(${exp.startDate} - ${exp.endDate})`
-                            : exp.startDate
-                            ? `(Start: ${exp.startDate})`
-                            : ""}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-[-70px] ">
-                        <button
-                          type="button"
-                          className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:bg-gray-100"
-                          onClick={() => handleEdit(idx)}
-                        >
-                          <Edit2 size={18} className="text-[#8C8C8C]" />
-                        </button>
-                        <button
-                          type="button"
-                          className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:bg-gray-100"
-                          onClick={() => handleDelete(idx)}
-                        >
-                          <Trash2 size={18} className="text-[#8C8C8C]" />
-                        </button>
-                      </div>
-                    </div>
-                    {exp.description && (
-                      <ul className="list-disc pl-5 mt-2 text-[15px] text-black">
-                        {exp.description
-                          .replace(/<(.|\n)*?>/g, "")
-                          .split(/\n|•|\r/)
-                          .filter((line) => line.trim())
-                          .map((line, i) => (
-                            <li key={i}>{line.trim()}</li>
-                          ))}
-                      </ul>
-                    )}
-                    {exp.skills && (
-                      <div className="flex gap-2 mt-2 flex-wrap">
-                        {exp.skills.map((skill, idx) => (
-                          <div
-                            key={idx}
-                            className="px-3 py-1 rounded-md border border-[#DCDCDC] text-[13px] bg-[#F5F5F5]"
-                          >
-                            {skill}
+      {!isInitialized ? (
+        // Show loading or blank state until initialized
+        <div className="w-full h-full bg-white" />
+      ) : (
+        <>
+          {/* Left (scrollable) */}
+          <div
+            className={`w-1/2 flex flex-col px-[100px] h-screen overflow-y-auto workexperience-scroll-container ${getResponsiveTopSpacing()}`}
+            style={{ minWidth: 560 }}
+          >
+            <div>
+              <button className="mb-8 mt-2 text-left" onClick={onPrevious}>
+                <ArrowLeft size={28} className="text-black" />
+              </button>
+              <div className="flex items-center justify-between mb-1 mt-[10px] ">
+                <h1 className="font-inter font-semibold text-[32px] leading-[130%] tracking-[0px] mb-1">
+                  Work Experience
+                </h1>
+                <StepProgressCircle currentStep={2} totalSteps={5} />
+              </div>
+              <p className="text-[13px] font-sm text-[#8C8C8C] mb-8">
+                Include all of your relevant experience and dates in this
+                section.
+              </p>
+              <div className="flex-1">
+                {showPreview ? (
+                  <>
+                    {expList.filter(
+                      (exp) =>
+                        exp.jobTitle ||
+                        exp.hospital ||
+                        exp.employmentType ||
+                        exp.location ||
+                        exp.startDate ||
+                        exp.endDate ||
+                        (exp.skills && exp.skills.length > 0) ||
+                        exp.description ||
+                        exp.currentlyWorking
+                    ).length > 0 ? (
+                      expList
+                        .filter(
+                          (exp) =>
+                            exp.jobTitle ||
+                            exp.hospital ||
+                            exp.employmentType ||
+                            exp.location ||
+                            exp.startDate ||
+                            exp.endDate ||
+                            (exp.skills && exp.skills.length > 0) ||
+                            exp.description ||
+                            exp.currentlyWorking
+                        )
+                        .map((exp, idx) => (
+                          <div key={idx} className="mb-8 ">
+                            <div className="flex items-center justify-between ">
+                              <div>
+                                <div className="text-[20px] font-semibold text-black leading-tight mb-1">
+                                  {exp.jobTitle}{" "}
+                                  {exp.hospital && `| ${exp.hospital}`}
+                                </div>
+                                <div className="text-[15px] text-[#8C8C8C] mb-1">
+                                  {exp.location}{" "}
+                                  {exp.employmentType &&
+                                    `| ${exp.employmentType}`}
+                                </div>
+                                <div className="text-[13px] text-[#8C8C8C] mb-2">
+                                  {exp.startDate && exp.endDate
+                                    ? `(${exp.startDate} - ${exp.endDate})`
+                                    : exp.startDate
+                                    ? `(Start: ${exp.startDate})`
+                                    : ""}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 mt-[-70px] ">
+                                <button
+                                  type="button"
+                                  className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:bg-gray-100"
+                                  onClick={() => handleEdit(idx)}
+                                >
+                                  <Edit2 size={18} className="text-[#8C8C8C]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="w-9 h-9 rounded-full border border-[#E5E5E5] bg-white flex items-center justify-center hover:bg-gray-100"
+                                  onClick={() => handleDelete(idx)}
+                                >
+                                  <Trash2
+                                    size={18}
+                                    className="text-[#8C8C8C]"
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                            {exp.description && (
+                              <ul className="list-disc pl-5 mt-2 text-[15px] text-black">
+                                {exp.description
+                                  .replace(/<(.|\n)*?>/g, "")
+                                  .split(/\n|•|\r/)
+                                  .filter((line) => line.trim())
+                                  .map((line, i) => (
+                                    <li key={i}>{line.trim()}</li>
+                                  ))}
+                              </ul>
+                            )}
+                            {exp.skills && (
+                              <div className="flex gap-2 mt-2 flex-wrap">
+                                {exp.skills.map((skill, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="px-3 py-1 rounded-md border border-[#DCDCDC] text-[13px] bg-[#F5F5F5]"
+                                  >
+                                    {skill}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        ))}
+                        ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-[#8C8C8C] mb-4">
+                          No work experience added yet.
+                        </p>
                       </div>
                     )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddNew}
-                  className="flex items-center gap-3 mb-8 mt-2"
-                >
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#8C8C8C]">
-                    <Plus size={28} className="text-[#23272E]" />
-                  </span>
-                  <span className="text-[15px] font-medium text-[#23272E]">
-                    Add Experience
-                  </span>
-                </button>
-              </>
-            ) : (
-              <form className="space-y-6">
-                {/* Job Title & Hospital/Clinic */}
-                <div className="flex gap-6">
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Job Title*
-                    </label>
-                    <input
-                      name="jobTitle"
-                      value={formValues.jobTitle}
-                      onChange={handleChange}
-                      type="text"
-                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter job title"
-                    />
-                  </div>
+                    <button
+                      type="button"
+                      onClick={handleAddNew}
+                      className="flex items-center gap-3 mb-8 mt-2"
+                    >
+                      <span className="w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#8C8C8C]">
+                        <Plus size={28} className="text-[#23272E]" />
+                      </span>
+                      <span className="text-[15px] font-medium text-[#23272E]">
+                        Add Experience
+                      </span>
+                    </button>
+                  </>
+                ) : (
+                  <form className="space-y-6">
+                    {/* Job Title & Hospital/Clinic */}
+                    <div className="flex gap-6">
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Job Title*
+                        </label>
+                        <input
+                          name="jobTitle"
+                          value={formValues.jobTitle}
+                          onChange={handleChange}
+                          type="text"
+                          className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter job title"
+                        />
+                      </div>
 
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Hospital/Clinic*
-                    </label>
-                    <Select
-                      name="hospital"
-                      options={hospitals}
-                      value={hospitals.find(
-                        (hospital) => hospital.value === formValues.hospital
-                      )}
-                      onChange={(option) =>
-                        handleSelectChange(option, "hospital")
-                      }
-                      placeholder={
-                        loading.hospitals
-                          ? "Loading hospitals..."
-                          : "Select hospital/clinic"
-                      }
-                      isLoading={loading.hospitals}
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.5rem",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Employment Type & Location */}
-                <div className="flex gap-6">
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Employment Type
-                    </label>
-                    <Select
-                      name="employmentType"
-                      options={employmentTypeOptions}
-                      value={employmentTypeOptions.find(
-                        (option) => option.value === formValues.employmentType
-                      )}
-                      onChange={(option) =>
-                        handleSelectChange(option, "employmentType")
-                      }
-                      placeholder="Select"
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.5rem",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Location
-                    </label>
-                    <Select
-                      name="location"
-                      options={cities}
-                      value={cities.find(
-                        (city) => city.value === formValues.location
-                      )}
-                      onChange={(option) =>
-                        handleSelectChange(option, "location")
-                      }
-                      placeholder={
-                        loading.cities ? "Loading cities..." : "Select location"
-                      }
-                      isLoading={loading.cities}
-                      className="text-[13px]"
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          minHeight: "48px",
-                          height: "48px",
-                          borderColor: "#e5e7eb",
-                          borderRadius: "0.5rem",
-                          "&:hover": {
-                            borderColor: "#e5e7eb",
-                          },
-                        }),
-                        valueContainer: (base) => ({
-                          ...base,
-                          padding: "0 16px",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          margin: 0,
-                          padding: 0,
-                        }),
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Time Period */}
-                <div className="flex gap-6">
-                  <div className="w-1/2">
-                    <label className="block text-[15px] text-gray-900 mb-1">
-                      Time Period*
-                    </label>
-                    <input
-                      name="startDate"
-                      type="date"
-                      value={formValues.startDate}
-                      onChange={handleChange}
-                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {!formValues.currentlyWorking && (
-                    <div className="w-1/2">
-                      <label className="block text-[15px] text-gray-900 mb-1">
-                        End Date
-                      </label>
-                      <input
-                        name="endDate"
-                        type="date"
-                        value={formValues.endDate}
-                        onChange={handleChange}
-                        className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Hospital/Clinic*
+                        </label>
+                        <Select
+                          name="hospital"
+                          options={hospitals}
+                          value={hospitals.find(
+                            (hospital) => hospital.value === formValues.hospital
+                          )}
+                          onChange={(option) =>
+                            handleSelectChange(option, "hospital")
+                          }
+                          placeholder={
+                            loading.hospitals
+                              ? "Loading hospitals..."
+                              : "Select hospital/clinic"
+                          }
+                          isLoading={loading.hospitals}
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.5rem",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Currently Working Checkbox */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="currentlyWorking"
-                    checked={formValues.currentlyWorking}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-blue-500 rounded"
-                  />
-                  <label className="text-[15px] text-gray-900">Present</label>
-                </div>
+                    {/* Employment Type & Location */}
+                    <div className="flex gap-6">
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Employment Type
+                        </label>
+                        <Select
+                          name="employmentType"
+                          options={employmentTypeOptions}
+                          value={employmentTypeOptions.find(
+                            (option) =>
+                              option.value === formValues.employmentType
+                          )}
+                          onChange={(option) =>
+                            handleSelectChange(option, "employmentType")
+                          }
+                          placeholder="Select"
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.5rem",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
 
-                {/* Skills */}
-                <div>
-                  <label className="block text-[15px] text-gray-900 mb-1">
-                    Skills*
-                  </label>
-                  <div className="relative w-full">
-                    <input
-                      type="text"
-                      name="skills"
-                      value={skillInput}
-                      onChange={handleSkillInputChange}
-                      onKeyDown={handleSkillInputKeyDown}
-                      placeholder="Add skill and press enter"
-                      className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 pr-10"
-                    />
-                    {skillInput.trim() && (
-                      <button
-                        type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 hover:text-green-800"
-                        onClick={addSkill}
-                        tabIndex={-1}
-                      >
-                        <Check size={20} />
-                      </button>
-                    )}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {formValues.skills &&
-                      formValues.skills.map((skill, idx) => (
-                        <div
-                          key={idx}
-                          className="px-3 h-[44px] py-1.5 rounded-md border border-[#DCDCDC] flex items-center text-sm"
-                        >
-                          {skill}
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Location
+                        </label>
+                        <Select
+                          name="location"
+                          options={cities}
+                          value={cities.find(
+                            (city) => city.value === formValues.location
+                          )}
+                          onChange={(option) =>
+                            handleSelectChange(option, "location")
+                          }
+                          placeholder={
+                            loading.cities
+                              ? "Loading cities..."
+                              : "Select location"
+                          }
+                          isLoading={loading.cities}
+                          className="text-[13px]"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              minHeight: "48px",
+                              height: "48px",
+                              borderColor: "#e5e7eb",
+                              borderRadius: "0.5rem",
+                              "&:hover": {
+                                borderColor: "#e5e7eb",
+                              },
+                            }),
+                            valueContainer: (base) => ({
+                              ...base,
+                              padding: "0 16px",
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              margin: 0,
+                              padding: 0,
+                            }),
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Time Period */}
+                    <div className="flex gap-6">
+                      <div className="w-1/2">
+                        <label className="block text-[15px] text-gray-900 mb-1">
+                          Time Period*
+                        </label>
+                        <input
+                          name="startDate"
+                          type="date"
+                          value={formValues.startDate}
+                          onChange={handleChange}
+                          className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      {!formValues.currentlyWorking && (
+                        <div className="w-1/2">
+                          <label className="block text-[15px] text-gray-900 mb-1">
+                            End Date
+                          </label>
+                          <input
+                            name="endDate"
+                            type="date"
+                            value={formValues.endDate}
+                            onChange={handleChange}
+                            className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Currently Working Checkbox */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="currentlyWorking"
+                        checked={formValues.currentlyWorking}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-blue-500 rounded"
+                      />
+                      <label className="text-[15px] text-gray-900">
+                        Present
+                      </label>
+                    </div>
+
+                    {/* Skills */}
+                    <div>
+                      <label className="block text-[15px] text-gray-900 mb-1">
+                        Skills*
+                      </label>
+                      <div className="relative w-full">
+                        <input
+                          type="text"
+                          name="skills"
+                          value={skillInput}
+                          onChange={handleSkillInputChange}
+                          onKeyDown={handleSkillInputKeyDown}
+                          placeholder="Add skill and press enter"
+                          className="block w-full h-[48px] rounded-lg border border-gray-200 px-4 text-gray-700 text-[14px] font-normal focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 pr-10"
+                        />
+                        {skillInput.trim() && (
                           <button
                             type="button"
-                            onClick={() => handleSkillRemove(idx)}
-                            className="ml-2 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 hover:text-green-800"
+                            onClick={addSkill}
+                            tabIndex={-1}
                           >
-                            <span>&times;</span>
+                            <Check size={20} />
                           </button>
-                        </div>
-                      ))}
-                  </div>
-                </div>
+                        )}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {formValues.skills &&
+                          formValues.skills.map((skill, idx) => (
+                            <div
+                              key={idx}
+                              className="px-3 h-[44px] py-1.5 rounded-md border border-[#DCDCDC] flex items-center text-sm"
+                            >
+                              {skill}
+                              <button
+                                type="button"
+                                onClick={() => handleSkillRemove(idx)}
+                                className="ml-2 text-gray-400 hover:text-gray-600"
+                              >
+                                <span>&times;</span>
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
 
-                {/* Description */}
-                <div>
-                  <label className="block text-[15px] text-gray-900 mb-1">
-                    Description
-                  </label>
-                  <ReactQuill
-                    theme="snow"
-                    value={formValues.description}
-                    onChange={handleQuillChange}
-                    modules={modules}
-                    className="[&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:h-[200px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:text-gray-700"
-                    placeholder="Describe your work experience..."
-                  />
-                </div>
+                    {/* Description */}
+                    <div>
+                      <label className="block text-[15px] text-gray-900 mb-1">
+                        Description
+                      </label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formValues.description}
+                        onChange={handleQuillChange}
+                        modules={modules}
+                        className="[&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:h-[200px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:text-gray-700"
+                        placeholder="Describe your work experience..."
+                      />
+                    </div>
 
-                {/* Buttons */}
-                {error && (
-                  <div className="text-red-500 text-sm mb-2">{error}</div>
+                    {/* Buttons */}
+                    {error && (
+                      <div className="text-red-500 text-sm mb-2">{error}</div>
+                    )}
+                  </form>
                 )}
-              </form>
-            )}
+              </div>
+            </div>
+            {/* Bottom Buttons - always at the bottom */}
+            <div className="flex justify-between items-center pb-8 pt-8">
+              <button
+                type="button"
+                onClick={handleSkipAll}
+                className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[15px] font-medium rounded-lg hover:bg-gray-200 transition-all"
+              >
+                Skip All
+              </button>
+              {showPreview ? (
+                <button
+                  type="button"
+                  onClick={onNext}
+                  className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleAddOrUpdate}
+                  disabled={!isFormComplete()}
+                  className={`w-[180px] h-[48px] text-[17px] font-medium rounded-lg transition-all shadow-none ${
+                    isFormComplete()
+                      ? "bg-[#4285F4] text-white hover:bg-blue-600"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  Next
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-        {/* Bottom Buttons - always at the bottom */}
-        <div className="flex justify-between items-center pb-8 pt-4">
-          <button
-            type="button"
-            onClick={handleSkipAll}
-            className="w-[120px] h-[48px] bg-gray-100 text-[#1890FF] text-[15px] font-medium rounded-lg hover:bg-gray-200 transition-all"
-          >
-            Skip All
-          </button>
-          {showPreview ? (
-            <button
-              type="button"
-              onClick={onNext}
-              className="w-[180px] h-[48px] bg-[#4285F4] text-white text-[17px] font-medium rounded-lg hover:bg-blue-600 transition-all shadow-none"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAddOrUpdate}
-              disabled={!isFormComplete()}
-              className={`w-[180px] h-[48px] text-[17px] font-medium rounded-lg transition-all shadow-none ${
-                isFormComplete()
-                  ? "bg-[#4285F4] text-white hover:bg-blue-600"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-            >
-              Next
-            </button>
-          )}
-        </div>
-      </div>
-      {/* Right (fixed, never scrolls) */}
-      <div className="w-1/2 h-screen bg-white flex-shrink-0" />
+          {/* Right (fixed, never scrolls) */}
+          <div className="w-1/2 h-screen bg-white flex-shrink-0" />
+        </>
+      )}
     </div>
   );
 };

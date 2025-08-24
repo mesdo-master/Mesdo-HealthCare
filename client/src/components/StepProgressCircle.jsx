@@ -12,6 +12,8 @@ const stepIcons = [
 const StepProgressCircle = ({ currentStep, totalSteps = 5 }) => {
   // Calculate arc length for progress
   const arcLength = 125.6 * ((currentStep + 1) / totalSteps); // 2πr, r=20
+  // Clamp icon index so we always render an icon
+  const iconIndex = Math.max(0, Math.min(currentStep, stepIcons.length - 1));
   return (
     <div className="relative w-12 h-12 flex items-center justify-center">
       <svg width="48" height="48" viewBox="0 0 48 48">
@@ -38,7 +40,7 @@ const StepProgressCircle = ({ currentStep, totalSteps = 5 }) => {
         />
       </svg>
       <span className="absolute inset-0 flex items-center justify-center text-black">
-        {stepIcons[currentStep]}
+        {stepIcons[iconIndex]}
       </span>
     </div>
   );

@@ -101,7 +101,7 @@ const Login = () => {
                 Email <span className="text-red-500">*</span>
               </label>
               <input
-                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
+                className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none ${
                   errors.email ? "border-red-500" : "border-gray-300"
                 } text-gray-900 bg-white`}
                 placeholder="example@mail.com"
@@ -120,7 +120,7 @@ const Login = () => {
                 Password <span className="text-red-500">*</span>
               </label>
               <input
-                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
+                className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none ${
                   errors.password ? "border-red-500" : "border-gray-300"
                 } text-gray-900 bg-white`}
                 placeholder="Enter Your Password"
@@ -136,7 +136,7 @@ const Login = () => {
             {/* Login Button */}
             <button
               type="submit"
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-sm shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-white bg-[#1890FF] hover:bg-primary-600"
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-white bg-[#1890FF] hover:bg-primary-600"
             >
               Log in
             </button>
@@ -166,7 +166,7 @@ const Login = () => {
           {/* Google Login */}
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 bg-white"
+            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 bg-white"
           >
             <FcGoogle className="mr-2 text-xl" />
             Log in with Google

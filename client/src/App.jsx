@@ -44,6 +44,8 @@ import Settings from "./pages/settings/Settings";
 import SearchResults from "./pages/SearchResults";
 import PublicJobPage from "./pages/user/jobs/PublicJobPage";
 import RecruiterSettings from "./pages/recuriter/Settings";
+import FeedPage from "./pages/user/feed/FeedPage";
+import RecruiterFeedPage from "./pages/recuriter/feed/RecruiterFeedPage";
 
 function AppRoutes() {
   const {
@@ -70,7 +72,11 @@ function AppRoutes() {
 
   // Routes that have custom Header rendering (excluding messages)
   const customHeaderRoutes = ["/organization/", "/profile/"];
-  const excludeMessageRoutes = ["/organization/messages", "/messages"];
+  const excludeMessageRoutes = [
+    "/organization/messages",
+    "/messages",
+    "/organization/feed",
+  ];
   const hasCustomHeader =
     customHeaderRoutes.some((route) => location.pathname.includes(route)) &&
     !excludeMessageRoutes.some((route) => location.pathname.startsWith(route));
@@ -194,6 +200,14 @@ function AppRoutes() {
                       />
                     </Route>
                     <Route
+                      path="/feed"
+                      element={
+                        <ProtectedRoute role="individual">
+                          <FeedPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/appliedJobs"
                       element={
                         <ProtectedRoute role="individual">
@@ -256,6 +270,22 @@ function AppRoutes() {
                       element={
                         <ProtectedRoute role="recruiter">
                           <Applicants />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/recruitment/applicants/:jobId"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <Applicants />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/organization/feed"
+                      element={
+                        <ProtectedRoute role="recruiter">
+                          <RecruiterFeedPage />
                         </ProtectedRoute>
                       }
                     />

@@ -114,7 +114,7 @@ const SignUpPage = () => {
                 Email <span className="text-red-500">*</span>
               </label>
               <input
-                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
+                className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none ${
                   errors.email ? "border-red-500" : "border-gray-300"
                 } bg-white`}
                 placeholder="example@mail.com"
@@ -132,7 +132,7 @@ const SignUpPage = () => {
                 Create a password <span className="text-red-500">*</span>
               </label>
               <input
-                className={`mt-1 block w-full px-4 py-3 border rounded-sm shadow-sm focus:outline-none ${
+                className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none ${
                   errors.password ? "border-red-500" : "border-gray-300"
                 } bg-white`}
                 placeholder="At least 8 characters"
@@ -172,7 +172,7 @@ const SignUpPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-sm shadow-sm text-white bg-[#1890FF] hover:bg-primary-600 disabled:bg-gray-400"
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-white bg-[#1890FF] hover:bg-primary-600 disabled:bg-gray-400"
             >
               {isLoading ? "Creating account..." : "Create account"}
             </button>
@@ -198,7 +198,7 @@ const SignUpPage = () => {
 
           <button
             onClick={handleGoogleSignup}
-            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 bg-white"
+            className="w-full flex items-center justify-center border border-gray-300 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 bg-white"
           >
             <FcGoogle className="mr-2 text-xl" />
             Sign Up with Google
