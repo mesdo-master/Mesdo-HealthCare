@@ -3,6 +3,8 @@ import { useAuth } from "../../../hooks/useAuth";
 import FeedTabs from "./components/FeedTabs";
 import CreatePost from "./components/CreatePost";
 import FeedPost from "./components/FeedPost";
+import CaseCreatePost from "./components/CaseCreatePost";
+import CasePost from "./components/CasePost";
 import SidebarSuggestions from "./components/SidebarSuggestions";
 
 const RecruiterFeedPage = () => {
@@ -103,6 +105,56 @@ const RecruiterFeedPage = () => {
         ],
         comments: [],
       },
+      {
+        id: 3,
+        author: {
+          name: "Dr. Alfredo Botosh",
+          username: "alfredo",
+          title: "Dermatologist - Apollo Hospital",
+          avatar:
+            "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150",
+        },
+        content:
+          "A @Alfredz is a medical doctor who specializes in conditions that affect the skin, hair, and nails.",
+        hashtags: ["#inclusive"],
+        timeAgo: "Posted 2 hours ago",
+        likes: 45,
+        comments: [
+          {
+            author: {
+              name: "Rebecca",
+              avatar:
+                "https://images.unsplash.com/photo-1494790108755-2616b612b1c1?w=150",
+            },
+            content:
+              "Rebecca really cool picture, and the caption gives me goosebumps 😉",
+            timeAgo: "4 hours ago",
+            likes: 5,
+            replies: [
+              {
+                author: {
+                  name: "Tobias Ricky",
+                  avatar:
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+                },
+                content: "can i join with you guys? 😊",
+                timeAgo: "4 hours ago",
+                likes: 8,
+              },
+              {
+                author: {
+                  name: "Tobias Ricky",
+                  avatar:
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+                },
+                content: "let's go for a holiday together 😊",
+                timeAgo: "4 hours ago",
+                likes: 12,
+              },
+            ],
+          },
+        ],
+      },
     ];
     setPosts(samplePosts);
   }, []);
@@ -164,6 +216,38 @@ const RecruiterFeedPage = () => {
     };
 
     setPosts((prevPosts) => [newPoll, ...prevPosts]);
+  };
+
+  // Function to handle new case posts
+  const handleNewCase = (caseData) => {
+    const newCase = {
+      id: Date.now(),
+      author: {
+        name: businessProfile?.orgName || currentUser?.name || "Anonymous",
+        username:
+          businessProfile?.orgHandle || currentUser?.username || "anonymous",
+        title: businessProfile?.orgType || currentUser?.title || "User",
+        avatar:
+          businessProfile?.orgLogo ||
+          currentUser?.profilePicture ||
+          "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif",
+      },
+      content: caseData.heading || "Share your knowledge .....",
+      timeAgo: "Just now",
+      likes: 0,
+      comments: [],
+      type: "case",
+      hashtags: ["#inclusive"],
+      // Case-specific data
+      patientAge: caseData.patientAge,
+      patientGender: caseData.patientGender,
+      isCritical: caseData.isCritical,
+      presentation: caseData.presentation,
+      keyFindings: caseData.keyFindings,
+      outcome: caseData.outcome,
+    };
+
+    setPosts((prevPosts) => [newCase, ...prevPosts]);
   };
 
   // Function to handle post updates (likes, comments, poll votes)
@@ -234,25 +318,49 @@ const RecruiterFeedPage = () => {
                       onTabChange={setActiveTab}
                     />
 
-                    {/* Create Post */}
-                    <CreatePost
-                      userProfile={businessProfile || currentUser}
-                      activeTab={activeTab}
-                      onTabChange={setActiveTab}
-                      onNewPost={handleNewPost}
-                      onNewPoll={handleNewPoll}
-                    />
+                    {/* Create Post - Conditional based on activeTab */}
+                    {activeTab === "feed" ? (
+                      <CreatePost
+                        userProfile={businessProfile || currentUser}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        onNewPost={handleNewPost}
+                        onNewPoll={handleNewPoll}
+                      />
+                    ) : (
+                      <CaseCreatePost
+                        userProfile={businessProfile || currentUser}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        onNewPost={handleNewCase}
+                      />
+                    )}
 
-                    {/* Feed Posts */}
+                    {/* Feed Posts - Conditional based on activeTab */}
                     <div className="space-y-4">
-                      {posts.map((post) => (
-                        <FeedPost
-                          key={post.id}
-                          post={post}
-                          onUpdatePost={handleUpdatePost}
-                          currentUserProfile={businessProfile || currentUser}
-                        />
-                      ))}
+                      {activeTab === "feed"
+                        ? // Regular Feed Posts
+                          posts.map((post) => (
+                            <FeedPost
+                              key={post.id}
+                              post={post}
+                              onUpdatePost={handleUpdatePost}
+                              currentUserProfile={
+                                businessProfile || currentUser
+                              }
+                            />
+                          ))
+                        : // Case Posts
+                          posts.map((post) => (
+                            <CasePost
+                              key={post.id}
+                              post={post}
+                              onUpdatePost={handleUpdatePost}
+                              currentUserProfile={
+                                businessProfile || currentUser
+                              }
+                            />
+                          ))}
                     </div>
 
                     {/* View All Link */}
@@ -261,7 +369,9 @@ const RecruiterFeedPage = () => {
                         className="font-medium hover:opacity-80 transition-opacity"
                         style={{ color: "#1890FF", fontSize: "14px" }}
                       >
-                        View All...
+                        {activeTab === "feed"
+                          ? "View All..."
+                          : "View All Cases..."}
                       </button>
                     </div>
                   </div>

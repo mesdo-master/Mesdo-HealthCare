@@ -3,42 +3,32 @@ import {
   Heart,
   MessageCircle,
   Share,
-  Send,
-  MoreHorizontal,
   Bookmark,
-  Frown,
-  VolumeX,
-  UserX,
-  Flag,
+  MoreHorizontal,
+  Eye,
+  Plus,
+  Send,
 } from "lucide-react";
 
-const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
+const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [showComments, setShowComments] = useState(true);
   const [newComment, setNewComment] = useState("");
   const [localPost, setLocalPost] = useState(post);
-  const [votedOption, setVotedOption] = useState(null);
+  const [commentLikes, setCommentLikes] = useState({});
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
-  const [commentLikes, setCommentLikes] = useState({});
-  const [showContextMenu, setShowContextMenu] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({
-    x: 0,
-    y: 0,
-  });
 
   const handleLike = () => {
     const newLikeState = !isLiked;
     setIsLiked(newLikeState);
 
-    // Update local post state
     const updatedPost = {
       ...localPost,
       likes: newLikeState ? localPost.likes + 1 : localPost.likes - 1,
     };
     setLocalPost(updatedPost);
 
-    // Update parent component if callback provided
     if (onUpdatePost) {
       onUpdatePost(updatedPost);
     }
@@ -62,19 +52,54 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
         replies: [],
       };
 
-      // Update local post state
       const updatedPost = {
         ...localPost,
         comments: [...(localPost.comments || []), newCommentObj],
       };
       setLocalPost(updatedPost);
 
-      // Update parent component if callback provided
       if (onUpdatePost) {
         onUpdatePost(updatedPost);
       }
 
       setNewComment("");
+    }
+  };
+
+  const handleCommentLike = (commentIndex, replyIndex = null) => {
+    const commentKey =
+      replyIndex !== null
+        ? `${commentIndex}-${replyIndex}`
+        : commentIndex.toString();
+    const isCurrentlyLiked = commentLikes[commentKey] || false;
+    const newLikeState = !isCurrentlyLiked;
+
+    setCommentLikes({
+      ...commentLikes,
+      [commentKey]: newLikeState,
+    });
+
+    const updatedComments = [...localPost.comments];
+
+    if (replyIndex !== null) {
+      // Like a reply
+      updatedComments[commentIndex].replies[replyIndex].likes += newLikeState
+        ? 1
+        : -1;
+    } else {
+      // Like a comment
+      updatedComments[commentIndex].likes += newLikeState ? 1 : -1;
+    }
+
+    const updatedPost = {
+      ...localPost,
+      comments: updatedComments,
+    };
+
+    setLocalPost(updatedPost);
+
+    if (onUpdatePost) {
+      onUpdatePost(updatedPost);
     }
   };
 
@@ -117,168 +142,6 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
     }
   };
 
-  const handleCommentLike = (commentIndex, replyIndex = null) => {
-    const commentKey =
-      replyIndex !== null
-        ? `${commentIndex}-${replyIndex}`
-        : commentIndex.toString();
-    const isCurrentlyLiked = commentLikes[commentKey] || false;
-    const newLikeState = !isCurrentlyLiked;
-
-    setCommentLikes({
-      ...commentLikes,
-      [commentKey]: newLikeState,
-    });
-
-    const updatedComments = [...localPost.comments];
-
-    if (replyIndex !== null) {
-      // Like a reply
-      updatedComments[commentIndex].replies[replyIndex].likes += newLikeState
-        ? 1
-        : -1;
-    } else {
-      // Like a comment
-      updatedComments[commentIndex].likes += newLikeState ? 1 : -1;
-    }
-
-    const updatedPost = {
-      ...localPost,
-      comments: updatedComments,
-    };
-
-    setLocalPost(updatedPost);
-
-    if (onUpdatePost) {
-      onUpdatePost(updatedPost);
-    }
-  };
-
-  const handlePollVote = (optionIndex) => {
-    if (votedOption !== null) return; // Already voted
-
-    setVotedOption(optionIndex);
-
-    // Update poll data with vote
-    const updatedPollData = {
-      ...localPost.pollData,
-      votes: localPost.pollData.votes.map((count, index) =>
-        index === optionIndex ? count + 1 : count
-      ),
-      totalVotes: localPost.pollData.totalVotes + 1,
-    };
-
-    const updatedPost = {
-      ...localPost,
-      pollData: updatedPollData,
-    };
-
-    setLocalPost(updatedPost);
-
-    if (onUpdatePost) {
-      onUpdatePost(updatedPost);
-    }
-  };
-
-  const getImageGridClass = (imageCount) => {
-    if (imageCount === 1) {
-      return "grid-cols-1";
-    } else if (imageCount === 2) {
-      return "grid-cols-2";
-    } else {
-      return "grid-cols-3";
-    }
-  };
-
-  const getImageHeight = (imageCount) => {
-    if (imageCount === 1) {
-      return "h-64";
-    } else if (imageCount === 2) {
-      return "h-40";
-    } else {
-      return "h-32";
-    }
-  };
-
-  const handleContextMenu = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    // Calculate position to ensure menu stays within viewport
-    let x = rect.right - 200; // Default: position to the left of button
-    let y = rect.bottom + 5; // Default: position below button
-
-    // Adjust if menu would go off the right edge
-    if (x + 200 > viewportWidth) {
-      x = rect.left - 200; // Position to the left of button
-    }
-
-    // Adjust if menu would go off the bottom edge
-    if (y + 120 > viewportHeight) {
-      y = rect.top - 125; // Position above button
-    }
-
-    // Ensure menu doesn't go off the left edge
-    if (x < 10) {
-      x = 10;
-    }
-
-    // Ensure menu doesn't go off the top edge
-    if (y < 10) {
-      y = 10;
-    }
-
-    setContextMenuPosition({ x, y });
-    setShowContextMenu(true);
-  };
-
-  const handleContextMenuAction = (action) => {
-    console.log(`Action: ${action} for post by ${localPost.author.name}`);
-    setShowContextMenu(false);
-
-    // Handle different actions
-    switch (action) {
-      case "not-interested":
-        // Handle not interested - could hide the post or mark as not interested
-        console.log("Marking post as not interested");
-        break;
-      case "mute":
-        // Handle mute user - could mute the user's posts
-        console.log(`Muting user: ${localPost.author.name}`);
-        break;
-      case "block":
-        // Handle block user - could block the user
-        console.log(`Blocking user: ${localPost.author.name}`);
-        break;
-      case "report":
-        // Handle report post - could open a report modal
-        console.log("Opening report form for post");
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Close context menu when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = (e) => {
-      // Don't close if clicking on the context menu itself
-      if (e.target.closest(".context-menu")) {
-        return;
-      }
-      setShowContextMenu(false);
-    };
-
-    if (showContextMenu) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
-    }
-  }, [showContextMenu]);
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 mb-4">
       {/* Post Header */}
@@ -303,74 +166,75 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
               <p className="text-gray-400 text-xs">{localPost.timeAgo}</p>
             </div>
           </div>
-          <button
-            className="text-gray-400 hover:text-gray-600 relative"
-            onClick={handleContextMenu}
-          >
+          <button className="text-gray-400 hover:text-gray-600">
             <MoreHorizontal className="w-5 h-5" />
           </button>
+        </div>
 
-          {/* Context Menu */}
-          {showContextMenu && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 z-[9998]"
-                onClick={() => setShowContextMenu(false)}
-              />
-
-              {/* Menu */}
-              <div
-                className="fixed bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[9999] min-w-[200px] context-menu"
-                style={{
-                  left: `${contextMenuPosition.x}px`,
-                  top: `${contextMenuPosition.y}px`,
-                }}
-              >
-                <button
-                  onClick={() => handleContextMenuAction("not-interested")}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                >
-                  <span className="font-medium">
-                    Not interested in this post
-                  </span>
-                  <Frown className="w-4 h-4 text-gray-400" />
-                </button>
-
-                <button
-                  onClick={() => handleContextMenuAction("mute")}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-medium">Mute</span>
-                  <VolumeX className="w-4 h-4 text-gray-400" />
-                </button>
-
-                <button
-                  onClick={() => handleContextMenuAction("block")}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-medium">
-                    Block '{localPost.author.name}'
-                  </span>
-                  <UserX className="w-4 h-4 text-gray-400" />
-                </button>
-
-                <button
-                  onClick={() => handleContextMenuAction("report")}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-medium">Report Post</span>
-                  <Flag className="w-4 h-4 text-gray-400" />
-                </button>
-              </div>
-            </>
+        {/* Case Tags */}
+        <div className="flex flex-wrap gap-2 mt-3 mb-3">
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+            Dermatology
+          </span>
+          {localPost.isCritical && (
+            <span className="px-3 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium">
+              Critical Case
+            </span>
           )}
         </div>
 
+        {/* Case Summary Section */}
+        <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-100">
+          <h3 className="font-semibold text-blue-700 mb-4 text-sm">
+            Case Summary:{" "}
+            {localPost.content ||
+              "A typical representation of the Takatsubo Cardiopathy"}
+          </h3>
+
+          <div className="space-y-3 text-sm">
+            <div className="flex items-start">
+              <span className="font-medium text-gray-700 w-24 flex-shrink-0">
+                Patient:
+              </span>
+              <span className="text-gray-600">
+                {localPost.patientAge} {localPost.patientGender}
+              </span>
+            </div>
+            <div className="flex items-start">
+              <span className="font-medium text-gray-700 w-24 flex-shrink-0">
+                Presentation:
+              </span>
+              <span className="text-gray-600">
+                {localPost.presentation ||
+                  "A dermatologist is a medical doctor who specializes in conditions that affect the skin, hair, and nails."}
+              </span>
+            </div>
+            <div className="flex items-start">
+              <span className="font-medium text-gray-700 w-24 flex-shrink-0">
+                Key Finding:
+              </span>
+              <span className="text-gray-600">
+                {localPost.keyFindings ||
+                  "A dermatologist is a medical doctor who specializes in conditions that affect the skin, hair, and nails."}
+              </span>
+            </div>
+            <div className="flex items-start">
+              <span className="font-medium text-gray-700 w-24 flex-shrink-0">
+                Outcome:
+              </span>
+              <span className="text-gray-600">
+                {localPost.outcome ||
+                  "Complete recovery at 6-week follow-up with lifestyle modifications"}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Post Content */}
-        <div className="mt-3">
+        <div className="mb-3">
           <p className="text-gray-800 text-sm leading-relaxed mb-3">
-            {localPost.content}
+            A @Alfredz is a medical doctor who specializes in conditions that
+            affect the skin, hair, and nails.
           </p>
           {localPost.hashtags && localPost.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
@@ -385,91 +249,9 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
               ))}
             </div>
           )}
-
-          {/* Poll Display */}
-          {localPost.type === "poll" && localPost.pollData && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-3">
-              <h3 className="font-semibold text-gray-900 mb-4">
-                {localPost.pollData.question}
-              </h3>
-              <div className="space-y-3">
-                {localPost.pollData.options.map((option, index) => {
-                  const votePercentage =
-                    localPost.pollData.totalVotes > 0
-                      ? Math.round(
-                          (localPost.pollData.votes[index] /
-                            localPost.pollData.totalVotes) *
-                            100
-                        )
-                      : 0;
-                  const isVoted = votedOption === index;
-                  const showResults = votedOption !== null;
-
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handlePollVote(index)}
-                      disabled={votedOption !== null}
-                      className={`w-full border rounded-lg p-3 text-center transition-colors relative overflow-hidden ${
-                        isVoted
-                          ? "border-blue-500 bg-blue-50"
-                          : showResults
-                          ? "border-gray-300 bg-gray-50 cursor-default"
-                          : "border-blue-300 hover:bg-blue-50 cursor-pointer"
-                      }`}
-                      style={{ color: "#1890FF" }}
-                    >
-                      {showResults && (
-                        <div
-                          className="absolute left-0 top-0 h-full bg-blue-100 transition-all duration-500 ease-out"
-                          style={{ width: `${votePercentage}%` }}
-                        />
-                      )}
-                      <div className="relative z-10 flex items-center justify-between">
-                        <span>{option}</span>
-                        {showResults && (
-                          <span className="text-sm font-medium">
-                            {votePercentage}%
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-sm text-gray-600">
-                  {localPost.pollData.totalVotes} votes
-                </span>
-                <span className="text-gray-400 text-sm">
-                  {localPost.pollData.duration} left
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Post Images */}
-        {localPost.images && localPost.images.length > 0 && (
-          <div
-            className={`mt-3 grid gap-2 ${getImageGridClass(
-              localPost.images.length
-            )}`}
-          >
-            {localPost.images.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Post image ${index + 1}`}
-                className={`w-full object-cover rounded-lg ${getImageHeight(
-                  localPost.images.length
-                )}`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Engagement Stats */}
+        {/* Case Engagement Stats */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
           <div className="flex items-center space-x-1 text-xs text-gray-500">
             <Heart className="w-3 h-3 fill-red-500 text-red-500" />
@@ -482,7 +264,7 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Case Action Buttons */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
           <div className="flex items-center space-x-2">
             <button
@@ -496,12 +278,13 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
               <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
               <span className="text-sm">{localPost.likes}</span>
             </button>
-            <button
-              onClick={() => setShowComments(!showComments)}
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-sm">{localPost.comments?.length || 0}</span>
+            <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
+              <Eye className="w-4 h-4" />
+              <span className="text-sm">61K</span>
+            </button>
+            <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors">
+              <Plus className="w-4 h-4" />
+              <span className="text-sm">+ Follow Case</span>
             </button>
           </div>
           <div className="flex items-center space-x-2">
@@ -545,6 +328,9 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
                         </p>
                       </div>
                       <div className="flex items-center space-x-4 mt-1 ml-3">
+                        <button className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                          Helpful
+                        </button>
                         <button
                           className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
                           onClick={() =>
@@ -579,6 +365,11 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
                   {/* Replies */}
                   {comment.replies && comment.replies.length > 0 && (
                     <div className="ml-11 space-y-2">
+                      {comment.replies.length > 2 && (
+                        <button className="text-xs text-blue-600 hover:text-blue-700 transition-colors mb-2">
+                          See all {comment.replies.length} replies
+                        </button>
+                      )}
                       {comment.replies.map((reply, replyIndex) => (
                         <div
                           key={reply.id || replyIndex}
@@ -625,6 +416,9 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
                                 />
                                 {reply.likes > 0 && <span>{reply.likes}</span>}
                               </button>
+                              <button className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                                Reply
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -668,7 +462,7 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
                             disabled={!replyText.trim()}
                             onClick={() => handleReply(commentIndex)}
                           >
-                            <Send className="w-3 h-3" />
+                            <Send className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -703,17 +497,6 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
                     "--tw-ring-color": "#1890FF",
                   }}
                 />
-                <button
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 hover:opacity-80"
-                  style={{ color: "#1890FF" }}
-                  disabled={!newComment.trim()}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleComment({ key: "Enter" });
-                  }}
-                >
-                  <Send className="w-4 h-4" />
-                </button>
               </div>
             </div>
           </div>
@@ -723,4 +506,4 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
   );
 };
 
-export default FeedPost;
+export default CasePost;

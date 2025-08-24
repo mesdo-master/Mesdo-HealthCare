@@ -1,25 +1,19 @@
 import React, { useState } from "react";
-import { BarChart3, FileText, MessageSquare } from "lucide-react";
-import CreatePostModal from "./CreatePostModal";
-import PollModal from "./PollModal";
+import { BarChart3, FileText, MessageSquare, User } from "lucide-react";
+import CaseCreateModal from "./CaseCreateModal";
 
-const CreatePost = ({
-  userProfile,
-  activeTab,
-  onTabChange,
-  onNewPost,
-  onNewPoll,
-}) => {
-  const [postContent, setPostContent] = useState("");
+const CaseCreatePost = ({ userProfile, activeTab, onTabChange, onNewPost }) => {
   const [showModal, setShowModal] = useState(false);
-  const [showPollModal, setShowPollModal] = useState(false);
 
   const handleTextareaClick = () => {
     setShowModal(true);
   };
 
-  const handlePollClick = () => {
-    setShowPollModal(true);
+  const handleNewCase = (caseData) => {
+    // Handle the new case data
+    if (onNewPost) {
+      onNewPost(caseData);
+    }
   };
 
   return (
@@ -77,20 +71,20 @@ const CreatePost = ({
             <div className="flex items-center space-x-4">
               <button
                 className="text-gray-400 hover:text-gray-600 transition-colors"
-                onClick={handlePollClick}
+                onClick={() => setShowModal(true)}
               >
+                <User className="w-5 h-5" />
+              </button>
+              <button className="text-gray-400 hover:text-gray-600 transition-colors">
                 <BarChart3 className="w-5 h-5" />
               </button>
               <button className="text-gray-400 hover:text-gray-600 transition-colors">
                 <FileText className="w-5 h-5" />
               </button>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                <MessageSquare className="w-5 h-5" />
-              </button>
             </div>
           </div>
 
-          {/* Simple Toggle Switch */}
+          {/* Case Toggle - Clickable to switch back to Feed */}
           <div className="flex items-center space-x-3">
             <span
               className="text-gray-700"
@@ -106,44 +100,26 @@ const CreatePost = ({
               Case
             </span>
             <button
-              onClick={() =>
-                onTabChange(activeTab === "case" ? "feed" : "case")
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                activeTab === "case" ? "bg-blue-400" : "bg-gray-300"
-              }`}
+              onClick={() => onTabChange("feed")}
+              className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-500 transition-colors duration-200 hover:bg-blue-600"
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                  activeTab === "case" ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
+              <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6 transition-transform duration-200" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Create Post Modal */}
-      <CreatePostModal
+      {/* Case Create Modal */}
+      <CaseCreateModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         userProfile={userProfile}
         activeTab={activeTab}
         onTabChange={onTabChange}
-        onNewPost={onNewPost}
-      />
-
-      {/* Poll Modal */}
-      <PollModal
-        isOpen={showPollModal}
-        onClose={() => setShowPollModal(false)}
-        userProfile={userProfile}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        onNewPoll={onNewPoll}
+        onNewCase={handleNewCase}
       />
     </>
   );
 };
 
-export default CreatePost;
+export default CaseCreatePost;

@@ -175,7 +175,7 @@ const CreatePostModal = ({
                     onTabChange(activeTab === "case" ? "feed" : "case")
                   }
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                    activeTab === "case" ? "bg-gray-400" : "bg-gray-300"
+                    activeTab === "case" ? "bg-blue-500" : "bg-gray-300"
                   }`}
                 >
                   <span

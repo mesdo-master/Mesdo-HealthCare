@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   BarChart3,
@@ -19,6 +19,20 @@ const PollModal = ({
   const [options, setOptions] = useState(["", ""]);
   const [duration, setDuration] = useState("1 week");
   const [showPreview, setShowPreview] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    // Cleanup function to restore scroll on unmount
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -66,8 +80,8 @@ const PollModal = ({
 
   if (showPreview) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200">
           {/* Preview Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <h2
@@ -172,7 +186,7 @@ const PollModal = ({
                       onTabChange(activeTab === "case" ? "feed" : "case")
                     }
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                      activeTab === "case" ? "bg-gray-400" : "bg-gray-300"
+                      activeTab === "case" ? "bg-blue-500" : "bg-gray-300"
                     }`}
                   >
                     <span
@@ -212,8 +226,8 @@ const PollModal = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto shadow-2xl border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2
@@ -370,7 +384,7 @@ const PollModal = ({
                     onTabChange(activeTab === "case" ? "feed" : "case")
                   }
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                    activeTab === "case" ? "bg-gray-400" : "bg-gray-300"
+                    activeTab === "case" ? "bg-blue-500" : "bg-gray-300"
                   }`}
                 >
                   <span
