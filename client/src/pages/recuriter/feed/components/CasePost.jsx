@@ -294,9 +294,9 @@ const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
               <Eye className="w-4 h-4" />
               <span className="text-sm">61K</span>
             </button>
-            <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors">
+            <button className="flex items-center space-x-2 px-3 py-2 rounded-lg text-[#262626] bg-[#F2F2F2] hover:bg-blue-50 transition-colors">
               <Plus className="w-4 h-4" />
-              <span className="text-sm">+ Follow Case</span>
+              <span className="text-sm">Follow Case</span>
             </button>
           </div>
           <div className="flex items-center space-x-2">

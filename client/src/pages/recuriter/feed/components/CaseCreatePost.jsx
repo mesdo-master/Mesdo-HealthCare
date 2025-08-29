@@ -1,9 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   BarChart3,
   Image as ImageIcon,
   MessageSquare,
   User,
+  ChevronDown,
 } from "lucide-react";
 import CreatePostModal from "./CreatePostModal";
 import CaseCreateModal from "./CaseCreateModal";
@@ -14,9 +15,14 @@ const CaseCreatePost = ({
   onTabChange,
   onNewPost,
   onNewCase,
+  resultsCount = 1202, // Add prop for results count
+  sortBy = "Recommended", // Add prop for sort option
+  onSortChange, // Add prop for sort change handler
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [showCaseModal, setShowCaseModal] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const handleTextareaClick = () => {
@@ -39,6 +45,36 @@ const CaseCreatePost = ({
       if (fileInputRef.current) fileInputRef.current.value = "";
     }, 0);
   };
+
+  const sortOptions = [
+    "Recommended",
+    "Most Recent",
+    "Most Popular",
+    "Most Discussed",
+  ];
+
+  const handleSortSelect = (option) => {
+    if (onSortChange) {
+      onSortChange(option);
+    }
+    setShowSortDropdown(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowSortDropdown(false);
+      }
+    };
+
+    if (showSortDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showSortDropdown]);
 
   return (
     <>
@@ -120,6 +156,85 @@ const CaseCreatePost = ({
               <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6 transition-transform duration-200" />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Results Count and Sort By Section */}
+      <div className="flex items-center justify-between mb-6">
+        <span
+          className="text-gray-600"
+          style={{
+            fontFamily:
+              'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            fontWeight: 400,
+            fontSize: "14px",
+            lineHeight: "100%",
+            letterSpacing: "0px",
+          }}
+        >
+          Showing {resultsCount} results
+        </span>
+
+        <div className="relative" ref={dropdownRef}>
+          <div className="flex items-center space-x-2">
+            <span
+              className="text-gray-600"
+              style={{
+                fontFamily:
+                  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontWeight: 400,
+                fontSize: "14px",
+                lineHeight: "100%",
+                letterSpacing: "0px",
+              }}
+            >
+              Sort by:
+            </span>
+            <button
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 transition-colors"
+              style={{
+                fontFamily:
+                  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontWeight: 500,
+                fontSize: "14px",
+                lineHeight: "100%",
+                letterSpacing: "0px",
+              }}
+            >
+              <span>{sortBy}</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Dropdown Menu */}
+          {showSortDropdown && (
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg border border-gray-200 shadow-lg z-10">
+              <div className="py-1">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleSortSelect(option)}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                      option === sortBy
+                        ? "bg-blue-50 text-blue-600"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                    style={{
+                      fontFamily:
+                        'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      fontWeight: option === sortBy ? 500 : 400,
+                      fontSize: "14px",
+                      lineHeight: "100%",
+                      letterSpacing: "0px",
+                    }}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
