@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { X, BarChart3, FileText, MessageSquare } from "lucide-react";
+import {
+  X,
+  BarChart3,
+  FileText,
+  MessageSquare,
+  User,
+  ChevronDown,
+} from "lucide-react";
+import CaseCreateModal from "./CaseCreateModal";
+import ShareWithModal from "./ShareWithModal";
 
 const CreatePostModal = ({
   isOpen,
@@ -8,15 +17,33 @@ const CreatePostModal = ({
   activeTab,
   onTabChange,
   onNewPost,
+  onNewCase,
 }) => {
   const [postContent, setPostContent] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [showCaseModal, setShowCaseModal] = useState(false);
+  const [selectedShareWith, setSelectedShareWith] = useState([]);
+  const [showShareWithModal, setShowShareWithModal] = useState(false);
+
+  React.useEffect(() => {
+    const listener = (e) => {
+      if (Array.isArray(e.detail?.files)) {
+        setSelectedFiles((prev) => [...prev, ...e.detail.files]);
+      }
+    };
+    window.addEventListener("create-post-preselect-files", listener);
+    return () => window.removeEventListener("create-post-files", listener);
+  }, []);
 
   if (!isOpen) return null;
 
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
     setSelectedFiles([...selectedFiles, ...files]);
+  };
+
+  const handleShareWithSelect = (shareWith) => {
+    setSelectedShareWith(shareWith);
   };
 
   const handlePost = () => {
@@ -30,6 +57,7 @@ const CreatePostModal = ({
       content: postContent,
       images: selectedFiles.map((file) => URL.createObjectURL(file)), // Create preview URLs
       hashtags: hashtags,
+      shareWith: selectedShareWith,
       type: "text",
     };
 
@@ -46,25 +74,31 @@ const CreatePostModal = ({
     setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
   };
 
+  const getShareWithLabel = () => {
+    if (!selectedShareWith || selectedShareWith.length === 0) return "Everyone";
+    if (selectedShareWith.length === 1)
+      return selectedShareWith[0].replace(/^[a-z]/, (m) => m.toUpperCase());
+    return `${selectedShareWith.length} Selected`;
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2
-            className="text-blue-600"
-            style={{
-              fontFamily:
-                'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              fontWeight: 400,
-              fontSize: "18px",
-              lineHeight: "100%",
-              letterSpacing: "0px",
-              color: "#1890FF",
-            }}
-          >
-            Share With...
-          </h2>
+          <div className="flex flex-col">
+            <span className="text-[11px] text-gray-500 leading-none">
+              Share With
+            </span>
+            <button
+              onClick={() => setShowShareWithModal(true)}
+              className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+              style={{ color: "#1890FF" }}
+            >
+              <span className="text-sm font-medium">{getShareWithLabel()}</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -136,9 +170,16 @@ const CreatePostModal = ({
           {/* Bottom Section */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div className="flex items-center space-x-4">
-              <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                <BarChart3 className="w-5 h-5" />
-              </button>
+              {/* Only show User icon in Case mode */}
+              {activeTab === "case" && (
+                <button
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowCaseModal(true)}
+                >
+                  <User className="w-5 h-5" />
+                </button>
+              )}
+
               <label className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                 <FileText className="w-5 h-5" />
                 <input
@@ -164,8 +205,6 @@ const CreatePostModal = ({
                       'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                     fontWeight: 500,
                     fontSize: "14px",
-                    lineHeight: "100%",
-                    letterSpacing: "0px",
                   }}
                 >
                   Case
@@ -191,12 +230,7 @@ const CreatePostModal = ({
                 <button
                   onClick={onClose}
                   className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                  style={{
-                    fontFamily:
-                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    fontWeight: 500,
-                    fontSize: "14px",
-                  }}
+                  style={{ fontWeight: 500, fontSize: "14px" }}
                 >
                   Cancel
                 </button>
@@ -206,8 +240,6 @@ const CreatePostModal = ({
                   className="px-6 py-2 rounded-lg text-white transition-colors disabled:opacity-50"
                   style={{
                     backgroundColor: "#1890FF",
-                    fontFamily:
-                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                     fontWeight: 500,
                     fontSize: "14px",
                   }}
@@ -218,6 +250,24 @@ const CreatePostModal = ({
             </div>
           </div>
         </div>
+
+        {/* Case Create Modal */}
+        <CaseCreateModal
+          isOpen={showCaseModal}
+          onClose={() => setShowCaseModal(false)}
+          userProfile={userProfile}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          onNewCase={onNewCase}
+        />
+
+        {/* Share With Modal */}
+        <ShareWithModal
+          isOpen={showShareWithModal}
+          onClose={() => setShowShareWithModal(false)}
+          onShareWithSelect={handleShareWithSelect}
+          selectedShareWith={selectedShareWith}
+        />
       </div>
     </div>
   );

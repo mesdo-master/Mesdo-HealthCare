@@ -143,7 +143,7 @@ const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 mb-4">
+    <div className="bg-white rounded-2xl border border-gray-200 mb-4">
       {/* Post Header */}
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between">
@@ -246,6 +246,18 @@ const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
                 >
                   {tag}
                 </span>
+              ))}
+            </div>
+          )}
+          {localPost.images && localPost.images.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {localPost.images.map((src, idx) => (
+                <img
+                  key={idx}
+                  src={src}
+                  alt="uploaded"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
               ))}
             </div>
           )}
@@ -416,9 +428,6 @@ const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
                                 />
                                 {reply.likes > 0 && <span>{reply.likes}</span>}
                               </button>
-                              <button className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
-                                Reply
-                              </button>
                             </div>
                           </div>
                         </div>
@@ -451,9 +460,7 @@ const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
                               }
                             }}
                             className="w-full bg-gray-50 rounded-full px-3 py-1 text-xs outline-none focus:bg-white focus:ring-1 focus:ring-opacity-20 transition-colors"
-                            style={{
-                              "--tw-ring-color": "#1890FF",
-                            }}
+                            style={{ "--tw-ring-color": "#1890FF" }}
                             autoFocus
                           />
                           <button
@@ -462,7 +469,7 @@ const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
                             disabled={!replyText.trim()}
                             onClick={() => handleReply(commentIndex)}
                           >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
@@ -488,15 +495,21 @@ const CasePost = ({ post, onUpdatePost, currentUserProfile }) => {
               <div className="flex-1 relative">
                 <input
                   type="text"
-                  placeholder="Write your comment"
+                  placeholder="Write a comment..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyPress={handleComment}
                   className="w-full bg-gray-50 rounded-full px-4 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-opacity-20 transition-colors"
-                  style={{
-                    "--tw-ring-color": "#1890FF",
-                  }}
+                  style={{ "--tw-ring-color": "#1890FF" }}
                 />
+                <button
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 hover:opacity-80"
+                  style={{ color: "#1890FF" }}
+                  disabled={!newComment.trim()}
+                  onClick={() => handleComment({ key: "Enter" })}
+                >
+                  <Send className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>

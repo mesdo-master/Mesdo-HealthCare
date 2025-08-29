@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { BarChart3, FileText, MessageSquare } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { BarChart3, Image as ImageIcon, MessageSquare } from "lucide-react";
 import CreatePostModal from "./CreatePostModal";
 import PollModal from "./PollModal";
 
@@ -13,6 +13,7 @@ const CreatePost = ({
   const [postContent, setPostContent] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showPollModal, setShowPollModal] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleTextareaClick = () => {
     setShowModal(true);
@@ -22,9 +23,23 @@ const CreatePost = ({
     setShowPollModal(true);
   };
 
+  const handleFilesSelected = (e) => {
+    // Open modal immediately with selected files
+    setShowModal(true);
+    // Defer attaching files to modal via a small timeout so modal mounts first
+    setTimeout(() => {
+      const event = new CustomEvent("create-post-preselect-files", {
+        detail: { files: Array.from(e.target.files || []) },
+      });
+      window.dispatchEvent(event);
+      // Reset input so same file can be selected again if needed
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }, 0);
+  };
+
   return (
     <>
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
         <div className="flex items-start space-x-4">
           <img
             src={
@@ -59,21 +74,6 @@ const CreatePost = ({
 
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
           <div className="flex flex-col space-y-3">
-            <span
-              className="text-blue-600"
-              style={{
-                fontFamily:
-                  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                fontWeight: 400,
-                fontSize: "14px",
-                lineHeight: "100%",
-                letterSpacing: "0px",
-                color: "#1890FF",
-              }}
-            >
-              Share With...
-            </span>
-
             <div className="flex items-center space-x-4">
               <button
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -81,9 +81,20 @@ const CreatePost = ({
               >
                 <BarChart3 className="w-5 h-5" />
               </button>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                <FileText className="w-5 h-5" />
-              </button>
+
+              {/* Gallery Upload */}
+              <label className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                <ImageIcon className="w-5 h-5" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFilesSelected}
+                  accept="image/*,application/pdf,.doc,.docx"
+                />
+              </label>
+
               <button className="text-gray-400 hover:text-gray-600 transition-colors">
                 <MessageSquare className="w-5 h-5" />
               </button>

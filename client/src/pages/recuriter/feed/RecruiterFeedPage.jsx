@@ -332,7 +332,8 @@ const RecruiterFeedPage = () => {
                         userProfile={businessProfile || currentUser}
                         activeTab={activeTab}
                         onTabChange={setActiveTab}
-                        onNewPost={handleNewCase}
+                        onNewPost={handleNewPost}
+                        onNewCase={handleNewCase}
                       />
                     )}
 
@@ -350,17 +351,28 @@ const RecruiterFeedPage = () => {
                               }
                             />
                           ))
-                        : // Case Posts
-                          posts.map((post) => (
-                            <CasePost
-                              key={post.id}
-                              post={post}
-                              onUpdatePost={handleUpdatePost}
-                              currentUserProfile={
-                                businessProfile || currentUser
-                              }
-                            />
-                          ))}
+                        : // Case Posts: render by type
+                          posts.map((post) =>
+                            post.type === "case" ? (
+                              <CasePost
+                                key={post.id}
+                                post={post}
+                                onUpdatePost={handleUpdatePost}
+                                currentUserProfile={
+                                  businessProfile || currentUser
+                                }
+                              />
+                            ) : (
+                              <FeedPost
+                                key={post.id}
+                                post={post}
+                                onUpdatePost={handleUpdatePost}
+                                currentUserProfile={
+                                  businessProfile || currentUser
+                                }
+                              />
+                            )
+                          )}
                     </div>
 
                     {/* View All Link */}

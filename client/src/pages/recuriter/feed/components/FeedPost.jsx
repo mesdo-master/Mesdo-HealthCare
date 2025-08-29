@@ -280,7 +280,7 @@ const FeedPost = ({ post, onUpdatePost, currentUserProfile }) => {
   }, [showContextMenu]);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 mb-4">
+    <div className="bg-white rounded-2xl border border-gray-200 mb-4">
       {/* Post Header */}
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between">

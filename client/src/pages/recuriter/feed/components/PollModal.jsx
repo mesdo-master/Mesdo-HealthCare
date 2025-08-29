@@ -6,6 +6,7 @@ import {
   MessageSquare,
   ChevronDown,
 } from "lucide-react";
+import ShareWithModal from "./ShareWithModal";
 
 const PollModal = ({
   isOpen,
@@ -19,6 +20,8 @@ const PollModal = ({
   const [options, setOptions] = useState(["", ""]);
   const [duration, setDuration] = useState("1 week");
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedShareWith, setSelectedShareWith] = useState([]);
+  const [showShareWithModal, setShowShareWithModal] = useState(false);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -65,6 +68,7 @@ const PollModal = ({
       question,
       options: options.filter((opt) => opt.trim()),
       duration,
+      shareWith: selectedShareWith,
     };
 
     // Call the onNewPoll function
@@ -78,33 +82,43 @@ const PollModal = ({
     setShowPreview(false);
   };
 
+  const getShareWithLabel = () => {
+    if (!selectedShareWith || selectedShareWith.length === 0) return "Everyone";
+    if (selectedShareWith.length === 1)
+      return selectedShareWith[0].replace(/^[a-z]/, (m) => m.toUpperCase());
+    return `${selectedShareWith.length} Selected`;
+  };
+
+  const Header = (
+    <div className="flex items-center justify-between p-6 border-b border-gray-100">
+      <div className="flex flex-col">
+        <span className="text-[11px] text-gray-500 leading-none">
+          Share With
+        </span>
+        <button
+          onClick={() => setShowShareWithModal(true)}
+          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+          style={{ color: "#1890FF" }}
+        >
+          <span className="text-sm font-medium">{getShareWithLabel()}</span>
+          <ChevronDown className="w-4 h-4" />
+        </button>
+      </div>
+      <button
+        onClick={onClose}
+        className="text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <X className="w-6 h-6" />
+      </button>
+    </div>
+  );
+
   if (showPreview) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200">
-          {/* Preview Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <h2
-              className="text-blue-600"
-              style={{
-                fontFamily:
-                  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                fontWeight: 400,
-                fontSize: "18px",
-                lineHeight: "100%",
-                letterSpacing: "0px",
-                color: "#1890FF",
-              }}
-            >
-              Share With...
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+          {/* Header */}
+          {Header}
 
           {/* Preview Content */}
           <div className="p-6">
@@ -173,33 +187,15 @@ const PollModal = ({
               </div>
 
               <div className="flex items-center space-x-4">
-                {/* Case Toggle */}
                 <div className="flex items-center space-x-3">
-                  <span
-                    className="text-gray-700"
-                    style={{ fontSize: "14px", fontWeight: 500 }}
-                  >
-                    Case
-                  </span>
-                  <button
-                    onClick={() =>
-                      onTabChange(activeTab === "case" ? "feed" : "case")
-                    }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                      activeTab === "case" ? "bg-blue-500" : "bg-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                        activeTab === "case" ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
+                  <span className="text-gray-700">Case</span>
+                  <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300">
+                    <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-1" />
+                  </div>
                 </div>
-
                 <div className="flex items-center space-x-3">
                   <button
-                    onClick={() => setShowPreview(false)}
+                    onClick={onClose}
                     className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                     style={{ fontSize: "14px", fontWeight: 500 }}
                   >
@@ -221,6 +217,14 @@ const PollModal = ({
             </div>
           </div>
         </div>
+
+        {/* Share With Modal */}
+        <ShareWithModal
+          isOpen={showShareWithModal}
+          onClose={() => setShowShareWithModal(false)}
+          onShareWithSelect={(v) => setSelectedShareWith(v)}
+          selectedShareWith={selectedShareWith}
+        />
       </div>
     );
   }
@@ -229,28 +233,7 @@ const PollModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto shadow-2xl border border-gray-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2
-            className="text-blue-600"
-            style={{
-              fontFamily:
-                'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              fontWeight: 400,
-              fontSize: "18px",
-              lineHeight: "100%",
-              letterSpacing: "0px",
-              color: "#1890FF",
-            }}
-          >
-            Share With...
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+        {Header}
 
         {/* Content */}
         <div className="p-6">
@@ -337,15 +320,13 @@ const PollModal = ({
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-300 transition-colors appearance-none bg-white"
-                style={{ fontSize: "14px" }}
               >
                 <option value="1 day">1 day</option>
                 <option value="3 days">3 days</option>
                 <option value="1 week">1 week</option>
                 <option value="2 weeks">2 weeks</option>
-                <option value="1 month">1 month</option>
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             </div>
           </div>
 
@@ -364,73 +345,44 @@ const PollModal = ({
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Case Toggle */}
               <div className="flex items-center space-x-3">
-                <span
-                  className="text-gray-700"
-                  style={{
-                    fontFamily:
-                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    fontWeight: 500,
-                    fontSize: "14px",
-                    lineHeight: "100%",
-                    letterSpacing: "0px",
-                  }}
-                >
-                  Case
-                </span>
-                <button
-                  onClick={() =>
-                    onTabChange(activeTab === "case" ? "feed" : "case")
-                  }
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                    activeTab === "case" ? "bg-blue-500" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                      activeTab === "case" ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
+                <span className="text-gray-700">Case</span>
+                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300">
+                  <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-1" />
+                </div>
               </div>
-
-              {/* Action Buttons */}
               <div className="flex items-center space-x-3">
                 <button
                   onClick={onClose}
                   className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                  style={{
-                    fontFamily:
-                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    fontWeight: 500,
-                    fontSize: "14px",
-                  }}
+                  style={{ fontSize: "14px", fontWeight: 500 }}
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleSaveAndContinue}
-                  disabled={
-                    !question.trim() ||
-                    options.filter((opt) => opt.trim()).length < 2
-                  }
-                  className="px-6 py-2 rounded-lg text-white transition-colors disabled:opacity-50"
+                  onClick={handlePost}
+                  className="px-6 py-2 rounded-lg text-white transition-colors"
                   style={{
                     backgroundColor: "#1890FF",
-                    fontFamily:
-                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    fontWeight: 500,
                     fontSize: "14px",
+                    fontWeight: 500,
                   }}
                 >
-                  Save & Continue
+                  Post
                 </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Share With Modal */}
+      <ShareWithModal
+        isOpen={showShareWithModal}
+        onClose={() => setShowShareWithModal(false)}
+        onShareWithSelect={(v) => setSelectedShareWith(v)}
+        selectedShareWith={selectedShareWith}
+      />
     </div>
   );
 };

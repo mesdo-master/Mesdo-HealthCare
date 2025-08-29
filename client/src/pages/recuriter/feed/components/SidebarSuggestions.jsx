@@ -150,7 +150,7 @@ const SidebarSuggestions = () => {
   return (
     <div className="space-y-6">
       {/* People you might know */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white rounded-2xl border border-gray-200">
         <div className="p-4 border-b border-gray-100">
           <h3 className="font-semibold text-gray-900">People you might know</h3>
         </div>
@@ -162,7 +162,7 @@ const SidebarSuggestions = () => {
       </div>
 
       {/* Based on your communities */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white rounded-2xl border border-gray-200">
         <div className="p-4 border-b border-gray-100">
           <h3 className="font-semibold text-gray-900">
             Based on your communities

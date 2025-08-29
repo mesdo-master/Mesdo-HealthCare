@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { X, User, BarChart3, Image, ChevronDown } from "lucide-react";
+import CaseCategoryModal from "./CaseCategoryModal";
+import ShareWithModal from "./ShareWithModal";
 
 const CaseCreateModal = ({
   isOpen,
@@ -19,6 +21,10 @@ const CaseCreateModal = ({
     outcome: "",
   });
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [selectedShareWith, setSelectedShareWith] = useState([]);
+  const [showShareWithModal, setShowShareWithModal] = useState(false);
 
   if (!isOpen) return null;
 
@@ -33,10 +39,20 @@ const CaseCreateModal = ({
     setShowPreview(true);
   };
 
+  const handleCategorySelect = (categories) => {
+    setSelectedCategories(categories);
+  };
+
+  const handleShareWithSelect = (shareWith) => {
+    setSelectedShareWith(shareWith);
+  };
+
   const handlePost = () => {
     // Create case data
     const caseData = {
       ...formData,
+      categories: selectedCategories,
+      shareWith: selectedShareWith,
       type: "case",
       author: {
         name: userProfile?.orgName || userProfile?.name || "Anonymous",
@@ -72,7 +88,7 @@ const CaseCreateModal = ({
   if (showPreview) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200">
+        <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200">
           {/* Preview Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <h2 className="text-gray-800 font-semibold text-lg">
@@ -177,9 +193,16 @@ const CaseCreateModal = ({
               <div className="flex items-center space-x-4">
                 {/* Case Category Toggle */}
                 <div className="flex items-center space-x-3">
-                  <span className="text-gray-700 text-sm">
-                    Select Case Category
-                  </span>
+                  <button
+                    onClick={() => setShowCategoryModal(true)}
+                    className="text-gray-700 text-sm hover:text-blue-600 transition-colors cursor-pointer"
+                  >
+                    {selectedCategories.length > 0
+                      ? selectedCategories.length === 1
+                        ? selectedCategories[0]
+                        : `${selectedCategories.length} Categories`
+                      : "Select Case Category"}
+                  </button>
                   <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-500 transition-colors duration-200">
                     <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6 transition-transform duration-200" />
                   </div>
@@ -216,29 +239,60 @@ const CaseCreateModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto shadow-2xl border border-gray-200">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-gray-800 font-semibold text-lg">to create</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200">
         {/* Content */}
-        <div className="p-6">
-          {/* Share With Link */}
-          <div className="mb-6">
-            <span className="text-blue-600 font-medium text-sm">
-              Share With...
-            </span>
+        <div
+          className="p-4 overflow-y-auto scrollbar-hide"
+          style={{
+            maxHeight: "calc(90vh - 32px)",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          {/* Share With - header style */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col ml-3">
+              <span className="text-[11px] text-gray-500 leading-none">
+                Share With
+              </span>
+              <button
+                onClick={() => setShowShareWithModal(true)}
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+                style={{ color: "#1890FF" }}
+              >
+                <span className="text-sm font-medium">Everyone</span>
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
           </div>
 
           {/* Form Fields */}
-          <div className="space-y-6">
+          <div className="space-y-5 ml-3">
             {/* Heading */}
             <div>
               <label className="block text-gray-700 font-medium mb-2 text-sm">
@@ -254,8 +308,8 @@ const CaseCreateModal = ({
               />
             </div>
 
-            {/* Patient Age and Gender Row */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Patient Age and Gender Row with Critical Case Checkbox */}
+            <div className="grid grid-cols-3 gap-6">
               <div>
                 <label className="block text-gray-700 font-medium mb-2 text-sm">
                   Patient Age
@@ -284,28 +338,31 @@ const CaseCreateModal = ({
                   style={{ fontSize: "14px" }}
                 />
               </div>
-            </div>
-
-            {/* Critical Case Checkbox */}
-            <div>
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  id="criticalCase"
-                  checked={formData.isCritical}
-                  onChange={(e) => handleChange("isCritical", e.target.checked)}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label
-                  htmlFor="criticalCase"
-                  className="text-gray-700 font-medium text-sm"
-                >
-                  Is this a critical case?
-                </label>
+              <div className="flex items-start pt-8">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="criticalCase"
+                    checked={formData.isCritical}
+                    onChange={(e) =>
+                      handleChange("isCritical", e.target.checked)
+                    }
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <div>
+                    <label
+                      htmlFor="criticalCase"
+                      className="text-blue-600 font-medium text-sm block"
+                      style={{ color: "#1890FF" }}
+                    >
+                      Is this a critical case?
+                    </label>
+                    <p className="text-gray-500 text-xs mt-1">
+                      If the patient requires high-priority care.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-gray-500 text-xs mt-1 ml-7">
-                If the patient requires high-priority care.
-              </p>
             </div>
 
             {/* Presentation */}
@@ -317,8 +374,8 @@ const CaseCreateModal = ({
                 placeholder='Eg:"Your Question"'
                 value={formData.presentation}
                 onChange={(e) => handleChange("presentation", e.target.value)}
-                rows={3}
-                className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-300 transition-colors resize-none"
+                rows={4}
+                className="w-full p-3 h-[65px] border border-gray-200 rounded-lg outline-none focus:border-blue-300 transition-colors resize-none"
                 style={{ fontSize: "14px" }}
               />
             </div>
@@ -332,8 +389,8 @@ const CaseCreateModal = ({
                 placeholder='Eg:"Your Question"'
                 value={formData.keyFindings}
                 onChange={(e) => handleChange("keyFindings", e.target.value)}
-                rows={3}
-                className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-300 transition-colors resize-none"
+                rows={4}
+                className="w-full p-3 h-[65px] border border-gray-200 rounded-lg outline-none focus:border-blue-300 transition-colors resize-none"
                 style={{ fontSize: "14px" }}
               />
             </div>
@@ -347,15 +404,42 @@ const CaseCreateModal = ({
                 placeholder='Eg:"Your Question"'
                 value={formData.outcome}
                 onChange={(e) => handleChange("outcome", e.target.value)}
-                rows={3}
-                className="w-full p-3 border border-gray-200 rounded-lg outline-none focus:border-blue-300 transition-colors resize-none"
+                rows={4}
+                className="w-full p-3 h-[65px] border border-gray-200 rounded-lg outline-none focus:border-blue-300 transition-colors resize-none"
                 style={{ fontSize: "14px" }}
               />
             </div>
           </div>
 
+          {/* Case Category and Toggle Section - positioned after Outcome field */}
+          <div className="flex justify-end mt-6">
+            <div className="flex flex-col items-end space-y-3">
+              {/* Case Category Button */}
+              <button
+                onClick={() => setShowCategoryModal(true)}
+                className="text-blue-600 text-sm hover:text-blue-700 transition-colors cursor-pointer font-medium"
+                style={{ color: "#1890FF" }}
+              >
+                {selectedCategories.length > 0
+                  ? selectedCategories.length === 1
+                    ? selectedCategories[0]
+                    : `${selectedCategories.length} Categories`
+                  : "Select Case Category"}
+              </button>
+
+              {/* Case Toggle Switch */}
+              <div className="flex items-center space-x-3">
+                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-500 transition-colors duration-200">
+                  <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6 transition-transform duration-200" />
+                </div>
+                <span className="text-gray-500 text-sm">Case</span>
+              </div>
+            </div>
+          </div>
+
           {/* Bottom Section */}
-          <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-6">
+          <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-8">
+            {/* Left-aligned Icons */}
             <div className="flex items-center space-x-4">
               <button className="text-gray-400 hover:text-gray-600 transition-colors">
                 <User className="w-5 h-5" />
@@ -368,18 +452,8 @@ const CaseCreateModal = ({
               </button>
             </div>
 
-            <div className="flex items-center space-x-4">
-              {/* Case Category Toggle */}
-              <div className="flex items-center space-x-3">
-                <span className="text-gray-700 text-sm">
-                  Select Case Category
-                </span>
-                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-500 transition-colors duration-200">
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6 transition-transform duration-200" />
-                </div>
-                <span className="text-gray-700 text-sm">Case</span>
-              </div>
-
+            {/* Right-aligned Content */}
+            <div className="flex items-center space-x-6">
               {/* Action Buttons */}
               <div className="flex items-center space-x-3">
                 <button
@@ -406,6 +480,22 @@ const CaseCreateModal = ({
           </div>
         </div>
       </div>
+
+      {/* Case Category Modal */}
+      <CaseCategoryModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onCategorySelect={handleCategorySelect}
+        selectedCategories={selectedCategories}
+      />
+
+      {/* Share With Modal */}
+      <ShareWithModal
+        isOpen={showShareWithModal}
+        onClose={() => setShowShareWithModal(false)}
+        onShareWithSelect={handleShareWithSelect}
+        selectedShareWith={selectedShareWith}
+      />
     </div>
   );
 };

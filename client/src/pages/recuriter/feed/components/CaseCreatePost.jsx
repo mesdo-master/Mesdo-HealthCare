@@ -1,24 +1,48 @@
-import React, { useState } from "react";
-import { BarChart3, FileText, MessageSquare, User } from "lucide-react";
+import React, { useState, useRef } from "react";
+import {
+  BarChart3,
+  Image as ImageIcon,
+  MessageSquare,
+  User,
+} from "lucide-react";
+import CreatePostModal from "./CreatePostModal";
 import CaseCreateModal from "./CaseCreateModal";
 
-const CaseCreatePost = ({ userProfile, activeTab, onTabChange, onNewPost }) => {
+const CaseCreatePost = ({
+  userProfile,
+  activeTab,
+  onTabChange,
+  onNewPost,
+  onNewCase,
+}) => {
   const [showModal, setShowModal] = useState(false);
+  const [showCaseModal, setShowCaseModal] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleTextareaClick = () => {
     setShowModal(true);
   };
 
-  const handleNewCase = (caseData) => {
-    // Handle the new case data
-    if (onNewPost) {
-      onNewPost(caseData);
+  const handleNewCaseLocal = (caseData) => {
+    if (onNewCase) {
+      onNewCase(caseData);
     }
+  };
+
+  const handleFilesSelected = (e) => {
+    setShowModal(true);
+    setTimeout(() => {
+      const event = new CustomEvent("create-post-preselect-files", {
+        detail: { files: Array.from(e.target.files || []) },
+      });
+      window.dispatchEvent(event);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }, 0);
   };
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
         <div className="flex items-start space-x-4">
           <img
             src={
@@ -52,36 +76,26 @@ const CaseCreatePost = ({ userProfile, activeTab, onTabChange, onNewPost }) => {
         </div>
 
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-          <div className="flex flex-col space-y-3">
-            <span
-              className="text-blue-600"
-              style={{
-                fontFamily:
-                  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                fontWeight: 400,
-                fontSize: "14px",
-                lineHeight: "100%",
-                letterSpacing: "0px",
-                color: "#1890FF",
-              }}
+          <div className="flex items-center space-x-4">
+            <button
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => setShowCaseModal(true)}
             >
-              Share With...
-            </span>
+              <User className="w-5 h-5" />
+            </button>
 
-            <div className="flex items-center space-x-4">
-              <button
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-                onClick={() => setShowModal(true)}
-              >
-                <User className="w-5 h-5" />
-              </button>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                <BarChart3 className="w-5 h-5" />
-              </button>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                <FileText className="w-5 h-5" />
-              </button>
-            </div>
+            {/* Gallery Upload */}
+            <label className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              <ImageIcon className="w-5 h-5" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFilesSelected}
+                accept="image/*,application/pdf,.doc,.docx"
+              />
+            </label>
           </div>
 
           {/* Case Toggle - Clickable to switch back to Feed */}
@@ -109,14 +123,25 @@ const CaseCreatePost = ({ userProfile, activeTab, onTabChange, onNewPost }) => {
         </div>
       </div>
 
-      {/* Case Create Modal */}
-      <CaseCreateModal
+      {/* Create Post Modal (regular feed post creation) */}
+      <CreatePostModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         userProfile={userProfile}
         activeTab={activeTab}
         onTabChange={onTabChange}
-        onNewCase={handleNewCase}
+        onNewPost={onNewPost}
+        onNewCase={handleNewCaseLocal}
+      />
+
+      {/* Case Create Modal (for structured case posts) */}
+      <CaseCreateModal
+        isOpen={showCaseModal}
+        onClose={() => setShowCaseModal(false)}
+        userProfile={userProfile}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        onNewCase={handleNewCaseLocal}
       />
     </>
   );
