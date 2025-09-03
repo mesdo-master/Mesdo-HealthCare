@@ -10,7 +10,6 @@ const CreatePost = ({
   onNewPost,
   onNewPoll,
 }) => {
-  const [postContent, setPostContent] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showPollModal, setShowPollModal] = useState(false);
   const fileInputRef = useRef(null);
@@ -40,20 +39,11 @@ const CreatePost = ({
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-        <div className="flex items-start space-x-4">
-          <img
-            src={
-              userProfile?.orgLogo ||
-              userProfile?.profilePicture ||
-              "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-            }
-            alt="Profile"
-            className="w-12 h-12 rounded-full object-cover"
-          />
+        <div className="flex items-start">
           <div className="flex-1">
             <div
               onClick={handleTextareaClick}
-              className="w-full mt-4 cursor-pointer"
+              className="w-full mt-2 cursor-pointer"
             >
               <span
                 className="text-gray-400"
@@ -72,7 +62,7 @@ const CreatePost = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-between mt-8 mb-[-2px]">
           <div className="flex flex-col space-y-3">
             <div className="flex items-center space-x-4">
               <button
@@ -101,8 +91,8 @@ const CreatePost = ({
             </div>
           </div>
 
-          {/* Simple Toggle Switch */}
-          <div className="flex items-center space-x-3">
+          {/* Simple Toggle Switch (indicator only) */}
+          <div className="flex items-center space-x-3 select-none">
             <span
               className="text-gray-700"
               style={{
@@ -116,20 +106,18 @@ const CreatePost = ({
             >
               Case
             </span>
-            <button
-              onClick={() =>
-                onTabChange(activeTab === "case" ? "feed" : "case")
-              }
+            <div
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
                 activeTab === "case" ? "bg-blue-400" : "bg-gray-300"
               }`}
+              aria-hidden="true"
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
                   activeTab === "case" ? "translate-x-6" : "translate-x-1"
                 }`}
               />
-            </button>
+            </div>
           </div>
         </div>
       </div>

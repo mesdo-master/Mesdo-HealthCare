@@ -1,120 +1,255 @@
-import React from "react";
-import { Rss, TrendingUp, Users, MessageCircle } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import FeedTabs from "./components/FeedTabs";
+import CreatePost from "./components/CreatePost";
+import CaseCreatePost from "./components/CaseCreatePost";
+import FeedPost from "./components/FeedPost";
+import CasePost from "./components/CasePost";
+import SidebarSuggestions from "./components/SidebarSuggestions";
+import { useAuth } from "../../../hooks/useAuth";
 
 const FeedPage = () => {
+  const { currentUser } = useAuth();
+  const [activeTab, setActiveTab] = useState("feed");
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const samplePosts = [
+      {
+        id: 1,
+        author: {
+          name: "Dr. Alfredo Botosh",
+          username: "alfredo",
+          title: "Dermatologist - Apollo Hospital",
+          avatar:
+            "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150",
+        },
+        content:
+          "A dermatologist is a medical doctor who specializes in conditions that affect the skin, hair, and nails. Whether it's rashes, wrinkles, psoriasis, or melanoma, no one understands your skin, hair, and nails better than a board-certified dermatologist. The skin is an incredible organ",
+        hashtags: ["#inclusive"],
+        timeAgo: "Posted 3 hours ago",
+        likes: 90,
+        images: [
+          "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300",
+          "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=300",
+          "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=300",
+        ],
+        comments: [],
+      },
+    ];
+    setPosts(samplePosts);
+  }, []);
+
+  const handleNewPost = (postData) => {
+    const newPost = {
+      id: Date.now(),
+      author: {
+        name: currentUser?.name || "Anonymous",
+        username: currentUser?.username || "anonymous",
+        title: currentUser?.title || "User",
+        avatar:
+          currentUser?.profilePicture ||
+          "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif",
+      },
+      content: postData.content,
+      timeAgo: "Just now",
+      likes: 0,
+      images: postData.images || [],
+      comments: [],
+      hashtags: postData.hashtags || [],
+      type: postData.type || "text",
+      pollData: postData.pollData || null,
+    };
+    setPosts((prev) => [newPost, ...prev]);
+  };
+
+  const handleNewPoll = (pollData) => {
+    const newPoll = {
+      id: Date.now(),
+      author: {
+        name: currentUser?.name || "Anonymous",
+        username: currentUser?.username || "anonymous",
+        title: currentUser?.title || "User",
+        avatar:
+          currentUser?.profilePicture ||
+          "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif",
+      },
+      content: "Share your knowledge .....",
+      timeAgo: "Just now",
+      likes: 0,
+      comments: [],
+      type: "poll",
+      pollData: {
+        question: pollData.question,
+        options: pollData.options.filter((opt) => opt.trim()),
+        duration: pollData.duration,
+        votes: pollData.options.filter((opt) => opt.trim()).map(() => 0),
+        totalVotes: 0,
+      },
+    };
+    setPosts((prev) => [newPoll, ...prev]);
+  };
+
+  const handleNewCase = (caseData) => {
+    const newCase = {
+      id: Date.now(),
+      author: {
+        name: currentUser?.name || "Anonymous",
+        username: currentUser?.username || "anonymous",
+        title: currentUser?.title || "User",
+        avatar:
+          currentUser?.profilePicture ||
+          "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif",
+      },
+      content: caseData.heading || "Share your knowledge .....",
+      timeAgo: "Just now",
+      likes: 0,
+      comments: [],
+      type: "case",
+      hashtags: ["#inclusive"],
+      patientAge: caseData.patientAge,
+      patientGender: caseData.patientGender,
+      isCritical: caseData.isCritical,
+      presentation: caseData.presentation,
+      keyFindings: caseData.keyFindings,
+      outcome: caseData.outcome,
+    };
+    setPosts((prev) => [newCase, ...prev]);
+  };
+
+  const handleUpdatePost = (updatedPost) => {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
+    );
+  };
+
+  const layout = (() => {
+    if (windowWidth <= 1599) {
+      return {
+        marginLeft: "100px",
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        gap: "16px",
+        padding: "16px",
+      };
+    } else if (windowWidth <= 1920) {
+      return {
+        marginLeft: "50px",
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        gap: "16px",
+        padding: "16px",
+      };
+    } else {
+      return {
+        marginLeft: "50px",
+        paddingLeft: "32px",
+        paddingRight: "32px",
+        gap: "16px",
+        padding: "16px",
+      };
+    }
+  })();
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Rss className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Feed</h1>
-          </div>
-          <p className="text-gray-600">
-            Stay updated with the latest job opportunities, industry news, and
-            career insights.
-          </p>
-        </div>
+    <div className="flex flex-col h-screen">
+      <div className="flex flex-1 overflow-hidden pt-[85px]">
+        <div
+          className="flex flex-1 overflow-y-auto"
+          style={{
+            marginLeft: layout.marginLeft,
+            paddingLeft: layout.paddingLeft,
+            paddingRight: layout.paddingRight,
+          }}
+        >
+          <div className="mx-auto w-full max-w-[80rem]">
+            <div className="bg-[#E4E5E8] rounded-lg w-full">
+              <div
+                className="bg-[#F5F7FA]"
+                style={{
+                  minHeight: "calc(100vh - 100px)",
+                  gap: layout.gap,
+                  padding: layout.padding,
+                }}
+              >
+                <div className="grid grid-cols-12 gap-6 h-full">
+                  <div className="col-span-8">
+                    <FeedTabs
+                      activeTab={activeTab}
+                      onTabChange={setActiveTab}
+                    />
 
-        {/* Feed Content */}
-        <div className="space-y-6">
-          {/* Placeholder Feed Items */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  New Job Opportunities in Tech
-                </h3>
-                <p className="text-gray-600 mb-3">
-                  Discover the latest job openings in software development, AI,
-                  and data science. Companies are actively hiring for remote and
-                  hybrid positions.
-                </p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>2 hours ago</span>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>128 views</span>
+                    {activeTab === "feed" ? (
+                      <CreatePost
+                        userProfile={currentUser}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        onNewPost={handleNewPost}
+                        onNewPoll={handleNewPoll}
+                      />
+                    ) : (
+                      <CaseCreatePost
+                        userProfile={currentUser}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        onNewPost={handleNewPost}
+                        onNewCase={handleNewCase}
+                      />
+                    )}
+
+                    <div className="space-y-4">
+                      {activeTab === "feed"
+                        ? posts.map((post) => (
+                            <FeedPost
+                              key={post.id}
+                              post={post}
+                              onUpdatePost={handleUpdatePost}
+                              currentUserProfile={currentUser}
+                            />
+                          ))
+                        : posts.map((post) =>
+                            post.type === "case" ? (
+                              <CasePost
+                                key={post.id}
+                                post={post}
+                                onUpdatePost={handleUpdatePost}
+                                currentUserProfile={currentUser}
+                              />
+                            ) : (
+                              <FeedPost
+                                key={post.id}
+                                post={post}
+                                onUpdatePost={handleUpdatePost}
+                                currentUserProfile={currentUser}
+                              />
+                            )
+                          )}
+                    </div>
+
+                    <div className="text-center mt-6">
+                      <button
+                        className="font-medium hover:opacity-80 transition-opacity"
+                        style={{ color: "#1890FF", fontSize: "14px" }}
+                      >
+                        {activeTab === "feed"
+                          ? "View All..."
+                          : "View All Cases..."}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>12 comments</span>
+
+                  <div className="col-span-4">
+                    <SidebarSuggestions />
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Industry Insights: Remote Work Trends
-                </h3>
-                <p className="text-gray-600 mb-3">
-                  Learn about the latest trends in remote work and how companies
-                  are adapting their hiring processes for distributed teams.
-                </p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>4 hours ago</span>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>89 views</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>7 comments</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Career Development Tips
-                </h3>
-                <p className="text-gray-600 mb-3">
-                  Essential skills and certifications that can help advance your
-                  career in the current job market.
-                </p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>1 day ago</span>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>256 views</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>18 comments</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Coming Soon Message */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-            <Rss className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-            <h3 className="font-semibold text-blue-900 mb-2">
-              More Content Coming Soon!
-            </h3>
-            <p className="text-blue-700">
-              We're working on bringing you personalized job recommendations,
-              industry news, and career insights tailored to your preferences.
-            </p>
           </div>
         </div>
       </div>

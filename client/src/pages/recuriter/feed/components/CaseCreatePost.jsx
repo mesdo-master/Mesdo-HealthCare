@@ -1,11 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  BarChart3,
-  Image as ImageIcon,
-  MessageSquare,
-  User,
-  ChevronDown,
-} from "lucide-react";
+import { BarChart3, Image as ImageIcon, ChevronDown } from "lucide-react";
 import CreatePostModal from "./CreatePostModal";
 import CaseCreateModal from "./CaseCreateModal";
 
@@ -79,21 +73,10 @@ const CaseCreatePost = ({
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-        <div className="flex items-start space-x-4">
-          <img
-            src={
-              userProfile?.orgLogo ||
-              userProfile?.profilePicture ||
-              "https://res.cloudinary.com/dy9voteoc/image/upload/v1743420262/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3383_sxcncq.avif"
-            }
-            alt="Profile"
-            className="w-12 h-12 rounded-full object-cover"
-          />
+        <div className="flex items-start">
           <div className="flex-1">
-            <div
-              onClick={handleTextareaClick}
-              className="w-full mt-4 cursor-pointer"
-            >
+            {/* Header text */}
+            <div className="w-full mt-1">
               <span
                 className="text-gray-400"
                 style={{
@@ -105,19 +88,70 @@ const CaseCreatePost = ({
                   letterSpacing: "0px",
                 }}
               >
-                Share your knowledge .....
+                Share case details...
               </span>
+            </div>
+
+            {/* Inline form to mirror design */}
+            <div className="mt-4 space-y-4">
+              {/* Heading */}
+              <div>
+                <label
+                  className="block text-gray-700 mb-2"
+                  style={{
+                    fontFamily:
+                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontWeight: 600,
+                    fontSize: "12px",
+                    lineHeight: "100%",
+                    letterSpacing: "0px",
+                  }}
+                >
+                  Heading
+                </label>
+                <input
+                  onClick={() => setShowCaseModal(true)}
+                  readOnly
+                  placeholder={'Eg;"Your Question"'}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 placeholder-gray-400 focus:outline-none"
+                />
+              </div>
+
+              {/* Presentation */}
+              <div>
+                <label
+                  className="block text-gray-700 mb-2"
+                  style={{
+                    fontFamily:
+                      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontWeight: 600,
+                    fontSize: "12px",
+                    lineHeight: "100%",
+                    letterSpacing: "0px",
+                  }}
+                >
+                  Presentation
+                </label>
+                <textarea
+                  onClick={() => setShowCaseModal(true)}
+                  readOnly
+                  rows={3}
+                  placeholder={'Eg;"Your Question"'}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 placeholder-gray-400 focus:outline-none resize-none"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
           <div className="flex items-center space-x-4">
+            {/* Poll */}
             <button
               className="text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={() => setShowCaseModal(true)}
+              onClick={handleTextareaClick}
             >
-              <User className="w-5 h-5" />
+              <BarChart3 className="w-5 h-5" />
             </button>
 
             {/* Gallery Upload */}
@@ -132,10 +166,11 @@ const CaseCreatePost = ({
                 accept="image/*,application/pdf,.doc,.docx"
               />
             </label>
+            {/* Message/Discussion icon */}
           </div>
 
-          {/* Case Toggle - Clickable to switch back to Feed */}
-          <div className="flex items-center space-x-3">
+          {/* Case Toggle - indicator only; switching via tabs */}
+          <div className="flex items-center space-x-3 select-none">
             <span
               className="text-gray-700"
               style={{
@@ -149,12 +184,12 @@ const CaseCreatePost = ({
             >
               Case
             </span>
-            <button
-              onClick={() => onTabChange("feed")}
-              className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-500 transition-colors duration-200 hover:bg-blue-600"
+            <div
+              className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-500"
+              aria-hidden="true"
             >
-              <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6 transition-transform duration-200" />
-            </button>
+              <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
+            </div>
           </div>
         </div>
       </div>

@@ -24,6 +24,10 @@ app.use(
         "https://mesdo-health-care-u5s9.vercel.app",
         "https://mesdo-health-care.vercel.app",
         "http://localhost:3000",
+        // Flutter/Web local dev common origins
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://10.0.2.2",
         "https://mesdo-healthcare-4-ui.vercel.app",
       ];
 
@@ -42,10 +46,21 @@ app.use(
         return callback(null, true);
       }
 
+      // Allow localhost with any port (Flutter web/dev servers)
+      if (origin.match(/^http:\/\/(localhost|127\.0\.0\.1)(:\\d+)?$/)) {
+        return callback(null, true);
+      }
+
+      // Android emulator host loopback
+      if (origin.match(/^http:\/\/10\.0\.2\.2(:\\d+)?$/)) {
+        return callback(null, true);
+      }
+
       callback(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "DELETE", "PUT"],
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
     allowedHeaders: [
+      "Origin",
       "Content-Type",
       "Authorization",
       "Cache-Control",
